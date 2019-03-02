@@ -102,7 +102,7 @@ class Feature(Entity):
     A feature
     """
     def __init__(self, fslot, fego, level, stability, max_stability):
-        super().__init__(None, None, fego.value.get("char"), fslot.value.get("color"), fego.value.get("name")+" "+fslot.value.get("name"), False, True, const.RenderOrder.ITEM)
+        super().__init__(None, None, fego.value.get("char"), fslot.value.get("desat_color"), fego.value.get("name")+" "+fslot.value.get("name"), False, True, const.RenderOrder.ITEM)
         self.fslot = fslot
         self.fego = fego
         self.is_in_inventory = False

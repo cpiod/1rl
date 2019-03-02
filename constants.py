@@ -21,6 +21,17 @@ base3 = tcod.Color(253,246,227)
 door_color = tcod.Color(203,75,22)
 tcod.color_scale_HSV(door_color, 0.7, 1)
 
+desat_magenta = tcod.Color(211,54,130)
+tcod.color_scale_HSV(desat_magenta, 0.7, 1)
+desat_violet = tcod.Color(108,113,196)
+tcod.color_scale_HSV(desat_violet, 0.7, 1)
+desat_blue = tcod.Color(38,139,210)
+tcod.color_scale_HSV(desat_blue, 0.7, 1)
+desat_green = tcod.Color(133,153,0)
+tcod.color_scale_HSV(desat_green, 0.7, 1)
+desat_yellow = tcod.Color(181,137,0)
+tcod.color_scale_HSV(desat_yellow, 0.7, 1)
+
 stability_threshold = 0.7
 inventory_max_size = 5
 
@@ -29,11 +40,11 @@ time_move = 1
 malus_max = 30
 
 class FeatureSlot(enum.Enum):
-    m = {"name": "monsters", "color": magenta}
-    i = {"name": "id", "color": violet}
-    p = {"name": "plot", "color": blue}
-    c = {"name": "combat", "color": yellow}
-    l = {"name": "loot", "color": green}
+    m = {"name": "monsters", "color": magenta, "desat_color": desat_magenta}
+    i = {"name": "id", "color": violet, "desat_color": desat_violet}
+    p = {"name": "plot", "color": blue, "desat_color": desat_blue}
+    c = {"name": "combat", "color": yellow, "desat_color": desat_yellow}
+    l = {"name": "loot", "color": green, "desat_color": desat_green}
 
 class WeaponSlot(enum.Enum):
     fast = {"name": "printf()", "success_rate_base": 0.3, "duration_base": 3, "instable": False, "key": "1"}
