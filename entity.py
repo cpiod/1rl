@@ -16,12 +16,12 @@ class Entity:
         self.transparent = transparent
         self.is_seen = is_seen
 
-class Floor(Entity):
+class Tile(Entity):
     """
-    A floor or a wall
+    A floor, a door or a wall
     """
 
-    def __init__(self, x, y, ftype, is_seen=False):
+    def __init__(self, x, y, ftype=const.TileType.WALL, is_seen=False):
         super().__init__(x, y, ftype.value.get("char"), const.base2, ftype.value.get("name"), ftype.value.get("collision"), ftype.value.get("transparent"), is_seen) # TODO color
         self.ftype = ftype
 
@@ -50,7 +50,7 @@ class Feature(Entity):
 
 class Player(Entity):
     def __init__(self, x, y):
-        super().__init__(x, y, '@', None, "You", collision=True, transparent=True, is_seen=True) # TODO color
+        super().__init__(x, y, '@', const.base3, "You", collision=True, transparent=True, is_seen=True) # TODO color
 
 class Monster(Entity):
     def __init__(self, x, y, fslot, hp, speed, fcreator):

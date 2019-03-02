@@ -61,7 +61,7 @@ class TurnType(enum.Enum):
     PLAYER = 1
     SPAWN = 2
 
-class FloorType(enum.Enum):
+class TileType(enum.Enum):
     WALL = {"name": "wall", "collision": True, "transparent": False, "char": "#"}
     FLOOR = {"name": "floor", "collision": False, "transparent": True, "char": "."}
     DOOR = {"name": "door", "collision": False, "transparent": False, "char": "+"}
