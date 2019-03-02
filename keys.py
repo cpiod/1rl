@@ -3,10 +3,39 @@ import constants as const
 def is_shift(modifiers):
     return 'tcod.event.KMOD_LSHIFT' in modifiers or 'tcod.event.KMOD_RSHIFT' in modifiers
 
-def handle_player_turn_keys(key, modifiers):
-    if key == None:
-        return {}
+def handle_equip_keys(key, modifiers):
+    if key == "tcod.event.K_a":
+        return {"equip_key": "a"}
+    elif key == "tcod.event.K_b":
+        return {"equip_key": "b"}
+    elif key == "tcod.event.K_c":
+        return {"equip_key": "c"}
+    elif key == "tcod.event.K_d":
+        return {"equip_key": "d"}
+    elif key == "tcod.event.K_e":
+        return {"equip_key": "e"}
+    elif key == "tcod.event.K_ESCAPE":
+        return {'cancel': True}
+    return {}
 
+
+
+def handle_drop_keys(key, modifiers):
+    if key == "tcod.event.K_a":
+        return {"drop_key": "a"}
+    elif key == "tcod.event.K_b":
+        return {"drop_key": "b"}
+    elif key == "tcod.event.K_c":
+        return {"drop_key": "c"}
+    elif key == "tcod.event.K_d":
+        return {"drop_key": "d"}
+    elif key == "tcod.event.K_e":
+        return {"drop_key": "e"}
+    elif key == "tcod.event.K_ESCAPE":
+        return {'cancel': True}
+    return {}
+
+def handle_player_turn_keys(key, modifiers):
     # Movement keys
     if key == "tcod.event.K_UP" or key == 'k' or key == "tcod.event.K_KP_8":
         return {'move': (0, -1)}
@@ -47,6 +76,12 @@ def handle_player_turn_keys(key, modifiers):
 
     elif key == 'tcod.event.K_g':
         return {'pickup': True}
+
+    elif key == 'tcod.event.K_w':
+        return {'equip': True}
+
+    elif key == 'tcod.event.K_d':
+        return {'drop': True}
 
     elif key == 'tcod.event.K_ESCAPE':
         # Exit the game

@@ -37,13 +37,33 @@ class Tile(Entity):
     def __init__(self, x, y, ftype=const.TileType.WALL):
         super().__init__(x, y, ftype.value.get("char"), ftype.value.get("color"), ftype.value.get("name"), ftype.value.get("collision"), ftype.value.get("transparent"), const.RenderOrder.TILE)
         self.ftype = ftype
+        self.item = None
+
+    def put_item(self, item, entities):
+        assert self.item == None
+        assert item not in entities
+        self.item = item
+        item.x = self.x
+        item.y = self.y
+        entities.append(item)
+
+    def take_item(self, entities):
+        assert self.item != None
+        assert self.item in entities
+        item = self.item
+        item.x = None
+        item.y = None
+        entities.remove(item)
+        self.item = None
+        return item
+
 
 class Weapon(Entity):
     """
     A debugger
     """
     def __init__(self, wslot, success_rate, duration, wego, level):
-        super().__init__(None, None, wego.value.get("char"), const.base2, wego.value.get("name")+" "+wslot.value.get("name"), False, True, const.RenderOrder.ITEM)
+        super().__init__(None, None, wego.value.get("char"), const.base3, wego.value.get("name")+" "+wslot.value.get("name"), False, True, const.RenderOrder.ITEM)
         self.wego = wego
         self.level = level
         # TODO : use wslot
@@ -51,11 +71,11 @@ class Weapon(Entity):
         self.duration = duration
         self.wslot = wslot
         self.is_in_inventory = False
+        self.equiped = False
         self.fslot_effective = []
 
     def update_effective(self, fequiped):
         self.fslot_effective = [fslot for fslot in const.FeatureSlot if fequiped.get(fslot) and fequiped.get(fslot).fego in self.wego.value.get("fego")]
-        # print(self.name+" is affective against "+str(self.fslot_effective))
 
     def stat_string(self):
         string = str(round(self.success_rate * 100))+"% "+str(self.duration)+"mn"
@@ -64,17 +84,18 @@ class Weapon(Entity):
         return string
 
     def attack(self, target, msglog):
+        dmg = 0
         if random.random() < self.success_rate:
             # succesfull attack
             effective = target.fslot in self.fslot_effective
             if effective:
                 msglog.add_log("Your "+self.name+" is super effective on the "+target.name+"!")
-                target.hp -= 2*self.level
+                dmg = 2*self.level
             else:
-                target.hp -= self.level
-            target.update_symbol()
+                dmg = self.level
         else:
             msglog.add_log("You miss the "+target.name)
+        return dmg
 
 class Feature(Entity):
     """
@@ -85,6 +106,7 @@ class Feature(Entity):
         self.fslot = fslot
         self.fego = fego
         self.is_in_inventory = False
+        self.equiped = False
         self.level = level
         self.stability = stability
         self.max_stability = max_stability
@@ -101,6 +123,9 @@ class Feature(Entity):
         if self.stability > self.max_stability:
             self.stability = self.max_stability
         return True
+
+    def is_stable(self):
+        return (self.stability / self.max_stability) >= const.stability_threshold
 
 class Player(Entity):
     """
@@ -121,34 +146,83 @@ class Player(Entity):
         for fslot in const.FeatureSlot:
             self.resistances[fslot] = 0
 
+    def is_inventory_full(self):
+        return len([i for i in self.inventory if self.inventory.get(i)]) == const.inventory_max_size
+
+    def is_inventory_empty(self):
+        return len([i for i in self.inventory if self.inventory.get(i)]) == 0
+
+    def remove_from_inventory(self, item, drop_key):
+        assert item.is_in_inventory
+        assert self.inventory.get(drop_key)
+        self.inventory[drop_key].is_in_inventory = False
+        self.inventory[drop_key] = None
+
     def add_to_inventory(self, item):
-        if item.is_in_inventory:
-            print("Already in inventory!")
-            return
+        assert not item.is_in_inventory
+        assert not self.is_inventory_full()
         for i in self.inventory:
             if not self.inventory.get(i):
                 self.inventory[i] = item
                 item.is_in_inventory = True
-                return
-        print("Inventory already full!")
+                return i
+        assert False
+        return None
 
-
-    def fequip(self, feature):
-        if not self.fequiped.get(feature.fslot):
-            self.fequiped[feature.fslot] = feature
-            for weapon in self.wequiped:
-                weapon.update_effective(self.fequiped)
+    def fequip(self, feature, key):
+        assert not feature.equiped
+        assert feature.is_in_inventory
+        previous_feature = self.fequiped.get(feature.fslot)
+        feature.equiped = True
+        feature.is_in_inventory = False
+        self.fequiped[feature.fslot] = feature
+        for weapon in self.wequiped:
+            w = self.wequiped.get(weapon)
+            if w:
+                w.update_effective(self.fequiped)
+        if previous_feature:
+            previous_feature.is_in_inventory = True
+            previous_feature.equiped = False
+            self.inventory[key] = previous_feature
         else:
-            print("Slot already used by "+str(self.fequiped.get(feature.fslot)))
+            self.inventory[key] = None
+        self.update_resistance()
 
-    def wequip(self, weapon):
-        if not self.wequiped.get(weapon.wslot):
-            weapon.update_effective(self.fequiped)
-            self.wequiped[weapon.wslot] = weapon
-            if not self.active_weapon:
-                self.active_weapon = weapon
+    def wequip(self, weapon, key):
+        assert not weapon.equiped
+        assert weapon.is_in_inventory
+        previous_weapon = self.wequiped.get(weapon.wslot)
+        weapon.equiped = True
+        weapon.is_in_inventory = False
+        self.wequiped[weapon.wslot] = weapon
+        weapon.update_effective(self.fequiped)
+
+        if previous_weapon:
+            if self.active_weapon == previous_weapon:
+                self.active_weapon = None
+            previous_weapon.is_in_inventory = True
+            previous_weapon.equiped = False
+            self.inventory[key] = previous_feature
         else:
-            print("Slot already used by "+str(self.wequiped.get(weapon.fslot)))
+            self.inventory[key] = None
+
+        if not self.active_weapon:
+            self.active_weapon = weapon
+
+    def update_resistance(self):
+        for fslot in const.FeatureSlot:
+            r = 0
+            feature = self.fequiped.get(fslot)
+            if feature:
+                fego = feature.fego
+                for fslot_equiped in const.FeatureSlot:
+                    other = self.fequiped.get(fslot_equiped)
+                    if other and other.fego == fego:
+                        if other.is_stable():
+                            r += other.level
+                        else:
+                            r += int(other.level/2)
+            self.resistances[fslot] = r
 
 class Monster(Entity):
     """

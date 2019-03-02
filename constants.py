@@ -77,3 +77,8 @@ class RenderOrder(enum.Enum):
     TILE = 1
     ITEM = 2
     ACTOR = 3
+
+class MenuState(enum.Enum):
+    STANDARD = 1
+    DROP = 2
+    EQUIP = 3

@@ -85,7 +85,7 @@ class GameMap:
     def recompute_fov(self, x, y, light_walls=True, radius=0):
         self.tcod_map.compute_fov(x, y, algorithm=2, radius=radius, light_walls=light_walls)
 
-    def is_visible(self, x,y):
+    def is_visible(self, x, y):
         return self.tcod_map.fov[y,x]
 
     def spawn(self, entities, feature):
@@ -283,3 +283,17 @@ class GameMap:
 
     def is_blocked(self, x, y):
         return not self.tcod_map.walkable[y,x]
+
+    def drop_item_on_floor(self, player, entities, item, drop_key):
+        if not self.tiles[player.x][player.y].item:
+            player.remove_from_inventory(item, drop_key)
+            return self.tiles[player.x][player.y].put_item(item, entities)
+
+    def get_item_on_floor(self, player, entities):
+        if self.tiles[player.x][player.y].item:
+            item = self.tiles[player.x][player.y].take_item(entities)
+            player.add_to_inventory(item)
+            return item
+
+    def is_there_item_on_floor(self, player):
+        return self.tiles[player.x][player.y].item != None

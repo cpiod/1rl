@@ -50,7 +50,7 @@ def render_feature(inv_panel, feature, default_fore, y):
     tcod.console_print_ex(inv_panel, 3, y, tcod.BKGND_NONE, tcod.LEFT, feature.fslot.value.get("name")+" v"+str(feature.level))
 
     tcod.console_set_default_foreground(inv_panel, const.base3)
-    stable = (feature.stability / feature.max_stability) >= const.stability_threshold
+    stable = feature.is_stable()
     if stable:
         tcod.console_print_ex(inv_panel, start_stab, y, tcod.BKGND_NONE, tcod.LEFT, "Stable")
     else:
@@ -111,14 +111,13 @@ def render_inv(root_console, inv_panel, player, map_width, sch_height):
         tcod.console_set_char_background(inv_panel, 1, y, fslot.value.get("color"), tcod.BKGND_SET)
         if feature:
             render_feature(inv_panel, feature, default_fore, y)
-            y += 1
+            y += 2
         else:
             tcod.console_set_default_foreground(inv_panel, const.base02)
             tcod.console_print_ex(inv_panel, 3, y, tcod.BKGND_NONE, tcod.LEFT, "(none)")
             y += 1
             tcod.console_print_ex(inv_panel, 3, y, tcod.BKGND_NONE, tcod.LEFT, fslot.value.get("name"))
-
-    y += 1
+            y += 1
 
     y += 1
     tcod.console_set_default_foreground(inv_panel, default_fore)
@@ -156,7 +155,7 @@ def render_inv(root_console, inv_panel, player, map_width, sch_height):
     y += 1
 
     tcod.console_set_default_foreground(inv_panel, default_fore)
-    inv_panel.print_frame(0, y, w, 5*3+1, string="Inventory")
+    inv_panel.print_frame(0, y, w, 5 * 3 + 1, string="Inventory")
 
     for k in player.inventory:
         y += 1

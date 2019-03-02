@@ -11,7 +11,7 @@ import scheduling as sch
 
 def main():
     screen_width = 100
-    screen_height = 44
+    screen_height = 48
 
     sch_height = 3
     sch_width = 27
@@ -67,28 +67,26 @@ def main():
     msglog = log.Log(log_width - 2, log_height - 3)
 
     # Test
-    msglog.add_log("Test 1")
-    msglog.add_log("Test 2")
-    msglog.set_rendered()
-    msglog.add_log("Test 3")
-    msglog.add_log("Test 4")
-    feature_test1 = entity.Feature(const.FeatureSlot.p, const.FeatureEgo.c3, 1, 2, 10)
+    feature_test1 = entity.Feature(const.FeatureSlot.p, const.FeatureEgo.c3, 3, 2, 10)
     feature_test2 = entity.Feature(const.FeatureSlot.l, const.FeatureEgo.p3, 2, 6, 10)
-    player.fequip(feature_test1)
-    player.fequip(feature_test1)
-    player.fequip(feature_test2)
-    player.add_to_inventory(feature_test1)
+    feature_test3 = entity.Feature(const.FeatureSlot.i, const.FeatureEgo.m2, 2, 6, 10)
+    feature_test4 = entity.Feature(const.FeatureSlot.p, const.FeatureEgo.m2, 2, 6, 10)
+    key = player.add_to_inventory(feature_test1)
+    player.fequip(feature_test1, key)
     player.add_to_inventory(feature_test2)
+    player.add_to_inventory(feature_test4)
 
     weapon_test1 = entity.Weapon(const.WeaponSlot.slow, 0.7, 5, const.WeaponEgo.c, 1)
     weapon_test2 = entity.Weapon(const.WeaponSlot.hack, 1, 3, const.WeaponEgo.m, 1)
-    player.wequip(weapon_test1)
-    player.wequip(weapon_test2)
-    player.add_to_inventory(weapon_test1)
+    key = player.add_to_inventory(weapon_test1)
+    player.wequip(weapon_test1, key)
     player.add_to_inventory(weapon_test2)
+
+    menu_state = const.MenuState.STANDARD
 
     for i in range(20):
         game_map.spawn(entities, feature_test1)
+    game_map.tiles[player.x][player.y].put_item(feature_test3, entities)
 
     # initial render
     render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
@@ -119,7 +117,7 @@ def main():
         if new_turn:
             current_turn = turns.get_turn()
             new_turn = False
-            print("Turn "+str(current_turn.date)+": "+current_turn.ttype.name)
+            # print("Turn "+str(current_turn.date)+": "+current_turn.ttype.name)
             if current_turn.ttype == const.TurnType.PLAYER and time_malus > 0:
                 msglog.add_log("Bugs make you lose time. You next action cost "+str(time_malus)+"m.")
 
@@ -133,25 +131,24 @@ def main():
                 if event.type == "QUIT":
                     raise SystemExit()
                 elif event.type == "KEYDOWN":
-                    # ignore repeat
-#                if event.repeat:
-#                    continue
-#                else:
                     for m in tcod.event_constants._REVERSE_MOD_TABLE:
                         if m & event.mod != 0:
                             modifiers.append(tcod.event_constants._REVERSE_MOD_TABLE[m])
                     key = tcod.event_constants._REVERSE_SYM_TABLE.get(event.sym)
-                    print(key)
                 else:
-                    # print("Ignored:",event.type)
                     continue
-                action = keys.handle_player_turn_keys(key, modifiers)
-                print(action)
+                if menu_state == const.MenuState.STANDARD:
+                    action = keys.handle_player_turn_keys(key, modifiers)
+                elif menu_state == const.MenuState.DROP:
+                    action = keys.handle_drop_keys(key, modifiers)
+                elif menu_state == const.MenuState.EQUIP:
+                    action = keys.handle_equip_keys(key, modifiers)
+                else:
+                    assert False
 
                 exit_game = action.get("exit")
                 if exit_game:
                     return True
-
 
                 use_weapon = action.get('use_weapon')
                 if use_weapon:
@@ -167,6 +164,71 @@ def main():
                         turns.add_turn(time_malus + const.time_equip_weapon, const.TurnType.PLAYER, player)
                         time_malus = 0
                         new_turn = True
+
+                grab = action.get('pickup')
+                if grab:
+                    if player.is_inventory_full():
+                        msglog.add_log("Your inventory is full.")
+                    else:
+                        if game_map.is_there_item_on_floor(player):
+                            item = game_map.get_item_on_floor(player, entities)
+                            msglog.add_log("You pick up a "+item.name+".")
+                            render_inv = True
+                        else:
+                            msglog.add_log("There is nothing on the floor to pick up.")
+
+                drop = action.get('drop')
+                if drop:
+                    if game_map.is_there_item_on_floor(player):
+                        msglog.add_log("There is already something there.")
+                    else:
+                        msglog.add_log("What do you want to drop? Press a, b, c, d or e.")
+                        menu_state = const.MenuState.DROP
+
+                equip = action.get('equip')
+                if equip:
+                    if player.is_inventory_empty():
+                        msglog.add_log("You inventory is empty.")
+                    else:
+                        msglog.add_log("What do you want to equip? Press a, b, c, d or e.")
+                        menu_state = const.MenuState.EQUIP
+
+                drop_key = action.get('drop_key')
+                if drop_key:
+                    item = player.inventory.get(drop_key)
+                    if item:
+                        msglog.add_log("You drop a "+item.name)
+                        game_map.drop_item_on_floor(player, entities, item, drop_key)
+                        menu_state = const.MenuState.STANDARD
+                        render_inv = True
+                    else:
+                        msglog.add_log("You don't have this item!")
+                        menu_state = const.MenuState.STANDARD
+
+                equip_key = action.get('equip_key')
+                if equip_key:
+                    item = player.inventory.get(equip_key)
+                    if item:
+                        msglog.add_log("You equip a "+item.name)
+                        if isinstance(item, entity.Feature):
+                            player.fequip(item, equip_key)
+                        elif isinstance(item, entity.Weapon):
+                            player.wequip(item, equip_key)
+                        else:
+                            assert False
+                        menu_state = const.MenuState.STANDARD
+                        render_inv = True
+                    else:
+                        msglog.add_log("You don't have this item!")
+                        menu_state = const.MenuState.STANDARD
+
+
+
+                cancel = action.get('cancel')
+                if cancel:
+                    msglog.add_log("Nevermind.")
+                    menu_state = const.MenuState.STANDARD
+
 
                 move = action.get('move')
                 if move:
@@ -186,18 +248,22 @@ def main():
                                 if not weapon:
                                     msglog.add_log("You have no weapon to attack with! Equip with 1, 2 or 3.")
                                 else:
-                                    weapon.attack(target, msglog)
+                                    dmg = weapon.attack(target, msglog)
+                                    target.hp -= dmg
+                                    target.update_symbol()
                                     if weapon.wslot.value.get("instable"):
                                         msglog.add_log("You hack the "+target.name+": your "+target.fcreator.name+" is less stable!")
                                         target.fcreator.destabilize(target.level)
+                                        player.update_resistance()
                                     if target.hp <= 0:
                                         entities.remove(target)
                                         more_stable = target.fcreator.stabilize(target.level)
+                                        player.update_resistance()
                                         if more_stable:
                                             msglog.add_log(target.name.capitalize()+" is defeated: your "+target.fcreator.name+" is more stable.")
                                         else:
                                             msglog.add_log(target.name.capitalize()+" is defeated but your "+target.fcreator.name+" is already stable.")
-                                        render_inv = True
+                                    render_inv = True
                                     turns.add_turn(time_malus + player.active_weapon.duration, const.TurnType.PLAYER, player)
                                     time_malus = 0
                                     new_turn = True
