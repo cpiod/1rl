@@ -6,7 +6,7 @@ import entity
 import math
 import textwrap
 
-def render_all(root_console, con, entities, player, game_map, fov_recompute, screen_width, screen_height):
+def render_map(root_console, con, entities, player, game_map, fov_recompute, screen_width, screen_height):
     if fov_recompute:
         game_map.recompute_fov(player.x, player.y)
     # Draw all the tiles in the game map
@@ -21,6 +21,20 @@ def render_all(root_console, con, entities, player, game_map, fov_recompute, scr
         draw_entity(con, entity, game_map)
 
     con.blit(dest=root_console)
+
+def render_log(root_console, log_panel, msglog, map_height):
+    tcod.console_clear(log_panel)
+    log_panel.print_frame(0,1,log_panel.width,log_panel.height-1, string="Log")
+    y = log_panel.height - 3 - len(msglog.messages)
+    tcod.console_set_default_foreground(log_panel, const.base0)
+    for msg in msglog.messages:
+        print(y, msglog.last)
+        if y >= msglog.last:
+            tcod.console_set_default_foreground(log_panel, const.base2)
+        log_panel.print_(1, y + 2, msg)
+        y += 1
+    msglog.set_rendered()
+    log_panel.blit(dest=root_console, dest_y=map_height)
 
 def render_description(root_console, mouse, panel, entities, game_map, screen_width, panel_height, panel_y):
     tcod.console_set_default_foreground(panel, tcod.light_gray)
