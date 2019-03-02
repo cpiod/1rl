@@ -43,22 +43,31 @@ class Weapon(Entity):
         self.wslot = wslot
 
 class Feature(Entity):
-
+    """
+    A feature
+    """
     def __init__(self, fslot, fego, level, stability):
         super().__init__(None, None, fego.value.get("char"), fslot.value.get("color"), fego.value.get("name")+" "+fslot.value.get("name"), False, True, const.RenderOrder.ITEM)
-        self.flot = fslot
+        self.fslot = fslot
         self.fego = fego
         self.level = level
         self.stability = stability
 
 class Player(Entity):
+    """
+    The player
+    """
     def __init__(self, x, y):
         super().__init__(x, y, '@', const.base3, "You", True, True, const.RenderOrder.ACTOR, is_seen=True)
 
 class Monster(Entity):
-    def __init__(self, x, y, fslot, hp, speed, fcreator):
-        super().__init__(x, y, str(hp), fslot.value.get("color"), fslot+" bug", True, True, const.RenderOrder.ACTOR)
-        self.fslot = fslot
+    """
+    A bug
+    """
+    def __init__(self, x, y, hp, speed, fcreator):
+        super().__init__(x, y, str(hp), fcreator.fslot.value.get("color"), fcreator.fslot.value.get("name")+" bug", True, True, const.RenderOrder.ACTOR)
+        print("New bug: "+self.name)
+        self.fslot = fcreator.fslot
         self.hp = hp
         self.speed = speed
         self.fcreator = fcreator

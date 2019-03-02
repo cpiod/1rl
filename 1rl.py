@@ -27,6 +27,10 @@ def main():
     game_map = gmap.GameMap(map_width, map_height, con)
     game_map.make_map_bsp(player)
 
+    feature_test = entity.Feature(const.FeatureSlot.p, const.FeatureEgo.c3, 1, 2)
+    for i in range(20):
+        game_map.spawn(entities, feature_test)
+
     # initial render
     fov_recompute = True
     render.render_all(root_console, con, entities, player, game_map, fov_recompute, screen_width, screen_height)

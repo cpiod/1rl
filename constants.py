@@ -36,7 +36,7 @@ class WeaponSlot(enum.Enum):
 class FeatureEgo(enum.Enum):
     c1 = {"name": "evolutive", "char": "C"}
     c2 = {"name": "diplomatic", "char": "C"}
-    c3 = {"eame": "artistic", "char": "C"}
+    c3 = {"name": "artistic", "char": "C"}
 
     b1 = {"name": "minigame-based", "char": "B"}
     b2 = {"name": "reputation-based", "char": "B"}

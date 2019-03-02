@@ -80,6 +80,7 @@ class GameMap:
 
         # Initialization
         (player.x, player.y) = self.random_cell()
+        self.recompute_fov(player.x, player.y)
 
     def recompute_fov(self, x, y, light_walls=True, radius=0):
         self.tcod_map.compute_fov(x, y, algorithm=2, radius=radius, light_walls=light_walls)
@@ -87,18 +88,12 @@ class GameMap:
     def is_visible(self, x,y):
         return self.tcod_map.fov[y,x]
 
-    def spawn(self, entities):
+    def spawn(self, entities, feature):
         # We try at most 50 times to spawn it
         for i in range(50):
             (x,y) = self.random_cell()
             if not self.is_visible(x,y) and not any([entity for entity in entities if entity.x == x and entity.y == y]):
-                done = True
-                fighter_component = Fighter(hp=10, defense=0, power=3)
-                ai_component = BasicMonster()
-
-                monster = Entity(x, y, chr(ord('1')+randint(0,8)), monsters_color[randint(0,4)], 'Orc', blocks=True,
-                                    render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
-
+                monster = entity.Monster(x, y, randint(2,5), 1, feature) # TODO
                 entities.append(monster)
                 break
         else:
