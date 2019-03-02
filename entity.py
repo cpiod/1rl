@@ -22,6 +22,12 @@ class Entity:
     def __str__(self):
         return self.name
 
+    def move(self, dx, dy):
+        self.x += dx
+        self.y += dy
+
+
+
 class Tile(Entity):
     """
     A floor, a door or a wall
@@ -127,3 +133,10 @@ class Monster(Entity):
         self.hp = hp
         self.speed = speed
         self.fcreator = fcreator
+
+
+def get_blocking_entities_at_location(entities, destination_x, destination_y):
+    for entity in entities:
+        if entity.collision and entity.x == destination_x and entity.y == destination_y:
+            return entity
+    return None

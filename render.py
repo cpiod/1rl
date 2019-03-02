@@ -13,9 +13,9 @@ def render_map(root_console, con, entities, player, game_map, fov_recompute, scr
     if fov_recompute:
         game_map.recompute_fov(player.x, player.y)
     # Draw all the tiles in the game map
-        for y in range(game_map.height):
-            for x in range(game_map.width):
-                clear_cell(con, x, y, game_map)
+    for y in range(game_map.height):
+        for x in range(game_map.width):
+            clear_cell(con, x, y, game_map)
 
     entities_in_render_order = sorted(entities, key=lambda x: x.render_order.value)
 
@@ -25,21 +25,22 @@ def render_map(root_console, con, entities, player, game_map, fov_recompute, scr
 
     con.blit(dest=root_console)
 
-def render_log(root_console, log_panel, msglog, map_height):
+def render_log(root_console, log_panel, msglog, map_height, force=False):
     """
     Render the bottom panel (log)
     """
-    tcod.console_clear(log_panel)
-    tcod.console_set_default_foreground(log_panel, const.base0)
-    log_panel.print_frame(0, 1, log_panel.width, log_panel.height-1, string="Log")
-    y = log_panel.height - 3 - len(msglog.messages)
-    for msg in msglog.messages:
-        if y >= msglog.last:
-            tcod.console_set_default_foreground(log_panel, const.base2)
-        log_panel.print(1, y + 2, msg)
-        y += 1
-    msglog.set_rendered()
-    log_panel.blit(dest=root_console, dest_y=map_height)
+    if force or msglog.is_there_new():
+        tcod.console_clear(log_panel)
+        tcod.console_set_default_foreground(log_panel, const.base0)
+        log_panel.print_frame(0, 1, log_panel.width, log_panel.height-1, string="Log")
+        y = log_panel.height - 3 - len(msglog.messages)
+        for msg in msglog.messages:
+            if y >= msglog.last:
+                tcod.console_set_default_foreground(log_panel, const.base2)
+            log_panel.print_(1, y + 2, msg)
+            y += 1
+        msglog.set_rendered()
+        log_panel.blit(dest=root_console, dest_y=map_height)
 
 def render_feature(inv_panel, feature, default_fore, y):
     max_stab_width = 10
@@ -89,8 +90,8 @@ def render_sch(root_console, sch_panel, turns, map_width):
     w = sch_panel.width
     tcod.console_set_default_foreground(sch_panel, const.base0)
     sch_panel.print_frame(0, 0, w, 3, string="Remaining time")
-    tcod.console_set_default_foreground(sch_panel, const.red)
-    sch_panel.print(int(w / 2), 1, str(remaining_d)+"d "+str(remaining_h)+"h "+str(remaining_m)+"m", alignment=tcod.CENTER)
+    # tcod.console_set_default_foreground(sch_panel, const.red)
+    sch_panel.print_(int(w / 2), 1, str(remaining_d)+"d "+str(remaining_h)+"h "+str(remaining_m)+"m", alignment=tcod.CENTER)
     sch_panel.blit(dest=root_console, dest_x=map_width)
 
 def render_inv(root_console, inv_panel, player, map_width, sch_height):
@@ -176,14 +177,6 @@ def render_inv(root_console, inv_panel, player, map_width, sch_height):
         y += 2
 
     inv_panel.blit(dest=root_console, dest_x=map_width, dest_y=sch_height)
-
-
-
-def render_description(root_console, mouse, panel, entities, game_map, screen_width, panel_height, panel_y):
-    tcod.console_set_default_foreground(panel, tcod.light_gray)
-    tcod.console_print_ex(panel, 1, 0, tcod.BKGND_NONE, tcod.LEFT,
-                             get_names_under_mouse(mouse, entities, game_map,screen_width))
-    panel.blit(dest=root_console, width=screen_width, height=panel_height, dest_y=panel_y)
 
 def clear_all_entities(con, entities,game_map):
     for entity in entities:

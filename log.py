@@ -10,6 +10,9 @@ class Log():
         self.messages = []
         self.last = 0
 
+    def is_there_new(self):
+        return self.last != self.height
+
     def set_rendered(self):
         self.last = self.height
 

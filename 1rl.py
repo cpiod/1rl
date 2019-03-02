@@ -1,4 +1,6 @@
 import tcod
+import tcod.event
+import keys
 import entity
 import constants as const
 import game_map as gmap
@@ -55,10 +57,7 @@ def main():
 
     # scheduling
     turns = sch.Scheduling()
-    turns.add_turn(sch.Turn(0, const.TurnType.PLAYER, player))
-
-    t = turns.get_turn()
-    print(t.ttype)
+    turns.add_turn(0, const.TurnType.PLAYER, player)
 
     # map generation
     game_map = gmap.GameMap(map_width, map_height, con)
@@ -92,16 +91,103 @@ def main():
         game_map.spawn(entities, feature_test1)
 
     # initial render
-    fov_recompute = True
-    render.render_map(root_console, con, entities, player, game_map, fov_recompute, screen_width, screen_height)
+    render.render_map(root_console, con, entities, player, game_map, False, screen_width, screen_height)
     render.render_log(root_console, log_panel, msglog, map_height)
     render.render_sch(root_console, sch_panel, turns, map_width)
     render.render_inv(root_console, inv_panel, player, map_width, sch_height)
     tcod.console_flush()
+    fov_recompute = False
+    need_render = False
+    render_inv = False
+    time_malus = 0
+    new_turn = True
+    while not tcod.console_is_window_closed():
+        render.render_log(root_console, log_panel, msglog, map_height, new_turn)
+        if new_turn:
+            current_turn = turns.get_turn()
+            new_turn = False
+            print("Turn "+str(current_turn.date)+": "+current_turn.ttype.name)
+        if fov_recompute:
+            game_map.recompute_fov(player.x, player.y)
 
-    time.sleep(2)
-    tcod.console_flush()
-    time.sleep(2)
+        render.render_map(root_console, con, entities, player, game_map, fov_recompute, screen_width, screen_height)
+        render.render_sch(root_console, sch_panel, turns, map_width)
+        if render_inv:
+            render.render_inv(root_console, inv_panel, player, map_width, sch_height)
+
+        fov_recompute = False
+        need_render = False
+
+        tcod.console_flush()
+        if current_turn.ttype == const.TurnType.PLAYER:
+            for event in tcod.event.wait():
+                key = None
+                modifiers = []
+                if event.type == "QUIT":
+                    raise SystemExit()
+                elif event.type == "KEYDOWN":
+                    # ignore repeat
+#                if event.repeat:
+#                    continue
+#                else:
+                    for m in tcod.event_constants._REVERSE_MOD_TABLE:
+                        if m & event.mod != 0:
+                            modifiers.append(tcod.event_constants._REVERSE_MOD_TABLE[m])
+                    key = tcod.event_constants._REVERSE_SYM_TABLE.get(event.sym)
+                    print(key)
+                else:
+                    # print("Ignored:",event.type)
+                    continue
+                need_render = True
+                action = keys.handle_player_turn_keys(key, modifiers)
+                print(action)
+
+                exit_game = action.get("exit")
+                if exit_game:
+                    return True
+
+
+                use_weapon = action.get('use_weapon')
+                if use_weapon:
+                    previous_active = player.active_weapon
+                    new_active = player.wequiped.get(use_weapon)
+                    if not new_active:
+                        print("You don't have this weapon")
+                    elif previous_active == new_active:
+                        print("This weapon is already active")
+                    else:
+                        player.active_weapon = new_active
+                        render_inv = True
+                        turns.add_turn(time_malus + const.time_equip_weapon, const.TurnType.PLAYER, player)
+                        new_turn = True
+
+                move = action.get('move')
+                if move:
+                    dx, dy = move
+
+                    if (dx, dy) == (0, 0):
+                        msglog.add_log("There is no time to lose!")
+                    else:
+                        destination_x = player.x + dx
+                        destination_y = player.y + dy
+
+                        if not game_map.is_blocked(destination_x, destination_y):
+                            target = entity.get_blocking_entities_at_location(entities, destination_x, destination_y)
+
+                            if target and target != player:
+                                if not player.active_weapon:
+                                    msglog.add_log("You have no weapon to attack with!")
+                                else:
+                                    msglog.add_log("You attack the "+target.name)
+                                    # TODO combat
+                                    turns.add_turn(time_malus + player.active_weapon.duration, const.TurnType.PLAYER, player)
+                                    new_turn = True
+                            else:
+                                player.move(dx, dy)
+                                turns.add_turn(time_malus + const.time_move, const.TurnType.PLAYER, player)
+
+                                fov_recompute = True
+                                new_turn = True
 
 if __name__ == '__main__':
     main()

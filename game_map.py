@@ -192,8 +192,6 @@ class GameMap:
             else:
                 y1 += 1
                 y2 -= 1
-            # if not force and not self.check_v_tunnel(y1,y2,x1):
-                # return False
             self.create_v_tunnel(y1, y2, x1)
             if randint(0,door_chance) == 0:
                 self.place_door(x1, y1)
@@ -206,8 +204,6 @@ class GameMap:
             else:
                 x1 += 1
                 x2 -= 1
-            # if not force and not self.check_h_tunnel(x1,x2,y1):
-                # return False
             self.create_h_tunnel(x1, x2, y1)
             if randint(0,door_chance) == 0:
                 self.place_door(x1, y1)
@@ -226,9 +222,6 @@ class GameMap:
                 else:
                     y2 -= 1
                     y3 = y1 + 1
-
-                # if not force and (not self.check_h_tunnel(x1, x2, y1) or not self.check_v_tunnel(y3, y2, x2)):
-                    # return False
 
                 self.create_h_tunnel(x1, x2, y1)
                 self.create_v_tunnel(y3, y2, x2)
@@ -249,26 +242,12 @@ class GameMap:
                 else:
                     y1 += 1
 
-                # if not force and (not self.check_v_tunnel(y1, y2, x1) or not self.check_h_tunnel(x3, x2, y2)):
-                    # return False
                 self.create_v_tunnel(y1, y2, x1)
                 self.create_h_tunnel(x3, x2, y2)
                 if randint(0,door_chance) == 0 and abs(y1-y2) > 1:
                     self.place_door(x1, y1)
                 elif randint(0,door_chance) == 0 and abs(x1-x2) > 1:
                     self.place_door(x2, y2)
-
-    def check_h_tunnel(self, x1, x2, y):
-        for x in range(min(x1, x2), max(x1, x2) + 1):
-            if not self.is_blocked(x,y):
-                return False
-        return True
-
-    def check_v_tunnel(self, y1, y2, x):
-        for y in range(min(y1, y2), max(y1, y2) + 1):
-            if not self.is_blocked(x,y):
-                return False
-        return True
 
     def create_h_tunnel(self, x1, x2, y):
         for x in range(min(x1, x2), max(x1, x2) + 1):

@@ -24,6 +24,9 @@ tcod.color_scale_HSV(door_color, 0.7, 1)
 stability_threshold = 0.8
 inventory_max_size = 5
 
+time_equip_weapon = 5
+time_move = 1
+
 class FeatureSlot(enum.Enum):
     m = {"name": "monsters", "color": magenta}
     i = {"name": "id", "color": violet}
