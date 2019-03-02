@@ -21,6 +21,9 @@ base3 = tcod.Color(253,246,227)
 door_color = tcod.Color(203,75,22)
 tcod.color_scale_HSV(door_color, 0.7, 1)
 
+stability_threshold = 0.8
+inventory_max_size = 5
+
 class FeatureSlot(enum.Enum):
     m = {"name": "monsters", "color": magenta}
     i = {"name": "id", "color": violet}
@@ -29,9 +32,9 @@ class FeatureSlot(enum.Enum):
     l = {"name": "loot", "color": green}
 
 class WeaponSlot(enum.Enum):
-    fast = {"name": "printf()", "success_rate_base": 0.3, "duration_base": 3, "instable": False}
-    slow = {"name": "profiler", "success_rate_base": 0.7, "duration_base": 7, "instable": False}
-    hack = {"name": "hack", "success_rate_base": 1, "duration_base": 4, "instable": True}
+    fast = {"name": "printf()", "success_rate_base": 0.3, "duration_base": 3, "instable": False, "key": "1"}
+    slow = {"name": "profiler", "success_rate_base": 0.7, "duration_base": 7, "instable": False, "key": "2"}
+    hack = {"name": "hack", "success_rate_base": 1, "duration_base": 4, "instable": True, "key": "3"}
 
 class FeatureEgo(enum.Enum):
     c1 = {"name": "evolutive", "char": "C"}
