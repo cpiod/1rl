@@ -26,6 +26,7 @@ inventory_max_size = 5
 
 time_equip_weapon = 5
 time_move = 1
+malus_max = 30
 
 class FeatureSlot(enum.Enum):
     m = {"name": "monsters", "color": magenta}

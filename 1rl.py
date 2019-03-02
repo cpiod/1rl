@@ -120,6 +120,8 @@ def main():
             current_turn = turns.get_turn()
             new_turn = False
             print("Turn "+str(current_turn.date)+": "+current_turn.ttype.name)
+            if current_turn.ttype == const.TurnType.PLAYER and time_malus > 0:
+                msglog.add_log("Bugs make you lose time. You next action cost "+str(time_malus)+"m.")
 
         fov_recompute = False
 
@@ -156,13 +158,14 @@ def main():
                     previous_active = player.active_weapon
                     new_active = player.wequiped.get(use_weapon)
                     if not new_active:
-                        print("You don't have this weapon")
+                        msglog.add_log("You don't have this weapon")
                     elif previous_active == new_active:
-                        print("This weapon is already active")
+                        msglog.add_log("This weapon is already wielded")
                     else:
                         player.active_weapon = new_active
                         render_inv = True
                         turns.add_turn(time_malus + const.time_equip_weapon, const.TurnType.PLAYER, player)
+                        time_malus = 0
                         new_turn = True
 
                 move = action.get('move')
@@ -185,10 +188,12 @@ def main():
                                     msglog.add_log("You attack the "+target.name)
                                     # TODO combat
                                     turns.add_turn(time_malus + player.active_weapon.duration, const.TurnType.PLAYER, player)
+                                    time_malus = 0
                                     new_turn = True
                             else:
                                 player.move(dx, dy)
                                 turns.add_turn(time_malus + const.time_move, const.TurnType.PLAYER, player)
+                                time_malus = 0
                                 fov_recompute = True
                                 new_turn = True
                                 force_log = True
@@ -197,6 +202,11 @@ def main():
             e = current_turn.entity
             if e.distance_to(player) >= 2:
                 e.move_astar(player, entities, game_map)
+            else:
+                delta_malus = max(0, e.atk - player.resistances[e.fslot])
+                time_malus += delta_malus
+                if time_malus > const.malus_max:
+                    time_malus = const.malus_max
             turns.add_turn(e.speed, const.TurnType.ENNEMY, e)
             new_turn = True
 

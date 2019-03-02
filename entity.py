@@ -127,9 +127,10 @@ class Monster(Entity):
     """
     A bug
     """
-    def __init__(self, x, y, hp, speed, fcreator):
+    def __init__(self, x, y, hp, speed, fcreator, atk):
         super().__init__(x, y, str(hp), fcreator.fslot.value.get("color"), fcreator.fslot.value.get("name")+" bug", True, True, const.RenderOrder.ACTOR)
         self.fslot = fcreator.fslot
+        self.atk = atk
         self.hp = hp
         self.speed = speed
         self.fcreator = fcreator
