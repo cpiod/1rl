@@ -81,7 +81,7 @@ def main():
     player.add_to_inventory(feature_test2)
 
     weapon_test1 = entity.Weapon(const.WeaponSlot.slow, 0.7, 5, const.WeaponEgo.c, 2)
-    weapon_test2 = entity.Weapon(const.WeaponSlot.hack, 0.7, 5, const.WeaponEgo.m, 2)
+    weapon_test2 = entity.Weapon(const.WeaponSlot.hack, 0.7, 8, const.WeaponEgo.m, 2)
     player.wequip(weapon_test1)
     player.wequip(weapon_test2)
     player.add_to_inventory(weapon_test1)
@@ -91,32 +91,37 @@ def main():
         game_map.spawn(entities, feature_test1)
 
     # initial render
-    render.render_map(root_console, con, entities, player, game_map, False, screen_width, screen_height)
+    render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
     render.render_log(root_console, log_panel, msglog, map_height)
     render.render_sch(root_console, sch_panel, turns, map_width)
     render.render_inv(root_console, inv_panel, player, map_width, sch_height)
     tcod.console_flush()
     fov_recompute = False
-    need_render = False
     render_inv = False
+    force_log = False
     time_malus = 0
     new_turn = True
     while not tcod.console_is_window_closed():
-        render.render_log(root_console, log_panel, msglog, map_height, new_turn)
-        if new_turn:
-            current_turn = turns.get_turn()
-            new_turn = False
-            print("Turn "+str(current_turn.date)+": "+current_turn.ttype.name)
         if fov_recompute:
             game_map.recompute_fov(player.x, player.y)
-
-        render.render_map(root_console, con, entities, player, game_map, fov_recompute, screen_width, screen_height)
+            for e in entities:
+                if not e.is_seen and game_map.is_visible(e.x, e.y):
+                    e.is_seen = True
+                    if isinstance(e, entity.Monster):
+                        turns.add_turn(e.speed, const.TurnType.ENNEMY, e)
+        render.render_log(root_console, log_panel, msglog, map_height, force_log)
+        force_log = False
+        render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
         render.render_sch(root_console, sch_panel, turns, map_width)
         if render_inv:
             render.render_inv(root_console, inv_panel, player, map_width, sch_height)
 
+        if new_turn:
+            current_turn = turns.get_turn()
+            new_turn = False
+            print("Turn "+str(current_turn.date)+": "+current_turn.ttype.name)
+
         fov_recompute = False
-        need_render = False
 
         tcod.console_flush()
         if current_turn.ttype == const.TurnType.PLAYER:
@@ -138,7 +143,6 @@ def main():
                 else:
                     # print("Ignored:",event.type)
                     continue
-                need_render = True
                 action = keys.handle_player_turn_keys(key, modifiers)
                 print(action)
 
@@ -185,9 +189,16 @@ def main():
                             else:
                                 player.move(dx, dy)
                                 turns.add_turn(time_malus + const.time_move, const.TurnType.PLAYER, player)
-
                                 fov_recompute = True
                                 new_turn = True
+                                force_log = True
+
+        elif current_turn.ttype == const.TurnType.ENNEMY:
+            e = current_turn.entity
+            if e.distance_to(player) >= 2:
+                e.move_astar(player, entities, game_map)
+            turns.add_turn(e.speed, const.TurnType.ENNEMY, e)
+            new_turn = True
 
 if __name__ == '__main__':
     main()

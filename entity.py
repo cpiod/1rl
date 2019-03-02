@@ -134,6 +134,73 @@ class Monster(Entity):
         self.speed = speed
         self.fcreator = fcreator
 
+    def move_towards(self, target_x, target_y, game_map, entities):
+        dx = target_x - self.x
+        dy = target_y - self.y
+        distance = abs(dx) + abs(dy)
+
+        dx = int(round(dx / distance))
+        dy = int(round(dy / distance))
+
+        if dx == 0:
+            for i in [0,-1,1]:
+                if not (game_map.is_blocked(self.x + dx + i, self.y + dy) or
+                    get_blocking_entities_at_location(entities, self.x + dx + i, self.y + dy)):
+                    self.move(dx + i, dy)
+                    break
+        elif dy == 0:
+            for i in [0,-1,1]:
+                if not (game_map.is_blocked(self.x + dx, self.y + dy + i) or
+                    get_blocking_entities_at_location(entities, self.x + dx, self.y + dy + i)):
+                    self.move(dx, dy + i)
+                    break
+        else: # both dx and dy are non-null
+            if not (game_map.is_blocked(self.x + dx, self.y + dy) or
+                    get_blocking_entities_at_location(entities, self.x + dx, self.y + dy)):
+                self.move(dx, dy)
+            elif not (game_map.is_blocked(self.x + dx, self.y) or
+                    get_blocking_entities_at_location(entities, self.x + dx, self.y)):
+                self.move(dx, 0)
+            elif not (game_map.is_blocked(self.x, self.y + dy) or
+                    get_blocking_entities_at_location(entities, self.x, self.y + dy)):
+                self.move(0, dy)
+
+    def distance_to(self, other):
+        # Manhattan distance
+        # distance = 1 iff the two points are adjacent
+        dx = other.x - self.x
+        dy = other.y - self.y
+        return max(abs(dx), abs(dy))
+
+    def move_astar(self, target, entities, game_map):
+        # Create a FOV map that has the dimensions of the map
+        pathfinding_map = game_map.get_copy_map()
+
+        for entity in entities:
+            if entity.collision and entity != self and entity != target:
+                # Set the tile as a wall so it must be navigated around
+                pathfinding_map.transparent[entity.y,entity.x] = pathfinding_map.walkable[entity.y,entity.x] = False
+
+        astar = tcod.path.AStar(pathfinding_map)
+        # Compute the path between self's coordinates and the target's coordinates
+        path = astar.get_path(self.x, self.y, target.x, target.y)
+
+        # Check if the path exists, and in this case, also the path is shorter than 25 tiles
+        # The path size matters if you want the monster to use alternative longer paths (for example through other rooms) if for example the player is in a corridor
+        # It makes sense to keep path size relatively low to keep the monsters from running around the map if there's an alternative path really far away
+        if path and len(path) < 25:
+            # Find the next coordinates in the computed full path
+            x, y = path[0]
+            if x or y:
+                # Set self's coordinates to the next path tile
+                self.x = x
+                self.y = y
+        else:
+            # Keep the old move function as a backup so that if there are no paths (for example another monster blocks a corridor)
+            # it will still try to move towards the player (closer to the corridor opening)
+            self.move_towards(target.x, target.y, game_map, entities)
+
+
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y):
     for entity in entities:

@@ -40,7 +40,7 @@ class GameMap:
     def rooms_with_arity(self, max_arity):
         return [r for r in self.room_list if len(r.neighbors) <= max_arity]
 
-    def make_map_bsp(self, player, show_map=True):
+    def make_map_bsp(self, player, show_map=False):
         self.show_map = show_map
         map_width = self.width
         map_height = self.height
@@ -93,7 +93,7 @@ class GameMap:
         for i in range(50):
             (x,y) = self.random_cell()
             if not self.is_visible(x,y) and not any([entity for entity in entities if entity.x == x and entity.y == y]):
-                monster = entity.Monster(x, y, randint(2,5), 1, feature) # TODO
+                monster = entity.Monster(x, y, randint(2,5), 3, feature) # TODO
                 entities.append(monster)
                 break
         else:

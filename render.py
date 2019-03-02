@@ -6,12 +6,10 @@ import entity
 import math
 import textwrap
 
-def render_map(root_console, con, entities, player, game_map, fov_recompute, screen_width, screen_height):
+def render_map(root_console, con, entities, player, game_map, screen_width, screen_height):
     """
     Render the map
     """
-    if fov_recompute:
-        game_map.recompute_fov(player.x, player.y)
     # Draw all the tiles in the game map
     for y in range(game_map.height):
         for x in range(game_map.width):
