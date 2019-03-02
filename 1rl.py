@@ -5,14 +5,18 @@ import game_map as gmap
 import time
 import render
 import log
+import scheduling as sch
 
 def main():
     screen_width = 100
     screen_height = 44
 
+    sch_height = 3
+    sch_width = 27
+
     # Inventory
-    inv_height = screen_height
-    inv_width = 27
+    inv_height = screen_height - sch_height
+    inv_width = sch_width
 
     # Log
     log_height = 10
@@ -39,10 +43,22 @@ def main():
     tcod.console_set_default_background(log_panel, const.base03)
     tcod.console_clear(log_panel)
 
+    # scheduling console
+    sch_panel = tcod.console.Console(sch_width, sch_height)
+    tcod.console_set_default_background(sch_panel, const.base03)
+    tcod.console_clear(sch_panel)
+
     # inventory console
     inv_panel = tcod.console.Console(inv_width, inv_height)
     tcod.console_set_default_background(inv_panel, const.base03)
     tcod.console_clear(inv_panel)
+
+    # scheduling
+    turns = sch.Scheduling()
+    turns.add_turn(sch.Turn(0, const.TurnType.PLAYER, player))
+
+    t = turns.get_turn()
+    print(t.ttype)
 
     # map generation
     game_map = gmap.GameMap(map_width, map_height, con)
@@ -79,7 +95,8 @@ def main():
     fov_recompute = True
     render.render_map(root_console, con, entities, player, game_map, fov_recompute, screen_width, screen_height)
     render.render_log(root_console, log_panel, msglog, map_height)
-    render.render_inv(root_console, inv_panel, player, map_width)
+    render.render_sch(root_console, sch_panel, turns, map_width)
+    render.render_inv(root_console, inv_panel, player, map_width, sch_height)
     tcod.console_flush()
 
     time.sleep(2)

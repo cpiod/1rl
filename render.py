@@ -80,8 +80,20 @@ def render_weapon(inv_panel, weapon, default_fore, y, active_weapon):
     string = weapon.stat_string()
     tcod.console_print_ex(inv_panel, inv_panel.width-1, y, tcod.BKGND_NONE, tcod.RIGHT, string)
 
+def render_sch(root_console, sch_panel, turns, map_width):
+    # Time
+    remaining = 7*24*60 - turns.current_date
+    remaining_d = int(remaining / (24*60))
+    remaining_h = int((remaining / 60)) % 24
+    remaining_m = remaining % 60
+    w = sch_panel.width
+    tcod.console_set_default_foreground(sch_panel, const.base0)
+    sch_panel.print_frame(0, 0, w, 3, string="Remaining time")
+    tcod.console_set_default_foreground(sch_panel, const.red)
+    sch_panel.print(int(w / 2), 1, str(remaining_d)+"d "+str(remaining_h)+"h "+str(remaining_m)+"m", alignment=tcod.CENTER)
+    sch_panel.blit(dest=root_console, dest_x=map_width)
 
-def render_inv(root_console, inv_panel, player, map_width):
+def render_inv(root_console, inv_panel, player, map_width, sch_height):
     """
     Render the right panel (time, features, weapons, inventory)
     """
@@ -90,14 +102,8 @@ def render_inv(root_console, inv_panel, player, map_width):
     tcod.console_set_default_foreground(inv_panel, default_fore)
     w = inv_panel.width
 
-    # Time
-    y = 0
-    inv_panel.print_frame(0, y, w, 3, string="Time")
-    tcod.console_set_default_foreground(inv_panel, const.red)
-    inv_panel.print(int(w / 2), y + 1, "TODO", alignment=tcod.CENTER)
-
     # Features
-    y = 3
+    y = 0
     tcod.console_set_default_foreground(inv_panel, default_fore)
     inv_panel.print_frame(0, y, w, 5 * 3 + 1, string="Features")
     for fslot in const.FeatureSlot:
@@ -169,7 +175,7 @@ def render_inv(root_console, inv_panel, player, map_width):
             tcod.console_print_ex(inv_panel, 1, y, tcod.BKGND_NONE, tcod.LEFT, k+" (none)")
         y += 2
 
-    inv_panel.blit(dest=root_console, dest_x=map_width)
+    inv_panel.blit(dest=root_console, dest_x=map_width, dest_y=sch_height)
 
 
 
