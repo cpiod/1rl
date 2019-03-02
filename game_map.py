@@ -1,7 +1,7 @@
 import tcod
 from random import randint, randrange, choice
 import copy
-
+import constants as const
 import entity
 import render
 import numpy as np
@@ -41,12 +41,13 @@ class GameMap:
         return [r for r in self.room_list if len(r.neighbors) <= max_arity]
 
     def make_map_bsp(self, player, show_map=True):
+        self.show_map = show_map
         map_width = self.width
         map_height = self.height
         if show_map:
             for x in range(map_width):
                 for y in range(map_height):
-                    self.tiles[x][y].explored = True
+                    self.tiles[x][y].is_seen = True
         # we garantee a wall on the north and the west
         # this is necessary due to the generation the room
         bsp = tcod.bsp.BSP(1,1,map_width-1, map_height-1)
@@ -287,17 +288,24 @@ class GameMap:
     def get_copy_map(self):
         return copy.deepcopy(self.tcod_map)
 
+    def set_tile_type(self, x, y, ttype):
+        self.tiles[x][y] = entity.Tile(x, y, ttype)
+        if self.show_map:
+            self.tiles[x][y].is_seen = True
+        self.tcod_map.transparent[y,x] = ttype.value.get("transparent")
+        self.tcod_map.walkable[y,x] = not ttype.value.get("collision")
+
     def set_blocked(self, x, y):
-        self.tcod_map.transparent[y,x] = self.tcod_map.walkable[y,x] = False
+        self.set_tile_type(x, y, const.TileType.WALL)
 
     def set_unblocked(self, x, y):
-        self.tcod_map.transparent[y,x] = self.tcod_map.walkable[y,x] = True
+        self.set_tile_type(x, y, const.TileType.FLOOR)
 
     def place_door(self, x, y):
-        self.tcod_map.transparent[y,x] = False
+        self.set_tile_type(x, y, const.TileType.DOOR)
 
     def is_door(self, x, y):
-        return not self.tcod_map.transparent[y,x] and self.tcod_map.walkable[y,x]
+        return self.tiles[x][y].ftype == const.TileType.DOOR
 
     def is_blocked(self, x, y):
         return not self.tcod_map.walkable[y,x]
