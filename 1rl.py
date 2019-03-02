@@ -72,16 +72,16 @@ def main():
     msglog.set_rendered()
     msglog.add_log("Test 3")
     msglog.add_log("Test 4")
-    feature_test1 = entity.Feature(const.FeatureSlot.p, const.FeatureEgo.c3, 1, 2, 3)
-    feature_test2 = entity.Feature(const.FeatureSlot.l, const.FeatureEgo.p3, 2, 6, 7)
+    feature_test1 = entity.Feature(const.FeatureSlot.p, const.FeatureEgo.c3, 1, 2, 10)
+    feature_test2 = entity.Feature(const.FeatureSlot.l, const.FeatureEgo.p3, 2, 6, 10)
     player.fequip(feature_test1)
     player.fequip(feature_test1)
     player.fequip(feature_test2)
     player.add_to_inventory(feature_test1)
     player.add_to_inventory(feature_test2)
 
-    weapon_test1 = entity.Weapon(const.WeaponSlot.slow, 0.7, 5, const.WeaponEgo.c, 2)
-    weapon_test2 = entity.Weapon(const.WeaponSlot.hack, 0.7, 8, const.WeaponEgo.m, 2)
+    weapon_test1 = entity.Weapon(const.WeaponSlot.slow, 0.7, 5, const.WeaponEgo.c, 1)
+    weapon_test2 = entity.Weapon(const.WeaponSlot.hack, 1, 3, const.WeaponEgo.m, 1)
     player.wequip(weapon_test1)
     player.wequip(weapon_test2)
     player.add_to_inventory(weapon_test1)
@@ -182,11 +182,22 @@ def main():
                             target = entity.get_blocking_entities_at_location(entities, destination_x, destination_y)
 
                             if target and target != player:
-                                if not player.active_weapon:
-                                    msglog.add_log("You have no weapon to attack with!")
+                                weapon = player.active_weapon
+                                if not weapon:
+                                    msglog.add_log("You have no weapon to attack with! Equip with 1, 2 or 3.")
                                 else:
-                                    msglog.add_log("You attack the "+target.name)
-                                    # TODO combat
+                                    weapon.attack(target, msglog)
+                                    if weapon.wslot.value.get("instable"):
+                                        msglog.add_log("You hack the "+target.name+": your "+target.fcreator.name+" is less stable!")
+                                        target.fcreator.destabilize(target.level)
+                                    if target.hp <= 0:
+                                        entities.remove(target)
+                                        more_stable = target.fcreator.stabilize(target.level)
+                                        if more_stable:
+                                            msglog.add_log(target.name.capitalize()+" is defeated: your "+target.fcreator.name+" is more stable.")
+                                        else:
+                                            msglog.add_log(target.name.capitalize()+" is defeated but your "+target.fcreator.name+" is already stable.")
+                                        render_inv = True
                                     turns.add_turn(time_malus + player.active_weapon.duration, const.TurnType.PLAYER, player)
                                     time_malus = 0
                                     new_turn = True
@@ -200,14 +211,15 @@ def main():
 
         elif current_turn.ttype == const.TurnType.ENNEMY:
             e = current_turn.entity
-            if e.distance_to(player) >= 2:
-                e.move_astar(player, entities, game_map)
-            else:
-                delta_malus = max(0, e.atk - player.resistances[e.fslot])
-                time_malus += delta_malus
-                if time_malus > const.malus_max:
-                    time_malus = const.malus_max
-            turns.add_turn(e.speed, const.TurnType.ENNEMY, e)
+            if e in entities:
+                if e.distance_to(player) >= 2:
+                    e.move_astar(player, entities, game_map)
+                else:
+                    delta_malus = max(0, e.atk - player.resistances[e.fslot])
+                    time_malus += delta_malus
+                    if time_malus > const.malus_max:
+                        time_malus = const.malus_max
+                turns.add_turn(e.speed, const.TurnType.ENNEMY, e)
             new_turn = True
 
 if __name__ == '__main__':

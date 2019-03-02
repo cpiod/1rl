@@ -21,7 +21,7 @@ base3 = tcod.Color(253,246,227)
 door_color = tcod.Color(203,75,22)
 tcod.color_scale_HSV(door_color, 0.7, 1)
 
-stability_threshold = 0.8
+stability_threshold = 0.7
 inventory_max_size = 5
 
 time_equip_weapon = 5

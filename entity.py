@@ -1,5 +1,6 @@
 import tcod
 import constants as const
+import random
 
 class Entity:
     """
@@ -62,6 +63,19 @@ class Weapon(Entity):
             string = "Stab- "+string
         return string
 
+    def attack(self, target, msglog):
+        if random.random() < self.success_rate:
+            # succesfull attack
+            effective = target.fslot in self.fslot_effective
+            if effective:
+                msglog.add_log("Your "+self.name+" is super effective on the "+target.name+"!")
+                target.hp -= 2*self.level
+            else:
+                target.hp -= self.level
+            target.update_symbol()
+        else:
+            msglog.add_log("You miss the "+target.name)
+
 class Feature(Entity):
     """
     A feature
@@ -74,6 +88,19 @@ class Feature(Entity):
         self.level = level
         self.stability = stability
         self.max_stability = max_stability
+
+    def destabilize(self, level):
+        self.stability -= level
+        if self.stability < 0:
+            self.stability = 0
+
+    def stabilize(self, level):
+        if self.stability == self.max_stability:
+            return False
+        self.stability += level
+        if self.stability > self.max_stability:
+            self.stability = self.max_stability
+        return True
 
 class Player(Entity):
     """
@@ -129,11 +156,16 @@ class Monster(Entity):
     """
     def __init__(self, x, y, hp, speed, fcreator, atk):
         super().__init__(x, y, str(hp), fcreator.fslot.value.get("color"), fcreator.fslot.value.get("name")+" bug", True, True, const.RenderOrder.ACTOR)
+        self.level = 3
         self.fslot = fcreator.fslot
         self.atk = atk
         self.hp = hp
         self.speed = speed
         self.fcreator = fcreator
+
+    def update_symbol(self):
+        if self.hp > 0:
+            self.char = str(self.hp)
 
     def move_towards(self, target_x, target_y, game_map, entities):
         dx = target_x - self.x
