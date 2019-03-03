@@ -81,15 +81,12 @@ def render_weapon(inv_panel, weapon, default_fore, y, active_weapon):
 
 def render_sch(root_console, sch_panel, turns, map_width):
     # Time
-    remaining = 7*24*60 - turns.current_date
-    remaining_d = int(remaining / (24*60))
-    remaining_h = int((remaining / 60)) % 24
-    remaining_m = remaining % 60
+    (remaining_d, remaining_h, remaining_m, remaining_s) = turns.get_remaining()
     w = sch_panel.width
     tcod.console_set_default_foreground(sch_panel, const.base0)
     sch_panel.print_frame(0, 0, w, 3, string="Remaining time")
     # tcod.console_set_default_foreground(sch_panel, const.red)
-    sch_panel.print_(int(w / 2), 1, str(remaining_d)+"d "+str(remaining_h)+"h "+str(remaining_m)+"m", alignment=tcod.CENTER)
+    sch_panel.print_(int(w / 2), 1, str(remaining_d)+"d "+str(remaining_h)+"h "+str(remaining_m)+"m "+str(remaining_s)+"s", alignment=tcod.CENTER)
     sch_panel.blit(dest=root_console, dest_x=map_width)
 
 def render_inv(root_console, inv_panel, player, map_width, sch_height):

@@ -1,10 +1,11 @@
 import tcod
-from random import randint, randrange, choice
+import random
 import copy
 import constants as const
 import entity
 import render
 import numpy as np
+import random_loot as rloot
 
 class Room:
     def __init__(self, x, y, w, h):
@@ -37,10 +38,22 @@ class GameMap:
         self.room_list = None
         self.tcod_map = tcod.map.Map(width, height)
 
+    def add_loot(self, turns, entities):
+        n_loot = 5 + sum([random.randint(1,6) for i in range(2)])
+        while n_loot > 0:
+            arity = random.choice([1,1,1,2,2,3,4,5])
+            rlist = self.rooms_with_arity(arity)
+            if rlist:
+                (x,y) = self.random_cell_in_room(random.choice(rlist))
+                if not self.tiles[x][y].item:
+                    self.tiles[x][y].put_item(rloot.get_random_loot(turns), entities)
+                    n_loot -= 1
+
+
     def rooms_with_arity(self, max_arity):
         return [r for r in self.room_list if len(r.neighbors) <= max_arity]
 
-    def make_map_bsp(self, player, show_map=False):
+    def make_map_bsp(self, turns, entities, player, show_map=False):
         self.show_map = show_map
         map_width = self.width
         map_height = self.height
@@ -59,7 +72,7 @@ class GameMap:
         rlist = self.rooms_with_arity(2)
         for i in range(6):
             for j in range(10):
-                c = choice(range(len(rlist)))
+                c = random.choice(range(len(rlist)))
                 best = self.closest_rooms([rlist[c]], self.room_list)
                 if best:
                     astar = tcod.path.AStar(self.tcod_map)
@@ -74,12 +87,13 @@ class GameMap:
                             best_tuple = [tuple_param]
                         elif tmp_score == score_tuple:
                             best_tuple.append(tuple_param)
-                    self.connect_rooms(choice(best_tuple))
+                    self.connect_rooms(random.choice(best_tuple))
                     del rlist[c]
                     break
 
         # Initialization
         (player.x, player.y) = self.random_cell()
+        self.add_loot(turns, entities)
         self.recompute_fov(player.x, player.y)
 
     def recompute_fov(self, x, y, light_walls=True, radius=0):
@@ -93,7 +107,7 @@ class GameMap:
         for i in range(50):
             (x,y) = self.random_cell()
             if not self.is_visible(x,y) and not any([entity for entity in entities if entity.x == x and entity.y == y]):
-                monster = entity.Monster(x, y, randint(2,5), 3, feature, 3) # TODO
+                monster = entity.Monster(x, y, random.randint(2,5), 3, feature, 3) # TODO
                 entities.append(monster)
                 break
         else:
@@ -132,25 +146,25 @@ class GameMap:
 
 
     def random_cell(self):
-        return self.random_cell_in_room(choice(self.room_list))
+        return self.random_cell_in_room(random.choice(self.room_list))
 
     def random_cell_in_room(self, r):
         while True:
-            x = randrange(r.x, r.x + r.w)
-            y = randrange(r.y, r.y + r.h)
+            x = random.randrange(r.x, r.x + r.w)
+            y = random.randrange(r.y, r.y + r.h)
             if not self.is_blocked(x,y):
                 return (x,y)
 
     def recursive_make_rooms(self, bsp):
         if not bsp.children:
-            w = randrange(max(3,int(bsp.w/3)),bsp.w-2)
-            h = randrange(max(3,int(bsp.h/3)),bsp.h-2)
+            w = random.randrange(max(3,int(bsp.w/3)),bsp.w-2)
+            h = random.randrange(max(3,int(bsp.h/3)),bsp.h-2)
             # w = 1
             # h = 1
             # w = bsp.w - 1
             # h = bsp.h - 1
-            upper_left_x = randrange(bsp.x, bsp.x + bsp.w - w)
-            upper_left_y = randrange(bsp.y, bsp.y + bsp.h - h)
+            upper_left_x = random.randrange(bsp.x, bsp.x + bsp.w - w)
+            upper_left_y = random.randrange(bsp.y, bsp.y + bsp.h - h)
 
             for x in range(0,w):
                 for y in range(0,h):
@@ -158,13 +172,13 @@ class GameMap:
 
             # Sometimes, add a central pillar
             if (w % 2) == 1 and (h % 2) == 1:
-                if randrange(0,10) == 0:
+                if random.randrange(0,10) == 0:
                     center_x = upper_left_x + int((w-1)/2)
                     center_y = upper_left_y + int((h-1)/2)
                     self.set_blocked(center_x, center_y)
 
             # And rarely a big one (rare because big rooms aren't common)
-            if (w % 2) == 0 and (h % 2) == 0 and w >= 10 and h >= 10 and randrange(0,2) == 0:
+            if (w % 2) == 0 and (h % 2) == 0 and w >= 10 and h >= 10 and random.randrange(0,2) == 0:
                 center_x = upper_left_x + int(w/2) - 1
                 center_y = upper_left_y + int(h/2) - 1
                 for x in range(0,2):
@@ -177,7 +191,7 @@ class GameMap:
             l1 = self.recursive_make_rooms(bsp.children[0])
             l2 = self.recursive_make_rooms(bsp.children[1])
             # it is garanteed to connect
-            self.connect_rooms(choice(self.closest_rooms(l1,l2)))
+            self.connect_rooms(random.choice(self.closest_rooms(l1,l2)))
             return l1+l2
 
     def connect_rooms(self, tuple_param, force=False):
@@ -193,9 +207,9 @@ class GameMap:
                 y1 += 1
                 y2 -= 1
             self.create_v_tunnel(y1, y2, x1)
-            if randint(0,door_chance) == 0:
+            if random.randint(0,door_chance) == 0:
                 self.place_door(x1, y1)
-            elif randint(0,door_chance) == 0:
+            elif random.randint(0,door_chance) == 0:
                 self.place_door(x2, y2)
         elif y1 == y2:
             if x1 > x2:
@@ -205,13 +219,13 @@ class GameMap:
                 x1 += 1
                 x2 -= 1
             self.create_h_tunnel(x1, x2, y1)
-            if randint(0,door_chance) == 0:
+            if random.randint(0,door_chance) == 0:
                 self.place_door(x1, y1)
-            elif randint(0,door_chance) == 0:
+            elif random.randint(0,door_chance) == 0:
                 self.place_door(x2, y2)
 #        elif abs(x1-x2) < 3 or abs(y1-y2) < 3:
         else:
-            if randint(0, 1) == 1:
+            if random.randint(0, 1) == 1:
                 if x1 > x2:
                     x1 -= 1
                 else:
@@ -225,9 +239,9 @@ class GameMap:
 
                 self.create_h_tunnel(x1, x2, y1)
                 self.create_v_tunnel(y3, y2, x2)
-                if randint(0,door_chance) == 0 and abs(x1-x2) > 1:
+                if random.randint(0,door_chance) == 0 and abs(x1-x2) > 1:
                     self.place_door(x1, y1)
-                elif randint(0,door_chance) == 0 and abs(y1-y2) > 1:
+                elif random.randint(0,door_chance) == 0 and abs(y1-y2) > 1:
                     self.place_door(x2, y2)
 
             else:
@@ -244,9 +258,9 @@ class GameMap:
 
                 self.create_v_tunnel(y1, y2, x1)
                 self.create_h_tunnel(x3, x2, y2)
-                if randint(0,door_chance) == 0 and abs(y1-y2) > 1:
+                if random.randint(0,door_chance) == 0 and abs(y1-y2) > 1:
                     self.place_door(x1, y1)
-                elif randint(0,door_chance) == 0 and abs(x1-x2) > 1:
+                elif random.randint(0,door_chance) == 0 and abs(x1-x2) > 1:
                     self.place_door(x2, y2)
 
     def create_h_tunnel(self, x1, x2, y):

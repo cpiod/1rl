@@ -8,6 +8,7 @@ import time
 import render
 import log
 import scheduling as sch
+import random_loot
 
 def main():
     screen_width = 100
@@ -61,23 +62,23 @@ def main():
 
     # map generation
     game_map = gmap.GameMap(map_width, map_height, con)
-    game_map.make_map_bsp(player)
+    game_map.make_map_bsp(turns, entities, player)
 
     # log init
     msglog = log.Log(log_width - 2, log_height - 3)
 
     # Test
-    feature_test1 = entity.Feature(const.FeatureSlot.p, const.FeatureEgo.c3, 3, 2, 10)
-    feature_test2 = entity.Feature(const.FeatureSlot.l, const.FeatureEgo.p3, 2, 6, 10)
-    feature_test3 = entity.Feature(const.FeatureSlot.i, const.FeatureEgo.m2, 2, 6, 10)
-    feature_test4 = entity.Feature(const.FeatureSlot.p, const.FeatureEgo.m2, 2, 6, 10)
+    feature_test1 = random_loot.get_random_feature(turns)
+    feature_test2 = random_loot.get_random_feature(turns)
+    feature_test3 = random_loot.get_random_feature(turns)
+    feature_test4 = random_loot.get_random_feature(turns)
     key = player.add_to_inventory(feature_test1)
     player.fequip(feature_test1, key)
     player.add_to_inventory(feature_test2)
     player.add_to_inventory(feature_test4)
 
-    weapon_test1 = entity.Weapon(const.WeaponSlot.slow, 0.7, 5, const.WeaponEgo.c, 1)
-    weapon_test2 = entity.Weapon(const.WeaponSlot.hack, 1, 3, const.WeaponEgo.m, 1)
+    weapon_test1 = random_loot.get_random_weapon(turns)
+    weapon_test2 = random_loot.get_random_weapon(turns)
     key = player.add_to_inventory(weapon_test1)
     player.wequip(weapon_test1, key)
     player.add_to_inventory(weapon_test2)

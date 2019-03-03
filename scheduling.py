@@ -16,6 +16,14 @@ class Scheduling():
         self.current_date = out.date
         return out
 
+    def get_remaining(self):
+        remaining = 7*24*60*60 - self.current_date
+        remaining_d = int(remaining / (24*60*60))
+        remaining_h = int((remaining / (60*60))) % 24
+        remaining_m = int((remaining / (60))) % 60
+        remaining_s = remaining % 60
+        return (remaining_d, remaining_h, remaining_m, remaining_s)
+
 class Turn():
     def __init__(self, date, ttype, entity):
         self.date = date

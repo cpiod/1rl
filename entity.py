@@ -57,18 +57,16 @@ class Tile(Entity):
         self.item = None
         return item
 
-
 class Weapon(Entity):
     """
     A debugger
     """
-    def __init__(self, wslot, success_rate, duration, wego, level):
+    def __init__(self, wslot, wego, level):
         super().__init__(None, None, wego.value.get("char"), const.base3, wego.value.get("name")+" "+wslot.value.get("name"), False, True, const.RenderOrder.ITEM)
         self.wego = wego
         self.level = level
-        # TODO : use wslot
-        self.success_rate = success_rate
-        self.duration = duration
+        self.success_rate = int(100*(wslot.value.get("success_rate_base")+level*0.05))/100
+        self.duration = wslot.value.get("duration_base")
         self.wslot = wslot
         self.is_in_inventory = False
         self.equiped = False
@@ -101,8 +99,10 @@ class Feature(Entity):
     """
     A feature
     """
-    def __init__(self, fslot, fego, level, stability, max_stability):
+    def __init__(self, fslot, fego, level):
         super().__init__(None, None, fego.value.get("char"), fslot.value.get("desat_color"), fego.value.get("name")+" "+fslot.value.get("name"), False, True, const.RenderOrder.ITEM)
+        max_stability = 10 * (level*level)
+        stability = int(max_stability / 10)
         self.fslot = fslot
         self.fego = fego
         self.is_in_inventory = False
