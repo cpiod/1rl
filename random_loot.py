@@ -3,7 +3,7 @@ import entity
 import constants as const
 
 def get_random_loot(turns):
-    if random.randint(0,1) == 0:
+    if random.randint(0,2) > 0:
         return get_random_feature(turns)
     else:
         return get_random_weapon(turns)

@@ -39,7 +39,7 @@ class GameMap:
         self.tcod_map = tcod.map.Map(width, height)
 
     def add_loot(self, turns, entities):
-        n_loot = 5 + sum([random.randint(1,6) for i in range(2)])
+        n_loot = 3 + sum([random.randint(1,4) for i in range(2)])
         while n_loot > 0:
             arity = random.choice([1,1,1,2,2,3,4,5])
             rlist = self.rooms_with_arity(arity)

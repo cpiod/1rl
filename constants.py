@@ -52,21 +52,21 @@ class WeaponSlot(enum.Enum):
     hack = {"name": "hack", "success_rate_base": 1, "duration_base": 4, "instable": True, "key": "3"}
 
 class FeatureEgo(enum.Enum):
-    c1 = {"name": "evolutive", "char": "C"}
-    c2 = {"name": "diplomatic", "char": "C"}
-    c3 = {"name": "artistic", "char": "C"}
+    c1 = {"name": "evolutive", "char": "c"}
+    c2 = {"name": "diplomatic", "char": "c"}
+    c3 = {"name": "artistic", "char": "c"}
 
-    b1 = {"name": "minigame-based", "char": "B"}
-    b2 = {"name": "reputation-based", "char": "B"}
-    b3 = {"name": "pun-based", "char": "B"}
+    b1 = {"name": "minigame-based", "char": "b"}
+    b2 = {"name": "reputation-based", "char": "b"}
+    b3 = {"name": "pun-based", "char": "b"}
 
-    p1 = {"name": "recursive", "char": "P"}
-    p2 = {"name": "meta", "char": "P"}
-    p3 = {"name": "self-contained", "char": "P"}
+    p1 = {"name": "recursive", "char": "p"}
+    p2 = {"name": "meta", "char": "p"}
+    p3 = {"name": "self-contained", "char": "p"}
 
-    m1 = {"name": "Sisyphean", "char": "M"}
-    m2 = {"name": "Lovecraftian", "char": "M"}
-    m3 = {"name": "Enochian", "char": "M"}
+    m1 = {"name": "Sisyphean", "char": "m"}
+    m2 = {"name": "Lovecraftian", "char": "m"}
+    m3 = {"name": "Enochian", "char": "m"}
 
 class WeaponEgo(enum.Enum):
     c = {"name": "conscious", "fego": [FeatureEgo.c1, FeatureEgo.c2, FeatureEgo.c3], "char": "c"}

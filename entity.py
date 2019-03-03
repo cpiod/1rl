@@ -165,6 +165,8 @@ class Player(Entity):
             if not self.inventory.get(i):
                 self.inventory[i] = item
                 item.is_in_inventory = True
+                if isinstance(item, Weapon):
+                    item.update_effective(self.fequiped)
                 return i
         assert False
         return None
@@ -180,6 +182,10 @@ class Player(Entity):
             w = self.wequiped.get(weapon)
             if w:
                 w.update_effective(self.fequiped)
+        for i in self.inventory:
+            item = self.inventory.get(i)
+            if item and isinstance(item, Weapon):
+                item.update_effective(self.fequiped)
         if previous_feature:
             previous_feature.is_in_inventory = True
             previous_feature.equiped = False
@@ -202,7 +208,7 @@ class Player(Entity):
                 self.active_weapon = None
             previous_weapon.is_in_inventory = True
             previous_weapon.equiped = False
-            self.inventory[key] = previous_feature
+            self.inventory[key] = previous_weapon
         else:
             self.inventory[key] = None
 
