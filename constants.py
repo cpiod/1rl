@@ -37,6 +37,7 @@ inventory_max_size = 5
 
 time_equip_weapon = 5
 time_move = 1
+spawn_interval = 20
 malus_max = 30
 
 class FeatureSlot(enum.Enum):

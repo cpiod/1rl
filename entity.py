@@ -101,15 +101,15 @@ class Feature(Entity):
     """
     def __init__(self, fslot, fego, level):
         super().__init__(None, None, fego.value.get("char"), fslot.value.get("desat_color"), fego.value.get("name")+" "+fslot.value.get("name"), False, True, const.RenderOrder.ITEM)
-        max_stability = 10 * (level*level)
-        stability = int(max_stability / 10)
+        self.n_bugs = 0
+        self.n_bugs_max = 10
+        self.max_stability = 10 * (level*level)
+        self.stability = int(self.max_stability / 10)
         self.fslot = fslot
         self.fego = fego
         self.is_in_inventory = False
         self.equiped = False
         self.level = level
-        self.stability = stability
-        self.max_stability = max_stability
 
     def destabilize(self, level):
         self.stability -= level
@@ -234,14 +234,20 @@ class Monster(Entity):
     """
     A bug
     """
-    def __init__(self, x, y, hp, speed, fcreator, atk):
-        super().__init__(x, y, str(hp), fcreator.fslot.value.get("color"), fcreator.fslot.value.get("name")+" bug", True, True, const.RenderOrder.ACTOR)
-        self.level = 3
+    def __init__(self, x, y, level, fcreator):
+        self.hp = level * level
+        super().__init__(x, y, str(self.hp), fcreator.fslot.value.get("color"), fcreator.fslot.value.get("name")+" bug", True, True, const.RenderOrder.ACTOR)
+        self.level = level
         self.fslot = fcreator.fslot
-        self.atk = atk
-        self.hp = hp
-        self.speed = speed
+        self.atk = 1
+        self.speed = 5 - level
         self.fcreator = fcreator
+        fcreator.n_bugs += 1
+
+    def dead(self, entities):
+        entities.remove(self)
+        self.fcreator.n_bugs -= 1
+        return self.fcreator.stabilize(self.level)
 
     def update_symbol(self):
         if self.hp > 0:

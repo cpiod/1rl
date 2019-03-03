@@ -13,6 +13,7 @@ class Room:
         self.y = y # upper left point
         self.w = w
         self.h = h
+        self.n_loot = 0
         self.neighbors = []
 
 class GameMap:
@@ -42,13 +43,14 @@ class GameMap:
         n_loot = 3 + sum([random.randint(1,4) for i in range(2)])
         while n_loot > 0:
             arity = random.choice([1,1,1,2,2,3,4,5])
-            rlist = self.rooms_with_arity(arity)
+            rlist = [r for r in self.rooms_with_arity(arity) if r.n_loot < 2] # 2 items per room max
             if rlist:
-                (x,y) = self.random_cell_in_room(random.choice(rlist))
+                room = random.choice(rlist)
+                (x,y) = self.random_cell_in_room(room)
                 if not self.tiles[x][y].item:
+                    room.n_loot += 1
                     self.tiles[x][y].put_item(rloot.get_random_loot(turns), entities)
                     n_loot -= 1
-
 
     def rooms_with_arity(self, max_arity):
         return [r for r in self.room_list if len(r.neighbors) <= max_arity]
@@ -104,14 +106,14 @@ class GameMap:
 
     def spawn(self, entities, feature):
         # We try at most 50 times to spawn it
-        for i in range(50):
-            (x,y) = self.random_cell()
-            if not self.is_visible(x,y) and not any([entity for entity in entities if entity.x == x and entity.y == y]):
-                monster = entity.Monster(x, y, random.randint(2,5), 3, feature, 3) # TODO
-                entities.append(monster)
-                break
-        else:
-            print("Spawn failed")
+        if not feature.is_stable() and feature.n_bugs < feature.n_bugs_max:
+            for i in range(50):
+                (x,y) = self.random_cell()
+                if not self.is_visible(x,y) and not any([entity for entity in entities if entity.x == x and entity.y == y]):
+                    monster = entity.Monster(x, y, random.randint(1, feature.level), feature)
+                    entities.append(monster)
+                    # print("Spawn from "+feature.name+": "+str(feature.n_bugs))
+                    break
 
     def iterator_perimeter_room(self, r):
         for x in range(r.x, r.x + r.w):

@@ -59,6 +59,10 @@ def main():
     # scheduling
     turns = sch.Scheduling()
     turns.add_turn(0, const.TurnType.PLAYER, player)
+    i = 2
+    for fslot in const.FeatureSlot:
+        turns.add_turn(i, const.TurnType.SPAWN, fslot)
+        i += 2
 
     # map generation
     game_map = gmap.GameMap(map_width, map_height, con)
@@ -67,27 +71,19 @@ def main():
     # log init
     msglog = log.Log(log_width - 2, log_height - 3)
 
-    # Test
-    feature_test1 = random_loot.get_random_feature(turns)
-    feature_test2 = random_loot.get_random_feature(turns)
-    feature_test3 = random_loot.get_random_feature(turns)
-    feature_test4 = random_loot.get_random_feature(turns)
-    key = player.add_to_inventory(feature_test1)
-    player.fequip(feature_test1, key)
-    player.add_to_inventory(feature_test2)
-    player.add_to_inventory(feature_test4)
+    first_feature = random_loot.get_random_feature(turns)
+    key = player.add_to_inventory(first_feature)
+    player.fequip(first_feature, key)
 
-    weapon_test1 = random_loot.get_random_weapon(turns)
-    weapon_test2 = random_loot.get_random_weapon(turns)
-    key = player.add_to_inventory(weapon_test1)
-    player.wequip(weapon_test1, key)
-    player.add_to_inventory(weapon_test2)
+    first_weapon = None
+    while first_weapon == None:
+        first_weapon = random_loot.get_random_weapon(turns)
+        if first_weapon.wslot.value.get("instable"):
+            first_weapon = None
+    key = player.add_to_inventory(first_weapon)
+    player.wequip(first_weapon, key)
 
     menu_state = const.MenuState.STANDARD
-
-    for i in range(20):
-        game_map.spawn(entities, feature_test1)
-    game_map.tiles[player.x][player.y].put_item(feature_test3, entities)
 
     # initial render
     render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
@@ -257,8 +253,7 @@ def main():
                                         target.fcreator.destabilize(target.level)
                                         player.update_resistance()
                                     if target.hp <= 0:
-                                        entities.remove(target)
-                                        more_stable = target.fcreator.stabilize(target.level)
+                                        more_stable = target.dead(entities)
                                         player.update_resistance()
                                         if more_stable:
                                             msglog.add_log(target.name.capitalize()+" is defeated: your "+target.fcreator.name+" is more stable.")
@@ -287,6 +282,13 @@ def main():
                     if time_malus > const.malus_max:
                         time_malus = const.malus_max
                 turns.add_turn(e.speed, const.TurnType.ENNEMY, e)
+            new_turn = True
+
+        elif current_turn.ttype == const.TurnType.SPAWN:
+            creator = player.fequiped.get(current_turn.entity)
+            if creator:
+                game_map.spawn(entities, creator)
+            turns.add_turn(const.spawn_interval, const.TurnType.SPAWN, current_turn.entity)
             new_turn = True
 
 if __name__ == '__main__':
