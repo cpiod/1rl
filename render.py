@@ -23,6 +23,11 @@ def render_map(root_console, con, entities, player, game_map, screen_width, scre
 
     con.blit(dest=root_console)
 
+def render_des(root_console, des_panel, map_height, string):
+    tcod.console_set_default_foreground(des_panel, const.base2)
+    tcod.console_print_ex(des_panel, 1, 0, tcod.BKGND_NONE, tcod.LEFT, string)
+    des_panel.blit(dest=root_console, dest_y=map_height)
+
 def render_log(root_console, log_panel, msglog, map_height, force=False):
     """
     Render the bottom panel (log)
@@ -30,15 +35,15 @@ def render_log(root_console, log_panel, msglog, map_height, force=False):
     if force or msglog.is_there_new():
         tcod.console_clear(log_panel)
         tcod.console_set_default_foreground(log_panel, const.base0)
-        log_panel.print_frame(0, 1, log_panel.width, log_panel.height-1, string="Log")
-        y = log_panel.height - 3 - len(msglog.messages)
+        log_panel.print_frame(0, 0, log_panel.width, log_panel.height, string="Log")
+        y = log_panel.height - 2 - len(msglog.messages)
         for msg in msglog.messages:
             if y >= msglog.last:
                 tcod.console_set_default_foreground(log_panel, const.base2)
-            log_panel.print_(1, y + 2, msg)
+            log_panel.print_(1, y + 1, msg)
             y += 1
         msglog.set_rendered()
-        log_panel.blit(dest=root_console, dest_y=map_height)
+        log_panel.blit(dest=root_console, dest_y=map_height + 1)
 
 def render_feature(inv_panel, feature, default_fore, y, player):
     max_stab_width = 10
@@ -218,3 +223,14 @@ def clear_cell(con, x,y,game_map):
         tcod.console_set_char(con, x, y, game_map.tiles[x][y].char)
     else:
         tcod.console_set_char(con, x, y, ' ')
+
+def get_names_under_mouse(mouse, entities, game_map, screen_width):
+    (x, y) = mouse
+    names = [entity.name for entity in entities
+             if entity.x == x and entity.y == y and game_map.is_visible(entity.x, entity.y)]
+    assert len(names) <= 1
+    names = ', '.join(names)
+    # space padding to remove the precedent description
+    names = names.ljust(screen_width, ' ')
+
+    return names.capitalize()

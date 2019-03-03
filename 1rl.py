@@ -28,7 +28,7 @@ def main():
 
     # Size of the map
     map_width = screen_width - inv_width
-    map_height = screen_height - log_height
+    map_height = screen_height - log_height - 1
 
     player = entity.Player(None, None)
     entities = [player]
@@ -41,6 +41,11 @@ def main():
     con = tcod.console.Console(map_width, map_height)
     tcod.console_set_default_background(con, const.base03)
     tcod.console_clear(con)
+
+    # description console
+    des_panel = tcod.console.Console(log_width, 1)
+    tcod.console_set_default_background(des_panel, const.base03)
+    tcod.console_clear(des_panel)
 
     # log console
     log_panel = tcod.console.Console(log_width, log_height)
@@ -70,7 +75,7 @@ def main():
     game_map.make_map_bsp(turns, entities, player)
 
     # log init
-    msglog = log.Log(log_width - 2, log_height - 3)
+    msglog = log.Log(log_width - 2, log_height - 2)
 
     first_feature = random_loot.get_random_feature(turns)
     key = player.add_to_inventory(first_feature)
@@ -89,6 +94,7 @@ def main():
     # initial render
     render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
     render.render_log(root_console, log_panel, msglog, map_height)
+    render.render_des(root_console, des_panel, map_height, "")
     render.render_sch(root_console, sch_panel, turns, map_width)
     render.render_inv(root_console, inv_panel, player, map_width, sch_height)
     tcod.console_flush()
@@ -99,6 +105,8 @@ def main():
     new_turn = True
     enemy_moved = False
     last_player_date = 0
+    mouse = (500,500) #OOB
+    new_mouse = False
     while not tcod.console_is_window_closed():
         if new_turn:
             current_turn = turns.get_turn()
@@ -107,7 +115,6 @@ def main():
             # print("Turn "+str(current_turn.date)+": "+current_turn.ttype.name)
             if current_turn.ttype == const.TurnType.PLAYER and time_malus > 0:
                 msglog.add_log("You lose "+str(time_malus)+"s!")
-
 
         tcod.console_flush()
         if current_turn.ttype == const.TurnType.PLAYER:
@@ -123,8 +130,13 @@ def main():
                         e.is_seen = True
                         # if isinstance(e, entity.Monster):
             if fov_recompute or enemy_moved:
+                new_mouse = True
                 render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
                 enemy_moved = False
+
+            if new_mouse:
+                render.render_des(root_console, des_panel, map_height, render.get_names_under_mouse(mouse, entities, game_map, log_width))
+                new_mouse = False
 
             fov_recompute = False
             render.render_log(root_console, log_panel, msglog, map_height, force_log)
@@ -143,8 +155,14 @@ def main():
                         if m & event.mod != 0:
                             modifiers.append(tcod.event_constants._REVERSE_MOD_TABLE[m])
                     key = tcod.event_constants._REVERSE_SYM_TABLE.get(event.sym)
+                elif event.type == "MOUSEMOTION":
+                    if event.tile != mouse:
+                        mouse = event.tile
+                        new_mouse = True
+                    continue
                 else:
                     continue
+
                 if menu_state == const.MenuState.STANDARD:
                     action = keys.handle_player_turn_keys(key, modifiers)
                 elif menu_state == const.MenuState.DROP:
