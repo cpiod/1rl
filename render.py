@@ -23,6 +23,16 @@ def render_map(root_console, con, entities, player, game_map, screen_width, scre
 
     con.blit(dest=root_console)
 
+def render_popup(root_console, popup_panel, screen_width, screen_height, strings):
+    tcod.console_clear(popup_panel)
+    tcod.console_set_default_foreground(popup_panel, const.base2)
+    popup_panel.print_frame(0, 0, popup_panel.width, popup_panel.height)
+    y = int(popup_panel.height /2 - len(strings) / 2)
+    for s in strings:
+        tcod.console_print_ex(popup_panel, int(popup_panel.width / 2), y, tcod.BKGND_NONE, tcod.CENTER, s)
+        y += 1
+    popup_panel.blit(dest=root_console, dest_x = int(screen_width/4), dest_y=int(screen_height/4), bg_alpha=0.7)
+
 def render_des(root_console, des_panel, map_height, string):
     tcod.console_set_default_foreground(des_panel, const.base2)
     tcod.console_print_ex(des_panel, 1, 0, tcod.BKGND_NONE, tcod.LEFT, string)
@@ -224,12 +234,22 @@ def clear_cell(con, x,y,game_map):
     else:
         tcod.console_set_char(con, x, y, ' ')
 
-def get_names_under_mouse(mouse, entities, game_map, screen_width):
+def get_object_under_mouse(mouse, entities, game_map, screen_width):
     (x, y) = mouse
     names = [entity.name for entity in entities
              if entity.x == x and entity.y == y and game_map.is_visible(entity.x, entity.y)]
-    assert len(names) <= 1
+
     names = ', '.join(names)
+    # space padding to remove the precedent description
+    names = names.ljust(screen_width, ' ')
+
+    return names.capitalize()
+
+def get_names_under_mouse(mouse, entities, game_map, screen_width):
+    (x, y) = mouse
+    entities_in_render_order = sorted([entity for entity in entities
+             if entity.x == x and entity.y == y and game_map.is_visible(entity.x, entity.y)], key=lambda x: x.render_order.value, reverse=True)
+    names = ', over a '.join([e.name for e in entities_in_render_order])
     # space padding to remove the precedent description
     names = names.ljust(screen_width, ' ')
 

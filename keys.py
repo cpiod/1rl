@@ -3,6 +3,11 @@ import constants as const
 def is_shift(modifiers):
     return 'tcod.event.KMOD_LSHIFT' in modifiers or 'tcod.event.KMOD_RSHIFT' in modifiers
 
+def handle_popup_keys(key, modifiers):
+    if key == "tcod.event.K_ESCAPE" or key == 'tcod.event.K_RETURN' or key == 'tcod.event.K_SPACE':
+        return {'cancel': True}
+    return {}
+
 def handle_equip_keys(key, modifiers):
     if key == "tcod.event.K_a":
         return {"equip_key": "a"}

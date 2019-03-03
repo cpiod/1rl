@@ -18,6 +18,9 @@ def main():
     sch_height = 3
     sch_width = 27
 
+    popup_width = int(2 * screen_width / 4)
+    popup_height = int(2 * screen_height / 4)
+
     # Inventory
     inv_height = screen_height - sch_height
     inv_width = sch_width
@@ -51,6 +54,11 @@ def main():
     log_panel = tcod.console.Console(log_width, log_height)
     tcod.console_set_default_background(log_panel, const.base03)
     tcod.console_clear(log_panel)
+
+    # popup console
+    popup_panel = tcod.console.Console(popup_width, popup_height)
+    tcod.console_set_default_background(popup_panel, const.base03)
+    tcod.console_clear(popup_panel)
 
     # scheduling console
     sch_panel = tcod.console.Console(sch_width, sch_height)
@@ -134,7 +142,7 @@ def main():
                 render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
                 enemy_moved = False
 
-            if new_mouse:
+            if new_mouse:# and menu_state != const.MenuState.POPUP:
                 render.render_des(root_console, des_panel, map_height, render.get_names_under_mouse(mouse, entities, game_map, log_width))
                 new_mouse = False
 
@@ -143,6 +151,7 @@ def main():
             force_log = False
             if render_inv:
                 render.render_inv(root_console, inv_panel, player, map_width, sch_height)
+                render_inv = False
 
 
             for event in tcod.event.wait():
@@ -160,6 +169,10 @@ def main():
                         mouse = event.tile
                         new_mouse = True
                     continue
+                # elif event.type == "MOUSEBUTTONDOWN" and event.button == tcod.event.BUTTON_LEFT:
+                #     if menu_state == const.MenuState.STANDARD:
+                #         menu_state = const.MenuState.POPUP
+                #         render.render_popup(root_console, popup_panel, screen_width, screen_height, ["Test 1","Test 2"])
                 else:
                     continue
 
@@ -169,6 +182,8 @@ def main():
                     action = keys.handle_drop_keys(key, modifiers)
                 elif menu_state == const.MenuState.EQUIP:
                     action = keys.handle_equip_keys(key, modifiers)
+                elif menu_state == const.MenuState.POPUP:
+                    action = keys.handle_popup_keys(key, modifiers)
                 else:
                     assert False
 
@@ -190,6 +205,11 @@ def main():
                         turns.add_turn(time_malus + const.time_equip_weapon, const.TurnType.PLAYER, player)
                         time_malus = 0
                         new_turn = True
+
+                help_popup = action.get('help')
+                if help_popup:
+                    menu_state = const.MenuState.POPUP
+                    render.render_popup(root_console, popup_panel, screen_width, screen_height, const.help_strings)
 
                 descend = action.get('descend')
                 if descend:
@@ -227,7 +247,9 @@ def main():
 
                 drop = action.get('drop')
                 if drop:
-                    if game_map.is_there_item_on_floor(player):
+                    if player.is_inventory_empty():
+                        msglog.add_log("Your inventory is empty.")
+                    elif game_map.is_there_item_on_floor(player):
                         msglog.add_log("There is already something there.")
                     else:
                         msglog.add_log("What do you want to drop? [abcde]")
@@ -292,6 +314,13 @@ def main():
 
                 cancel = action.get('cancel')
                 if cancel:
+                    if menu_state == const.MenuState.POPUP:
+                        render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
+                        render.render_log(root_console, log_panel, msglog, map_height)
+                        render.render_des(root_console, des_panel, map_height, "")
+                        render.render_sch(root_console, sch_panel, turns, map_width)
+                        render.render_inv(root_console, inv_panel, player, map_width, sch_height)
+
                     msglog.add_log("Nevermind.")
                     menu_state = const.MenuState.STANDARD
 
