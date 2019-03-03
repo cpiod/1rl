@@ -35,6 +35,7 @@ tcod.color_scale_HSV(desat_yellow, 0.7, 1)
 stability_threshold = 0.7
 inventory_max_size = 5
 
+time_descend = 60
 time_equip = 60*3
 time_equip_weapon = 20
 time_move = 60
@@ -84,6 +85,7 @@ class TurnType(enum.Enum):
 class TileType(enum.Enum):
     WALL = {"name": "wall", "collision": True, "transparent": False, "char": "#", "color": base2}
     FLOOR = {"name": "floor", "collision": False, "transparent": True, "char": ".", "color": base2}
+    STAIRS = {"name": "stairs", "collision": False, "transparent": True, "char": ">", "color": door_color}
     DOOR = {"name": "door", "collision": False, "transparent": False, "char": "+", "color": door_color}
 
 class RenderOrder(enum.Enum):

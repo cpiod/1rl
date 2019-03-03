@@ -21,6 +21,7 @@ class GameMap:
         self.width = width
         self.con = con
         self.height = height
+        self.dlevel = 0
         # ogrid = [np.arange(width, dtype=np.float32),
         # np.arange(height, dtype=np.float32)]
 
@@ -35,9 +36,6 @@ class GameMap:
         # min_lum = 0.5
         # max_lum = 1
         # sample = noise.sample_ogrid(ogrid)*(max_lum-min_lum) + min_lum
-        self.tiles = [[entity.Tile(x,y) for y in range(self.height)] for x in range(self.width)]
-        self.room_list = None
-        self.tcod_map = tcod.map.Map(width, height)
 
     def add_loot(self, turns, entities):
         n_loot = 5 + sum([random.randint(1,4) for i in range(2)])
@@ -56,6 +54,10 @@ class GameMap:
         return [r for r in self.room_list if len(r.neighbors) <= max_arity]
 
     def make_map_bsp(self, turns, entities, player, show_map=False):
+        self.tiles = [[entity.Tile(x,y) for y in range(self.height)] for x in range(self.width)]
+        self.room_list = None
+        self.tcod_map = tcod.map.Map(self.width, self.height)
+        self.dlevel += 1
         self.show_map = show_map
         map_width = self.width
         map_height = self.height
@@ -95,6 +97,8 @@ class GameMap:
 
         # Initialization
         (player.x, player.y) = self.random_cell()
+        (x, y) = self.random_cell()
+        self.place_stairs(x,y)
         self.add_loot(turns, entities)
         self.recompute_fov(player.x, player.y)
 
@@ -294,6 +298,9 @@ class GameMap:
 
     def place_door(self, x, y):
         self.set_tile_type(x, y, const.TileType.DOOR)
+
+    def place_stairs(self, x, y):
+        self.set_tile_type(x, y, const.TileType.STAIRS)
 
     def is_door(self, x, y):
         return self.tiles[x][y].ftype == const.TileType.DOOR

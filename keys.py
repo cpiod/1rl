@@ -56,7 +56,7 @@ def handle_player_turn_keys(key, modifiers):
     elif key == 'tcod.event.K_PERIOD' or key == "tcod.event.K_KP_5":
         return {'move': (0, 0)}
 
-    elif key == 'tcod.event.K_RETURN':
+    elif key == 'tcod.event.K_RETURN' or key == 'tcod.event.K_SPACE':
         return {'descend': True}
 
     elif key == 'tcod.event.K_1':

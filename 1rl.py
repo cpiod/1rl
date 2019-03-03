@@ -173,6 +173,18 @@ def main():
                         time_malus = 0
                         new_turn = True
 
+                descend = action.get('descend')
+                if descend:
+                    msglog.add_log("You go down the stairs.")
+                    entities = [player]
+                    game_map.make_map_bsp(turns, entities, player)
+                    turns.add_turn(time_malus + const.time_descend, const.TurnType.PLAYER, player)
+                    time_malus = 0
+                    render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
+                    enemy_moved = True
+                    new_turn = True
+
+
                 grab = action.get('pickup')
                 if grab:
                     if player.is_inventory_full():
