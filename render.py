@@ -40,14 +40,22 @@ def render_log(root_console, log_panel, msglog, map_height, force=False):
         msglog.set_rendered()
         log_panel.blit(dest=root_console, dest_y=map_height)
 
-def render_feature(inv_panel, feature, default_fore, y):
+def render_feature(inv_panel, feature, default_fore, y, player):
     max_stab_width = 10
     start_stab = inv_panel.width - 1 - max_stab_width
 
     tcod.console_set_default_foreground(inv_panel, default_fore)
-    tcod.console_print_ex(inv_panel, 3, y, tcod.BKGND_NONE, tcod.LEFT, feature.fego.value.get("name"))
+    effective_string = ""
+    if feature.is_in_inventory:
+        for wslot in player.wequiped:
+            weapon = player.wequiped.get(wslot)
+            if weapon and weapon.is_effective_on_fego(feature.fego):
+                effective_string = " *"
+                break
+
+    tcod.console_print_ex(inv_panel, 3, y, tcod.BKGND_NONE, tcod.LEFT, feature.fego.value.get("name") + effective_string)
     y += 1
-    tcod.console_print_ex(inv_panel, 3, y, tcod.BKGND_NONE, tcod.LEFT, feature.fslot.value.get("name")+" v"+str(feature.level))
+    tcod.console_print_ex(inv_panel, 3, y, tcod.BKGND_NONE, tcod.LEFT, feature.fslot.value.get("name") + " v" + str(feature.level))
 
     tcod.console_set_default_foreground(inv_panel, const.base3)
     stable = feature.is_stable()
@@ -56,8 +64,12 @@ def render_feature(inv_panel, feature, default_fore, y):
     else:
         tcod.console_print_ex(inv_panel, start_stab, y, tcod.BKGND_NONE, tcod.LEFT, "Unstable")
     stab_width = round(feature.stability / feature.max_stability * max_stab_width)
+    if stable:
+        color = const.green
+    else:
+        color = const.green*(feature.stability/feature.max_stability/const.stability_threshold) + const.red*(1 - feature.stability/feature.max_stability/const.stability_threshold)
     for x in range(start_stab, start_stab + stab_width):
-        tcod.console_set_char_background(inv_panel, x, y, const.green if stable else const.red, tcod.BKGND_SET)
+        tcod.console_set_char_background(inv_panel, x, y, color, tcod.BKGND_SET)
     for x in range(start_stab + stab_width, start_stab + max_stab_width):
         tcod.console_set_char_background(inv_panel, x, y, const.base02, tcod.BKGND_SET)
 
@@ -66,7 +78,7 @@ def render_weapon(inv_panel, weapon, default_fore, y, active_weapon):
     for fslot in weapon.fslot_effective:
         # tcod.console_set_char_background(inv_panel, x, y, fslot.value.get("color"), tcod.BKGND_SET)
         tcod.console_set_default_foreground(inv_panel, fslot.value.get("color"))
-        tcod.console_put_char(inv_panel, x, y, "!", tcod.BKGND_NONE)
+        tcod.console_put_char(inv_panel, x, y, "*", tcod.BKGND_NONE)
         x += 1
     tcod.console_set_default_foreground(inv_panel, default_fore)
     if active_weapon:
@@ -107,7 +119,7 @@ def render_inv(root_console, inv_panel, player, map_width, sch_height):
         feature = player.fequiped.get(fslot)
         tcod.console_set_char_background(inv_panel, 1, y, fslot.value.get("color"), tcod.BKGND_SET)
         if feature:
-            render_feature(inv_panel, feature, default_fore, y)
+            render_feature(inv_panel, feature, default_fore, y, player)
             y += 2
         else:
             tcod.console_set_default_foreground(inv_panel, const.base02)
@@ -122,11 +134,20 @@ def render_inv(root_console, inv_panel, player, map_width, sch_height):
     inv_panel.print_frame(0, y, w, 3, string="Resistance")
     y += 1
     x = 2
+    at_least_one = False
     for fslot in const.FeatureSlot:
-        tcod.console_set_char_background(inv_panel, x, y, fslot.value.get("color"), tcod.BKGND_SET)
-        x += 1
-        tcod.console_print_ex(inv_panel, x, y, tcod.BKGND_NONE, tcod.LEFT, ":"+str(player.resistances.get(fslot)))
-        x += 4
+        r = player.resistances.get(fslot)
+        if r > 0:
+            at_least_one = True
+            tcod.console_set_char_background(inv_panel, x, y, fslot.value.get("color"), tcod.BKGND_SET)
+            x += 1
+            tcod.console_print_ex(inv_panel, x, y, tcod.BKGND_NONE, tcod.LEFT, ":"+str(r))
+            x += 4
+        else:
+            x += 5
+    if not at_least_one:
+        tcod.console_set_default_foreground(inv_panel, const.base02)
+        tcod.console_print_ex(inv_panel, int(w / 2), y, tcod.BKGND_NONE, tcod.CENTER, "(none)")
 
     tcod.console_set_default_foreground(inv_panel, default_fore)
     y += 2
@@ -162,7 +183,7 @@ def render_inv(root_console, inv_panel, player, map_width, sch_height):
                 render_weapon(inv_panel, item, default_fore, y, False)
                 tcod.console_put_char(inv_panel, 1, y, k, tcod.BKGND_NONE)
             else:
-                render_feature(inv_panel, item, default_fore, y)
+                render_feature(inv_panel, item, default_fore, y, player)
             tcod.console_set_default_foreground(inv_panel, default_fore)
             tcod.console_put_char(inv_panel, 1, y, k, tcod.BKGND_NONE)
         else:

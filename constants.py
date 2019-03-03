@@ -35,22 +35,23 @@ tcod.color_scale_HSV(desat_yellow, 0.7, 1)
 stability_threshold = 0.7
 inventory_max_size = 5
 
-time_equip_weapon = 5
-time_move = 1
-spawn_interval = 20
-malus_max = 30
+time_equip = 60*3
+time_equip_weapon = 20
+time_move = 60
+spawn_interval = 60*3
+malus_max = 10*60
 
 class FeatureSlot(enum.Enum):
     m = {"name": "monsters", "color": magenta, "desat_color": desat_magenta}
-    i = {"name": "id", "color": violet, "desat_color": desat_violet}
+    i = {"name": "mapgen", "color": violet, "desat_color": desat_violet}
     p = {"name": "plot", "color": blue, "desat_color": desat_blue}
     c = {"name": "combat", "color": yellow, "desat_color": desat_yellow}
     l = {"name": "loot", "color": green, "desat_color": desat_green}
 
 class WeaponSlot(enum.Enum):
-    fast = {"name": "printf()", "success_rate_base": 0.3, "duration_base": 3, "instable": False, "key": "1"}
-    slow = {"name": "profiler", "success_rate_base": 0.7, "duration_base": 7, "instable": False, "key": "2"}
-    hack = {"name": "hack", "success_rate_base": 1, "duration_base": 4, "instable": True, "key": "3"}
+    fast = {"name": "printf()", "success_rate_base": 0.3, "duration_base": 3*60, "instable": False, "key": "1"}
+    slow = {"name": "profiler", "success_rate_base": 0.7, "duration_base": 7*60, "instable": False, "key": "2"}
+    hack = {"name": "hack", "success_rate_base": 1, "duration_base": 2*60, "instable": True, "key": "3"}
 
 class FeatureEgo(enum.Enum):
     c1 = {"name": "evolutive", "char": "c"}

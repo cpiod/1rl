@@ -16,9 +16,7 @@ def handle_equip_keys(key, modifiers):
         return {"equip_key": "e"}
     elif key == "tcod.event.K_ESCAPE":
         return {'cancel': True}
-    return {}
-
-
+    return {'equip_unknow': True}
 
 def handle_drop_keys(key, modifiers):
     if key == "tcod.event.K_a":
@@ -33,7 +31,7 @@ def handle_drop_keys(key, modifiers):
         return {"drop_key": "e"}
     elif key == "tcod.event.K_ESCAPE":
         return {'cancel': True}
-    return {}
+    return {'drop_unknow': True}
 
 def handle_player_turn_keys(key, modifiers):
     # Movement keys

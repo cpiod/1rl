@@ -65,7 +65,7 @@ class Weapon(Entity):
         super().__init__(None, None, wego.value.get("char"), const.base3, wego.value.get("name")+" "+wslot.value.get("name"), False, True, const.RenderOrder.ITEM)
         self.wego = wego
         self.level = level
-        self.success_rate = int(100*(wslot.value.get("success_rate_base")+level*0.05))/100
+        self.success_rate = min(1, int(100*(wslot.value.get("success_rate_base")+level*0.05))/100)
         self.duration = wslot.value.get("duration_base")
         self.wslot = wslot
         self.is_in_inventory = False
@@ -76,18 +76,23 @@ class Weapon(Entity):
         self.fslot_effective = [fslot for fslot in const.FeatureSlot if fequiped.get(fslot) and fequiped.get(fslot).fego in self.wego.value.get("fego")]
 
     def stat_string(self):
-        string = str(round(self.success_rate * 100))+"% "+str(self.duration)+"mn"
+        string = str(round(self.success_rate * 100))+"% "+str(self.duration)+"s"
         if self.wslot.value.get("instable"):
             string = "Stab- "+string
         return string
+
+    def is_effective_on_fego(self, fego):
+        return fego in self.wego.value.get("fego")
+
+    def is_effective_on(self, fslot):
+        return fslot in self.fslot_effective
 
     def attack(self, target, msglog):
         dmg = 0
         if random.random() < self.success_rate:
             # succesfull attack
-            effective = target.fslot in self.fslot_effective
+            effective = self.is_effective_on(target)
             if effective:
-                msglog.add_log("Your "+self.name+" is super effective on the "+target.name+"!")
                 dmg = 2*self.level
             else:
                 dmg = self.level
@@ -103,7 +108,7 @@ class Feature(Entity):
         super().__init__(None, None, fego.value.get("char"), fslot.value.get("desat_color"), fego.value.get("name")+" "+fslot.value.get("name"), False, True, const.RenderOrder.ITEM)
         self.n_bugs = 0
         self.n_bugs_max = 10
-        self.max_stability = 10 * (level*level)
+        self.max_stability = 30 * (level*level)
         self.stability = int(self.max_stability / 10)
         self.fslot = fslot
         self.fego = fego
@@ -175,6 +180,8 @@ class Player(Entity):
         assert not feature.equiped
         assert feature.is_in_inventory
         previous_feature = self.fequiped.get(feature.fslot)
+        if previous_feature and not previous_feature.is_stable():
+            return previous_feature
         feature.equiped = True
         feature.is_in_inventory = False
         self.fequiped[feature.fslot] = feature
@@ -193,6 +200,7 @@ class Player(Entity):
         else:
             self.inventory[key] = None
         self.update_resistance()
+        return None
 
     def wequip(self, weapon, key):
         assert not weapon.equiped
@@ -220,6 +228,7 @@ class Player(Entity):
             r = 0
             feature = self.fequiped.get(fslot)
             if feature:
+                r = 1
                 fego = feature.fego
                 for fslot_equiped in const.FeatureSlot:
                     other = self.fequiped.get(fslot_equiped)
@@ -239,8 +248,8 @@ class Monster(Entity):
         super().__init__(x, y, str(self.hp), fcreator.fslot.value.get("color"), fcreator.fslot.value.get("name")+" bug", True, True, const.RenderOrder.ACTOR)
         self.level = level
         self.fslot = fcreator.fslot
-        self.atk = 1
-        self.speed = 5 - level
+        self.atk = 15
+        self.speed = 30 * (4 - level)
         self.fcreator = fcreator
         fcreator.n_bugs += 1
 
@@ -307,7 +316,7 @@ class Monster(Entity):
         # Check if the path exists, and in this case, also the path is shorter than 25 tiles
         # The path size matters if you want the monster to use alternative longer paths (for example through other rooms) if for example the player is in a corridor
         # It makes sense to keep path size relatively low to keep the monsters from running around the map if there's an alternative path really far away
-        if path and len(path) < 25:
+        if path:
             # Find the next coordinates in the computed full path
             x, y = path[0]
             if x or y:

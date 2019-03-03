@@ -40,7 +40,7 @@ class GameMap:
         self.tcod_map = tcod.map.Map(width, height)
 
     def add_loot(self, turns, entities):
-        n_loot = 3 + sum([random.randint(1,4) for i in range(2)])
+        n_loot = 5 + sum([random.randint(1,4) for i in range(2)])
         while n_loot > 0:
             arity = random.choice([1,1,1,2,2,3,4,5])
             rlist = [r for r in self.rooms_with_arity(arity) if r.n_loot < 2] # 2 items per room max
@@ -106,14 +106,15 @@ class GameMap:
 
     def spawn(self, entities, feature):
         # We try at most 50 times to spawn it
-        if not feature.is_stable() and feature.n_bugs < feature.n_bugs_max:
-            for i in range(50):
-                (x,y) = self.random_cell()
-                if not self.is_visible(x,y) and not any([entity for entity in entities if entity.x == x and entity.y == y]):
-                    monster = entity.Monster(x, y, random.randint(1, feature.level), feature)
-                    entities.append(monster)
-                    # print("Spawn from "+feature.name+": "+str(feature.n_bugs))
-                    break
+        for i in range(50):
+            (x,y) = self.random_cell()
+            if not self.is_visible(x,y) and not any([entity for entity in entities if entity.x == x and entity.y == y]):
+                monster = entity.Monster(x, y, random.randint(1, feature.level), feature)
+                entities.append(monster)
+                # print("Spawn from "+feature.name+": "+str(feature.n_bugs))
+                return monster
+                break
+        return None
 
     def iterator_perimeter_room(self, r):
         for x in range(r.x, r.x + r.w):
@@ -310,6 +311,11 @@ class GameMap:
             item = self.tiles[player.x][player.y].take_item(entities)
             player.add_to_inventory(item)
             return item
+
+    def description_item_on_floor(self, player):
+        if self.tiles[player.x][player.y].item:
+            return self.tiles[player.x][player.y].item.name
+        return None
 
     def is_there_item_on_floor(self, player):
         return self.tiles[player.x][player.y].item != None
