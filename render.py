@@ -247,10 +247,17 @@ def get_object_under_mouse(mouse, entities, game_map, screen_width):
 
 def get_names_under_mouse(mouse, entities, game_map, screen_width):
     (x, y) = mouse
-    entities_in_render_order = sorted([entity for entity in entities
-             if entity.x == x and entity.y == y and game_map.is_visible(entity.x, entity.y)], key=lambda x: x.render_order.value, reverse=True)
-    names = ', over a '.join([e.name for e in entities_in_render_order])
-    # space padding to remove the precedent description
-    names = names.ljust(screen_width, ' ')
+    if game_map.is_over_map(x,y) and game_map.is_visible(x,y):
+        entities_in_render_order = sorted([entity for entity in entities
+                if entity.x == x and entity.y == y], key=lambda x: x.render_order.value, reverse=True)
+        names = [e.name for e in entities_in_render_order]
+        string = game_map.tiles[x][y].name
+        if string:
+            names.append(string)
+        names = ', over a '.join(names)
+        # space padding to remove the precedent description
+        names = names.ljust(screen_width, ' ')
 
-    return names.capitalize()
+        return  "%s%s" % (names[0].upper(), names[1:]) # fist letter in capital
+    else:
+        return "".ljust(screen_width, ' ')

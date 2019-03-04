@@ -253,7 +253,7 @@ class Monster(Entity):
         self.fcreator = fcreator
         fcreator.n_bugs += 1
 
-    def dead(self, entities):
+    def dead(self, entities, stabilize=True):
         entities.remove(self)
         self.fcreator.n_bugs -= 1
         return self.fcreator.stabilize(self.level)

@@ -45,7 +45,7 @@ malus_max = 10*60
 class FeatureSlot(enum.Enum):
     m = {"name": "monsters", "color": magenta, "desat_color": desat_magenta}
     i = {"name": "mapgen", "color": violet, "desat_color": desat_violet}
-    p = {"name": "plot", "color": blue, "desat_color": desat_blue}
+    p = {"name": "RNG", "color": blue, "desat_color": desat_blue}
     c = {"name": "combat", "color": yellow, "desat_color": desat_yellow}
     l = {"name": "loot", "color": green, "desat_color": desat_green}
 
@@ -83,8 +83,8 @@ class TurnType(enum.Enum):
     SPAWN = 2
 
 class TileType(enum.Enum):
-    WALL = {"name": "wall", "collision": True, "transparent": False, "char": "#", "color": base2}
-    FLOOR = {"name": "floor", "collision": False, "transparent": True, "char": ".", "color": base2}
+    WALL = {"name": "", "collision": True, "transparent": False, "char": "#", "color": base2}
+    FLOOR = {"name": "", "collision": False, "transparent": True, "char": ".", "color": base2}
     STAIRS = {"name": "stairs", "collision": False, "transparent": True, "char": ">", "color": door_color}
     DOOR = {"name": "door", "collision": False, "transparent": False, "char": "+", "color": door_color}
 

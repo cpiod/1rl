@@ -85,6 +85,21 @@ def main():
     # log init
     msglog = log.Log(log_width - 2, log_height - 2)
 
+    # Splash
+    img = tcod.image_load("splash.png")
+    img.blit_2x(root_console, 0, 0)
+    tcod.console_print_ex(root_console, 75, 10, tcod.BKGND_NONE, tcod.CENTER, "Press any key to create your\nfirst 7DRL game!")
+    tcod.console_print_ex(root_console, 50, 47, tcod.BKGND_NONE, tcod.CENTER, "A cheap plastic imitation of a game dev, 2019")
+    tcod.console_flush()
+
+    again = True
+    while again:
+        for event in tcod.event.wait():
+            if event.type == "QUIT":
+                raise SystemExit()
+            elif event.type == "KEYDOWN" or event.type == "MOUSEBUTTONDOWN":
+                again = False
+
     first_feature = random_loot.get_random_feature(turns)
     key = player.add_to_inventory(first_feature)
     player.fequip(first_feature, key)
@@ -214,6 +229,9 @@ def main():
                 descend = action.get('descend')
                 if descend:
                     msglog.add_log("You go down the stairs.")
+                    for e in entities:
+                        if isinstance(e, entity.Monster):
+                            e.dead(entities, stabilize=False)
                     entities = [player]
                     game_map.make_map_bsp(turns, entities, player)
                     turns.add_turn(time_malus + const.time_descend, const.TurnType.PLAYER, player)
