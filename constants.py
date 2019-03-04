@@ -57,24 +57,24 @@ class WeaponSlot(enum.Enum):
     hack = {"name": "hack", "success_rate_base": 1, "duration_base": 30, "instable": True, "key": "3"}
 
 class FeatureEgo(enum.Enum):
-    c1 = {"name": "evolutive", "char": "c"}
-    c2 = {"name": "diplomatic", "char": "c"}
-    c3 = {"name": "artistic", "char": "c"}
+    c1 = {"name": "narcoleptic", "char": "t"}
+    c2 = {"name": "occult", "char": "t"}
+    c3 = {"name": "psychic", "char": "t"}
 
-    b1 = {"name": "minigame-based", "char": "b"}
+    b1 = {"name": "magic-based", "char": "b"}
     b2 = {"name": "reputation-based", "char": "b"}
     b3 = {"name": "pun-based", "char": "b"}
 
     p1 = {"name": "recursive", "char": "p"}
     p2 = {"name": "meta", "char": "p"}
-    p3 = {"name": "self-contained", "char": "p"}
+    p3 = {"name": "self-referenced", "char": "p"}
 
     m1 = {"name": "Sisyphean", "char": "m"}
     m2 = {"name": "Lovecraftian", "char": "m"}
-    m3 = {"name": "Enochian", "char": "m"}
+    m3 = {"name": "Elvish", "char": "m"}
 
 class WeaponEgo(enum.Enum):
-    c = {"name": "conscious", "fego": [FeatureEgo.c1, FeatureEgo.c2, FeatureEgo.c3], "char": "c", "w_class": "ConsciousWeapon"}
+    c = {"name": "telepathic", "fego": [FeatureEgo.c1, FeatureEgo.c2, FeatureEgo.c3], "char": "t", "w_class": "ConsciousWeapon"}
     b = {"name": "basic", "fego": [FeatureEgo.b1, FeatureEgo.b2, FeatureEgo.b3], "char": "b", "w_class": "BasicWeapon"}
     p = {"name": "paradoxical", "fego": [FeatureEgo.p1, FeatureEgo.p2, FeatureEgo.p3], "char": "p", "w_class": "ParadoxicalWeapon"}
     m = {"name": "mythical", "fego": [FeatureEgo.m1, FeatureEgo.m2, FeatureEgo.m3], "char": "m", "w_class": "MythicalWeapon"}
