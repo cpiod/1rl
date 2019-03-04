@@ -1,6 +1,7 @@
 import tcod
 import constants as const
 import random
+import math
 
 class Entity:
     """
@@ -69,6 +70,7 @@ class Weapon(Entity):
         self.success_rate = wslot.value.get("success_rate_base")
         self.duration = wslot.value.get("duration_base")
         self.wslot = wslot
+        self.dmg = self.level
         self.is_in_inventory = False
         self.equiped = False
         self.fslot_effective = []
@@ -88,30 +90,54 @@ class Weapon(Entity):
     def is_effective_on(self, fslot):
         return fslot in self.fslot_effective
 
-    def attack(self, target, msglog):
+    def equip_log(self, msglog):
+        pass
+
+    def attack(self, target, msglog, turns):
         dmg = 0
         duration = self.duration
         if random.random() < self.success_rate:
-            dmg = self.level
-            # succesfull attack
+            dmg = self.dmg
+            target.hp -= dmg
+            target.update_symbol()
+           # succesfull attack
             effective = self.is_effective_on(target)
             if effective:
                 duration = int(self.duration/2)
         else:
             msglog.add_log("You miss the "+target.name)
+
         return (dmg, duration)
 
 class ConsciousWeapon(Weapon):
-    pass
+    def equip_log(self, msglog):
+        msglog.add_log("You feel conscious of bug presence.")
 
 class BasicWeapon(Weapon):
-    pass
+    def equip_log(self, msglog):
+        msglog.add_log("You feel surrounded by a caustic aura.")
 
 class ParadoxicalWeapon(Weapon):
-    pass
+    def attack(self, target, msglog, turns):
+        (dmg,duration) = super().attack(target, msglog, turns)
+        if dmg != 0 and target.hp > 0: # we didn't miss and it's still alive
+            if not target.confusion_date and random.randint(1, 3) < 3:
+                msglog.add_log(random.choice(const.paradox_list))
+                msglog.add_log("The "+target.name+" is confused!")
+                target.confusion_date = turns.current_date + const.confusion_duration
+        return (dmg,duration)
+
+    def equip_log(self, msglog):
+        msglog.add_log("Your weapon tells you a paradox.")
+
 
 class MythicalWeapon(Weapon):
-    pass
+    def __init__(self, wslot, wego, level):
+        super().__init__(wslot, wego, level)
+        self.dmg = math.ceil(self.dmg * 1.5)
+
+    def equip_log(self, msglog):
+        msglog.add_log("Your mythical weapon is worthy of the gods.")
 
 class Feature(Entity):
     """
@@ -253,6 +279,7 @@ class Player(Entity):
 
         if not self.active_weapon:
             self.active_weapon = weapon
+
         return {}
 
     def update_resistance(self):
@@ -287,6 +314,7 @@ class Monster(Entity):
         assert fcreator.n_bugs[self.level - 1] < fcreator.n_bugs_max[self.level - 1]
         fcreator.n_bugs[self.level - 1] += 1
         self.stability_reward = 3*self.level
+        self.confusion_date = None
 
     def dead(self, entities, stabilize=True):
         entities.remove(self)
@@ -368,7 +396,12 @@ class Monster(Entity):
             self.move_towards(target.x, target.y, game_map, entities)
 
 
-    def attack(self, player):
+    def attack(self, player, turns):
+        if self.confusion_date:
+            if self.confusion_date < turns.current_date:
+                return 0
+            else:
+                self.confusion_date = None
         if random.random() < self.success_rate:
             r = player.resistances[self.fslot]
             mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]

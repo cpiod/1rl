@@ -109,8 +109,9 @@ def main():
         first_weapon = random_loot.get_random_weapon(turns, player)
         if first_weapon.wslot.value.get("instable"):
             first_weapon = None
+
     key = player.add_to_inventory(first_weapon)
-    player.wequip(first_weapon, key)
+    # player.wequip(first_weapon, key)
 
     menu_state = const.MenuState.STANDARD
 
@@ -216,6 +217,8 @@ def main():
                         msglog.add_log("This weapon is already wielded")
                     else:
                         player.active_weapon = new_active
+                        player.active_weapon.equip_log(msglog)
+                        enemy_moved = True
                         render_inv = True
                         turns.add_turn(time_malus + const.time_equip_weapon, const.TurnType.PLAYER, player)
                         time_malus = 0
@@ -305,6 +308,7 @@ def main():
                 if equip_key:
                     item = player.inventory.get(equip_key)
                     if item:
+                        previous_active = player.active_weapon
                         if isinstance(item, entity.Feature):
                             out = player.fequip(item, equip_key)
                         elif isinstance(item, entity.Weapon):
@@ -322,6 +326,9 @@ def main():
                             msglog.add_log("You equip a "+item.name)
                             if isinstance(item, entity.Weapon):
                                 msglog.add_log("You can change your active weapon with [123].")
+                                if not previous_active:
+                                    enemy_moved = True
+                                    player.active_weapon.equip_log(msglog)
                             render_inv = True
                             turns.add_turn(time_malus + const.time_equip, const.TurnType.PLAYER, player)
                             time_malus = 0
@@ -355,6 +362,10 @@ def main():
 
                     if (dx, dy) == (0, 0):
                         msglog.add_log("There is no time to lose!")
+                        turns.add_turn(time_malus + const.time_move, const.TurnType.PLAYER, player)
+                        time_malus = 0
+                        new_turn = True
+                        force_log = True
                     else:
                         destination_x = player.x + dx
                         destination_y = player.y + dy
@@ -367,23 +378,7 @@ def main():
                                 msglog.add_log("You have no weapon to attack with! Equip with 1, 2 or 3.")
                                 assert False
                             else:
-                                (dmg,duration) = weapon.attack(target, msglog)
-                                target.hp -= dmg
-                                target.update_symbol()
-                                if weapon.wslot.value.get("instable"):
-                                    msglog.add_log("Your "+target.fcreator.name+" is less stable!")
-                                    target.fcreator.destabilize(target.level)
-                                    player.update_resistance()
-                                if target.hp <= 0:
-                                    enemy_moved = True
-                                    if weapon.is_effective_on(target.fslot):
-                                        msglog.add_log("You squashed the "+target.name+"!")
-                                    more_stable = target.dead(entities)
-                                    player.update_resistance()
-                                    if more_stable:
-                                        msglog.add_log("Your "+target.fcreator.name+" is more stable.")
-                                    # else:
-                                        # msglog.add_log(target.name.capitalize()+" is defeated but your "+target.fcreator.name+" is already stable.")
+                                duration = attack(weapon, target, msglog, player, entities, turns)
                                 render_inv = True
                                 turns.add_turn(time_malus + duration, const.TurnType.PLAYER, player)
                                 time_malus = 0
@@ -407,9 +402,11 @@ def main():
                     if game_map.is_visible(e.x, e.y):
                         enemy_moved = True
                 else:
-                    delta_malus = e.attack(player)
+                    delta_malus = e.attack(player, turns)
                     if delta_malus == 0:
-                        pass
+                        if player.active_weapon and isinstance(player.active_weapon, entity.BasicWeapon) and random.randint(1,3) == 1:
+                            msglog.add_log("The "+e.name+" is burned by your caustic and "+player.active_weapon.name+"!")
+                            attack(player.active_weapon, e, msglog, player, entities, turns, log_effective=False)
                         # msglog.add_log("The "+e.name+" misses.")
                     else:
                         time_malus += delta_malus
@@ -428,6 +425,23 @@ def main():
                         turns.add_turn(e.speed, const.TurnType.ENNEMY, e)
             turns.add_turn(const.spawn_interval, const.TurnType.SPAWN, current_turn.entity)
             new_turn = True
+
+
+def attack(weapon, target, msglog, player, entities, turns, log_effective=True):
+    (dmg,duration) = weapon.attack(target, msglog, turns)
+    if weapon.wslot.value.get("instable"):
+        msglog.add_log("Your "+target.fcreator.name+" is less stable!")
+        target.fcreator.destabilize(target.level)
+        player.update_resistance()
+    if target.hp <= 0:
+        enemy_moved = True
+        if log_effective and weapon.is_effective_on(target.fslot):
+            msglog.add_log("You squashed the "+target.name+"!")
+        more_stable = target.dead(entities)
+        player.update_resistance()
+        if more_stable:
+            msglog.add_log("Your "+target.fcreator.name+" is more stable.")
+    return duration
 
 if __name__ == '__main__':
     main()

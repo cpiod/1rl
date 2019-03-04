@@ -19,7 +19,7 @@ def render_map(root_console, con, entities, player, game_map, screen_width, scre
 
     # Draw all entities in the list
     for entity in entities_in_render_order:
-        draw_entity(con, entity, game_map)
+        draw_entity(con, entity, game_map, player)
 
     con.blit(dest=root_console)
 
@@ -208,13 +208,15 @@ def render_inv(root_console, inv_panel, player, map_width, sch_height):
 
     inv_panel.blit(dest=root_console, dest_x=map_width, dest_y=sch_height)
 
-def clear_all_entities(con, entities,game_map):
-    for entity in entities:
-        clear_cell(con, entity.x,entity.y,game_map)
+# def clear_all_entities(con, entities,game_map, player):
+    # for entity in entities:
+        # clear_cell(con, entity.x,entity.y,game_map,player)
 
-def draw_entity(con, entity, game_map):
+def draw_entity(con, entity, game_map, player):
     visible = game_map.is_visible(entity.x, entity.y)
-    if visible or (entity.is_seen and (isinstance(entity, ent.Weapon) or isinstance(entity, ent.Feature))):
+    if visible\
+    or (entity.is_seen and (isinstance(entity, ent.Weapon) or isinstance(entity, ent.Feature)))\
+    or (isinstance(entity, ent.Monster) and isinstance(player.active_weapon, ent.ConsciousWeapon)):
         if visible:
             tcod.console_set_char_foreground(con, entity.x, entity.y, entity.visible_color)
         else:
@@ -238,7 +240,7 @@ def clear_cell(con, x,y,game_map):
     else:
         tcod.console_set_char(con, x, y, ' ')
 
-def get_object_under_mouse(mouse, entities, game_map, screen_width):
+def get_object_under_mouse(mouse, entities, game_map, screen_width): # TODO
     (x, y) = mouse
     names = [entity.name for entity in entities
              if entity.x == x and entity.y == y and game_map.is_visible(entity.x, entity.y)]

@@ -40,7 +40,9 @@ time_equip = 60*3
 time_equip_weapon = 20
 time_move = 60
 spawn_interval = 60*3
+confusion_duration = 60*20
 malus_max = 15*60
+paradox_list = ["\"Illusions are not real, yet it's real that illusion itself exists.\"", "\"I know one thing: that I know nothing.\"", "\"Can the Wizard of Yendor create a rock too heavy for itself to lift?\"", "\"What happens if Pinocchio says \"My nose will grow now\"?\"", "\"I am lying.\""]
 
 class FeatureSlot(enum.Enum):
     m = {"name": "monsters", "color": magenta, "desat_color": desat_magenta, "bug_class": "MonsterBug"}

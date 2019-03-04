@@ -22,10 +22,10 @@ def get_random_weapon(turns, player):
     flevel = player.flevel()
     # Weapon are stronger than feature
     rand = 10*flevel + 2 * (7 - remaining_d) + sum([random.randint(1,6) for i in range(1)])
-    level = int(max(1,min(5, rand/10+1)))
+    level = int(max(1,min(3, rand/10+1)))
     wego = random.choice(list(const.WeaponEgo))
     wslot = random.choice(list(const.WeaponSlot))
-    if level > 1:
+    if level >= 1:
         class_name = wego.value.get("w_class")
         the_class = getattr(entity, class_name)
         w = the_class(wslot, wego, level)
