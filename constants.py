@@ -40,14 +40,14 @@ time_equip = 60*3
 time_equip_weapon = 20
 time_move = 60
 spawn_interval = 60*3
-malus_max = 10*60
+malus_max = 15*60
 
 class FeatureSlot(enum.Enum):
-    m = {"name": "monsters", "color": magenta, "desat_color": desat_magenta}
-    i = {"name": "mapgen", "color": violet, "desat_color": desat_violet}
-    p = {"name": "RNG", "color": blue, "desat_color": desat_blue}
-    c = {"name": "combat", "color": yellow, "desat_color": desat_yellow}
-    l = {"name": "loot", "color": green, "desat_color": desat_green}
+    m = {"name": "monsters", "color": magenta, "desat_color": desat_magenta, "bug_class": "MonsterBug"}
+    i = {"name": "mapgen", "color": violet, "desat_color": desat_violet, "bug_class": "MapGenBug"}
+    p = {"name": "RNG", "color": blue, "desat_color": desat_blue, "bug_class": "RNGBug"}
+    c = {"name": "combat", "color": yellow, "desat_color": desat_yellow, "bug_class": "CombatBug"}
+    l = {"name": "loot", "color": green, "desat_color": desat_green, "bug_class": "LootBug"}
 
 class WeaponSlot(enum.Enum):
     fast = {"name": "printf()", "success_rate_base": 0.3, "duration_base": 3*60, "instable": False, "key": "1"}
@@ -100,6 +100,6 @@ class MenuState(enum.Enum):
     POPUP = 4
 
 resistance_mul = [1, 0.9, 0.8, 0.7, 0.6, 0.5]
-
+monster_success_rate = [0.7, 0.75, 0.8]
 help_adjust = 30
 help_strings = ["1RL","","You have 7 days to complete your game.","","","Commands","","g        pick-up".ljust(help_adjust, ' '),"d        drop".ljust(help_adjust, ' '),"w        equip".ljust(help_adjust, ' '),"123      change active weapon".ljust(help_adjust, ' '),"ENTER    use stairs".ljust(help_adjust, ' ')]

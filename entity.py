@@ -89,16 +89,16 @@ class Weapon(Entity):
 
     def attack(self, target, msglog):
         dmg = 0
+        duration = self.duration
         if random.random() < self.success_rate:
+            dmg = self.level
             # succesfull attack
             effective = self.is_effective_on(target)
             if effective:
-                dmg = 2*self.level
-            else:
-                dmg = self.level
+                duration = int(self.duration/2)
         else:
             msglog.add_log("You miss the "+target.name)
-        return dmg
+        return (dmg, duration)
 
 class Feature(Entity):
     """
@@ -106,8 +106,8 @@ class Feature(Entity):
     """
     def __init__(self, fslot, fego, level):
         super().__init__(None, None, fego.value.get("char"), fslot.value.get("desat_color"), fego.value.get("name")+" "+fslot.value.get("name")+" v"+str(level), False, True, const.RenderOrder.ITEM)
-        self.n_bugs = 0
-        self.n_bugs_max = 10
+        self.n_bugs = [0,0,0]
+        self.n_bugs_max = [20,5,1]
         self.max_stability = 30 * (level*level)
         self.stability = int(self.max_stability / 10)
         self.fslot = fslot
@@ -270,11 +270,14 @@ class Monster(Entity):
         self.atk = 20 + 10*level
         self.speed = 30 * (4 - level)
         self.fcreator = fcreator
-        fcreator.n_bugs += 1
+        self.success_rate = const.monster_success_rate[self.level]
+        assert fcreator.n_bugs[self.level] < fcreator.n_bugs_max[self.level]
+        fcreator.n_bugs[self.level] += 1
 
     def dead(self, entities, stabilize=True):
         entities.remove(self)
-        self.fcreator.n_bugs -= 1
+        self.fcreator.n_bugs[self.level] -= 1
+        assert self.fcreator.n_bugs[self.level] >= 0
         return self.fcreator.stabilize(self.level)
 
     def update_symbol(self):
@@ -348,6 +351,28 @@ class Monster(Entity):
             self.move_towards(target.x, target.y, game_map, entities)
 
 
+    def attack(self, player):
+        if random.random() < self.success_rate:
+            r = player.resistances[self.fslot]
+            mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
+            delta_malus = round(self.atk*r)
+            return delta_malus
+        else:
+            return 0
+
+class MonsterBug(Monster):
+    pass
+
+class LootBug(Monster):
+    pass
+
+class RNGBug(Monster):
+    pass
+
+class CombatBug(Monster):
+    pass
+class MapGenBug(Monster):
+    pass
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y):
     for entity in entities:

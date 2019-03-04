@@ -38,7 +38,7 @@ class GameMap:
         # sample = noise.sample_ogrid(ogrid)*(max_lum-min_lum) + min_lum
 
     def add_loot(self, turns, player, entities):
-        n_loot = 10 + sum([random.randint(1,4) for i in range(2)])
+        n_loot = 15 + sum([random.randint(1,4) for i in range(4)])
         while n_loot > 0:
             arity = random.choice([1,1,1,2,2,3,4,5])
             rlist = [r for r in self.rooms_with_arity(arity) if r.n_loot < 2] # 2 items per room max
@@ -113,11 +113,17 @@ class GameMap:
         for i in range(50):
             (x,y) = self.random_cell()
             if not self.is_visible(x,y) and not any([entity for entity in entities if entity.x == x and entity.y == y]):
-                monster = entity.Monster(x, y, random.randint(1, feature.level), feature)
-                entities.append(monster)
-                # print("Spawn from "+feature.name+": "+str(feature.n_bugs))
-                return monster
-                break
+                level = random.randint(1, feature.level)
+                if feature.n_bugs[level] < feature.n_bugs_max[level]:
+                    if level > 1:
+                        class_name = feature.fslot.value.get("bug_class")
+                        the_class = getattr(entity, class_name)
+                        monster = the_class(x, y, level, feature)
+                    else:
+                        monster = entity.Monster(x, y, level, feature)
+                    entities.append(monster)
+                    # print("Spawn from "+feature.name+": "+str(feature.n_bugs))
+                    return monster
         return None
 
     def iterator_perimeter_room(self, r):

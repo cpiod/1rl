@@ -368,7 +368,7 @@ def main():
                                     msglog.add_log("You have no weapon to attack with! Equip with 1, 2 or 3.")
                                     assert False
                                 else:
-                                    dmg = weapon.attack(target, msglog)
+                                    (dmg,duration) = weapon.attack(target, msglog)
                                     target.hp -= dmg
                                     target.update_symbol()
                                     if weapon.wslot.value.get("instable"):
@@ -386,7 +386,7 @@ def main():
                                         # else:
                                             # msglog.add_log(target.name.capitalize()+" is defeated but your "+target.fcreator.name+" is already stable.")
                                     render_inv = True
-                                    turns.add_turn(time_malus + player.active_weapon.duration, const.TurnType.PLAYER, player)
+                                    turns.add_turn(time_malus + duration, const.TurnType.PLAYER, player)
                                     time_malus = 0
                                     new_turn = True
                             else:
@@ -407,18 +407,19 @@ def main():
                     e.move_astar(player, entities, game_map)
                     enemy_moved = True
                 else:
-                    r = player.resistances[e.fslot]
-                    mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
-                    delta_malus = round(e.atk*r)
-                    time_malus += delta_malus
-                    if time_malus > const.malus_max:
-                        time_malus = const.malus_max
+                    delta_malus = e.attack(player)
+                    if delta_malus == 0:
+                        msglog.add_log("The "+e.name+" misses.")
+                    else:
+                        time_malus += delta_malus
+                        if time_malus > const.malus_max:
+                            time_malus = const.malus_max
                 turns.add_turn(e.speed, const.TurnType.ENNEMY, e)
             new_turn = True
 
         elif current_turn.ttype == const.TurnType.SPAWN:
             creator = player.fequiped.get(current_turn.entity)
-            if creator and not creator.is_stable() and creator.n_bugs < creator.n_bugs_max:
+            if creator and not creator.is_stable() and sum(creator.n_bugs) < sum(creator.n_bugs_max):
                 chance = 1 - creator.stability / creator.max_stability / const.stability_threshold
                 if random.random() < chance:
                     e = game_map.spawn(entities, creator)

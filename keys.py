@@ -86,9 +86,9 @@ def handle_player_turn_keys(key, modifiers):
     elif key == 'tcod.event.K_d':
         return {'drop': True}
 
-    elif key == 'tcod.event.K_ESCAPE':
+    # elif key == 'tcod.event.K_ESCAPE':
         # Exit the game
-        return {'exit': True}
+        # return {'exit': True}
 
     # No key was pressed
     return {}
