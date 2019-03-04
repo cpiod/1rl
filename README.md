@@ -17,6 +17,26 @@ This is my first participation to a game jam, namely 7DRL 2019. So this is kind 
 - Weapons and features have ego: find the combinations that work best!
 - Depending on the feature that generated them, bugs have special skills. Mapgen bugs can phase, RNG bugs rarely fail their attack.
 
+## Manual compilation (Unix)
+
+You will need sdl2-dev package.
+
+First, install tcod and pyinstaller:
+
+    $ python3 -m pip install tcod
+    $ python3 -m pip install pyinstaller
+
+Then clone the repository:
+
+    $ git clone https://github.com/PFGimenez/1rl
+    $ cd 1rl
+
+Then package it:
+
+    $ python3 -m PyInstaller 1rl.py --additional-hooks-dir=. -F --add-data "font.png:font.png" --add-data "splash.png:splash.png"
+
+The binary is in `dist`.
+
 ## Acknowledgement
 
 This game is based on the [python-tcod](https://github.com/libtcod/python-tcod) library. Splash art by [Master484](http://m484games.ucoz.com/)
