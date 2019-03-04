@@ -359,46 +359,45 @@ def main():
                         destination_x = player.x + dx
                         destination_y = player.y + dy
 
-                        if not game_map.is_blocked(destination_x, destination_y):
-                            target = entity.get_blocking_entities_at_location(entities, destination_x, destination_y)
+                        target = entity.get_blocking_entities_at_location(entities, destination_x, destination_y)
 
-                            if target and target != player:
-                                weapon = player.active_weapon
-                                if not weapon:
-                                    msglog.add_log("You have no weapon to attack with! Equip with 1, 2 or 3.")
-                                    assert False
-                                else:
-                                    (dmg,duration) = weapon.attack(target, msglog)
-                                    target.hp -= dmg
-                                    target.update_symbol()
-                                    if weapon.wslot.value.get("instable"):
-                                        msglog.add_log("Your "+target.fcreator.name+" is less stable!")
-                                        target.fcreator.destabilize(target.level)
-                                        player.update_resistance()
-                                    if target.hp <= 0:
-                                        enemy_moved = True
-                                        if weapon.is_effective_on(target.fslot):
-                                            msglog.add_log("You squashed the "+target.name+"!")
-                                        more_stable = target.dead(entities)
-                                        player.update_resistance()
-                                        if more_stable:
-                                            msglog.add_log("Your "+target.fcreator.name+" is more stable.")
-                                        # else:
-                                            # msglog.add_log(target.name.capitalize()+" is defeated but your "+target.fcreator.name+" is already stable.")
-                                    render_inv = True
-                                    turns.add_turn(time_malus + duration, const.TurnType.PLAYER, player)
-                                    time_malus = 0
-                                    new_turn = True
+                        if target and target != player:
+                            weapon = player.active_weapon
+                            if not weapon:
+                                msglog.add_log("You have no weapon to attack with! Equip with 1, 2 or 3.")
+                                assert False
                             else:
-                                player.move(dx, dy)
-                                des = game_map.description_item_on_floor(player)
-                                if des:
-                                    msglog.add_log("You see a "+des+" on the floor.")
-                                turns.add_turn(time_malus + const.time_move, const.TurnType.PLAYER, player)
+                                (dmg,duration) = weapon.attack(target, msglog)
+                                target.hp -= dmg
+                                target.update_symbol()
+                                if weapon.wslot.value.get("instable"):
+                                    msglog.add_log("Your "+target.fcreator.name+" is less stable!")
+                                    target.fcreator.destabilize(target.level)
+                                    player.update_resistance()
+                                if target.hp <= 0:
+                                    enemy_moved = True
+                                    if weapon.is_effective_on(target.fslot):
+                                        msglog.add_log("You squashed the "+target.name+"!")
+                                    more_stable = target.dead(entities)
+                                    player.update_resistance()
+                                    if more_stable:
+                                        msglog.add_log("Your "+target.fcreator.name+" is more stable.")
+                                    # else:
+                                        # msglog.add_log(target.name.capitalize()+" is defeated but your "+target.fcreator.name+" is already stable.")
+                                render_inv = True
+                                turns.add_turn(time_malus + duration, const.TurnType.PLAYER, player)
                                 time_malus = 0
-                                fov_recompute = True
                                 new_turn = True
-                                force_log = True
+                        elif not game_map.is_blocked(destination_x, destination_y):
+                            player.move(dx, dy)
+                            des = game_map.description_item_on_floor(player)
+                            if des:
+                                msglog.add_log("You see a "+des+" on the floor.")
+                            turns.add_turn(time_malus + const.time_move, const.TurnType.PLAYER, player)
+                            time_malus = 0
+                            fov_recompute = True
+                            new_turn = True
+                            force_log = True
 
         elif current_turn.ttype == const.TurnType.ENNEMY:
             e = current_turn.entity

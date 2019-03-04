@@ -72,10 +72,10 @@ class FeatureEgo(enum.Enum):
     m3 = {"name": "Enochian", "char": "m"}
 
 class WeaponEgo(enum.Enum):
-    c = {"name": "conscious", "fego": [FeatureEgo.c1, FeatureEgo.c2, FeatureEgo.c3], "char": "c"}
-    b = {"name": "basic", "fego": [FeatureEgo.b1, FeatureEgo.b2, FeatureEgo.b3], "char": "b"}
-    p = {"name": "paradoxical", "fego": [FeatureEgo.p1, FeatureEgo.p2, FeatureEgo.p3], "char": "p"}
-    m = {"name": "mythical", "fego": [FeatureEgo.m1, FeatureEgo.m2, FeatureEgo.m3], "char": "m"}
+    c = {"name": "conscious", "fego": [FeatureEgo.c1, FeatureEgo.c2, FeatureEgo.c3], "char": "c", "w_class": "ConsciousWeapon"}
+    b = {"name": "basic", "fego": [FeatureEgo.b1, FeatureEgo.b2, FeatureEgo.b3], "char": "b", "w_class": "BasicWeapon"}
+    p = {"name": "paradoxical", "fego": [FeatureEgo.p1, FeatureEgo.p2, FeatureEgo.p3], "char": "p", "w_class": "ParadoxicalWeapon"}
+    m = {"name": "mythical", "fego": [FeatureEgo.m1, FeatureEgo.m2, FeatureEgo.m3], "char": "m", "w_class": "MythicalWeapon"}
 
 class TurnType(enum.Enum):
     ENNEMY = 0

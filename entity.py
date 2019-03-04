@@ -101,6 +101,18 @@ class Weapon(Entity):
             msglog.add_log("You miss the "+target.name)
         return (dmg, duration)
 
+class ConsciousWeapon(Weapon):
+    pass
+
+class BasicWeapon(Weapon):
+    pass
+
+class ParadoxicalWeapon(Weapon):
+    pass
+
+class MythicalWeapon(Weapon):
+    pass
+
 class Feature(Entity):
     """
     A feature

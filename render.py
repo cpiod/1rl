@@ -2,7 +2,7 @@ import tcod as tcod
 
 import constants as const
 from enum import Enum
-import entity
+import entity as ent
 import math
 import textwrap
 
@@ -194,7 +194,7 @@ def render_inv(root_console, inv_panel, player, map_width, sch_height):
         y += 1
         item = player.inventory.get(k)
         if item:
-            if isinstance(item, entity.Weapon):
+            if isinstance(item, ent.Weapon):
                 render_weapon(inv_panel, item, default_fore, y, False)
                 tcod.console_put_char(inv_panel, 1, y, k, tcod.BKGND_NONE)
             else:
@@ -213,9 +213,13 @@ def clear_all_entities(con, entities,game_map):
         clear_cell(con, entity.x,entity.y,game_map)
 
 def draw_entity(con, entity, game_map):
-    if game_map.is_visible(entity.x, entity.y):
-        tcod.console_set_default_foreground(con, entity.color)
-        tcod.console_put_char(con, entity.x, entity.y, entity.char, tcod.BKGND_NONE)
+    visible = game_map.is_visible(entity.x, entity.y)
+    if visible or (entity.is_seen and (isinstance(entity, ent.Weapon) or isinstance(entity, ent.Feature))):
+        if visible:
+            tcod.console_set_char_foreground(con, entity.x, entity.y, entity.visible_color)
+        else:
+            tcod.console_set_char_foreground(con, entity.x, entity.y, entity.hidden_color)
+        tcod.console_set_char(con, entity.x, entity.y, entity.char)
 
 def clear_cell(con, x,y,game_map):
     wall = game_map.is_blocked(x,y)

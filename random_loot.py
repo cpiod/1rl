@@ -25,5 +25,11 @@ def get_random_weapon(turns, player):
     level = int(max(1,min(5, rand/10+1)))
     wego = random.choice(list(const.WeaponEgo))
     wslot = random.choice(list(const.WeaponSlot))
-    return entity.Weapon(wslot, wego, level)
+    if level > 1:
+        class_name = wego.value.get("w_class")
+        the_class = getattr(entity, class_name)
+        w = the_class(wslot, wego, level)
+    else:
+        w = entity.Weapon(wslot, wego, level)
+    return w
 
