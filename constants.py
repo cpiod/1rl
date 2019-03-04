@@ -99,5 +99,7 @@ class MenuState(enum.Enum):
     EQUIP = 3
     POPUP = 4
 
+resistance_mul = [1, 0.9, 0.8, 0.7, 0.6, 0.5]
+
 help_adjust = 30
 help_strings = ["1RL","","You have 7 days to complete your game.","","","Commands","","g        pick-up".ljust(help_adjust, ' '),"d        drop".ljust(help_adjust, ' '),"w        equip".ljust(help_adjust, ' '),"123      change active weapon".ljust(help_adjust, ' '),"ENTER    use stairs".ljust(help_adjust, ' ')]

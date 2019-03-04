@@ -100,13 +100,13 @@ def main():
             elif event.type == "KEYDOWN" or event.type == "MOUSEBUTTONDOWN":
                 again = False
 
-    first_feature = random_loot.get_random_feature(turns)
+    first_feature = random_loot.get_random_feature(turns, player)
     key = player.add_to_inventory(first_feature)
-    player.fequip(first_feature, key)
+    # player.fequip(first_feature, key)
 
     first_weapon = None
     while first_weapon == None:
-        first_weapon = random_loot.get_random_weapon(turns)
+        first_weapon = random_loot.get_random_weapon(turns, player)
         if first_weapon.wslot.value.get("instable"):
             first_weapon = None
     key = player.add_to_inventory(first_weapon)
@@ -306,13 +306,19 @@ def main():
                     item = player.inventory.get(equip_key)
                     if item:
                         if isinstance(item, entity.Feature):
-                            previous = player.fequip(item, equip_key)
+                            out = player.fequip(item, equip_key)
                         elif isinstance(item, entity.Weapon):
-                            player.wequip(item, equip_key)
-                            previous = None
+                            out = player.wequip(item, equip_key)
                         else:
                             assert False
-                        if not previous:
+                        previous = out.get("unstable-previous")
+                        level_problem_no_previous = out.get("level-problem-no-previous")
+                        level_problem_previous = out.get("level-problem-previous")
+                        if level_problem_previous:
+                            msglog.add_log("You can't equip a v"+str(item.level)+" feature on a v"+str(level_problem_previous.level)+" feature.")
+                        elif level_problem_no_previous:
+                            msglog.add_log("You need to equip a v1 "+item.fslot.value.get("name")+" feature first.")
+                        elif not previous:
                             msglog.add_log("You equip a "+item.name)
                             if isinstance(item, entity.Weapon):
                                 msglog.add_log("You can change your active weapon with [123].")
@@ -321,7 +327,7 @@ def main():
                             time_malus = 0
                             new_turn = True
                         else:
-                            msglog.add_log("You try to equip the "+item.name+" but you cannot remove the unstable "+previous.name+"!")
+                            msglog.add_log("You try to equip the "+item.name+" but your "+previous.name+" is too unstable!")
                         menu_state = const.MenuState.STANDARD
 
                     else:
@@ -401,7 +407,9 @@ def main():
                     e.move_astar(player, entities, game_map)
                     enemy_moved = True
                 else:
-                    delta_malus = max(0, e.atk - player.resistances[e.fslot])
+                    r = player.resistances[e.fslot]
+                    mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
+                    delta_malus = round(e.atk*r)
                     time_malus += delta_malus
                     if time_malus > const.malus_max:
                         time_malus = const.malus_max

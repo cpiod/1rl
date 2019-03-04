@@ -62,7 +62,7 @@ class Weapon(Entity):
     A debugger
     """
     def __init__(self, wslot, wego, level):
-        super().__init__(None, None, wego.value.get("char"), const.base3, wego.value.get("name")+" "+wslot.value.get("name"), False, True, const.RenderOrder.ITEM)
+        super().__init__(None, None, wego.value.get("char"), const.base3, wego.value.get("name")+" "+wslot.value.get("name")+" v"+str(level), False, True, const.RenderOrder.ITEM)
         self.wego = wego
         self.level = level
         self.success_rate = min(1, int(100*(wslot.value.get("success_rate_base")+level*0.05))/100)
@@ -105,7 +105,7 @@ class Feature(Entity):
     A feature
     """
     def __init__(self, fslot, fego, level):
-        super().__init__(None, None, fego.value.get("char"), fslot.value.get("desat_color"), fego.value.get("name")+" "+fslot.value.get("name"), False, True, const.RenderOrder.ITEM)
+        super().__init__(None, None, fego.value.get("char"), fslot.value.get("desat_color"), fego.value.get("name")+" "+fslot.value.get("name")+" v"+str(level), False, True, const.RenderOrder.ITEM)
         self.n_bugs = 0
         self.n_bugs_max = 10
         self.max_stability = 30 * (level*level)
@@ -180,11 +180,17 @@ class Player(Entity):
         assert not feature.equiped
         assert feature.is_in_inventory
         previous_feature = self.fequiped.get(feature.fslot)
+        # you can't equip an unstable feature
         if previous_feature and not previous_feature.is_stable():
-            return previous_feature
+            return {"unstable-previous": previous_feature}
+        if not previous_feature and feature.level > 1:
+            return {"level-problem-no-previous": True}
+        if previous_feature and previous_feature.level < feature.level - 1:
+            return {"level-problem-previous": previous_feature}
         feature.equiped = True
         feature.is_in_inventory = False
         self.fequiped[feature.fslot] = feature
+        # update effective
         for weapon in self.wequiped:
             w = self.wequiped.get(weapon)
             if w:
@@ -193,14 +199,26 @@ class Player(Entity):
             item = self.inventory.get(i)
             if item and isinstance(item, Weapon):
                 item.update_effective(self.fequiped)
+        # replace previous feature in inventory
         if previous_feature:
             previous_feature.is_in_inventory = True
             previous_feature.equiped = False
             self.inventory[key] = previous_feature
         else:
             self.inventory[key] = None
+        # update player resistance
         self.update_resistance()
-        return None
+        return {}
+
+    def flevel(self):
+        level = 0
+        for fslot in self.fequiped:
+            feature = self.fequiped.get(fslot)
+            if feature:
+                level += feature.level
+                if not feature.is_stable():
+                    level -= 0.5
+        return level / 5
 
     def wequip(self, weapon, key):
         assert not weapon.equiped
@@ -222,6 +240,7 @@ class Player(Entity):
 
         if not self.active_weapon:
             self.active_weapon = weapon
+        return {}
 
     def update_resistance(self):
         for fslot in const.FeatureSlot:
@@ -248,7 +267,7 @@ class Monster(Entity):
         super().__init__(x, y, str(self.hp), fcreator.fslot.value.get("color"), fcreator.fslot.value.get("name")+" bug", True, True, const.RenderOrder.ACTOR)
         self.level = level
         self.fslot = fcreator.fslot
-        self.atk = 15
+        self.atk = 20 + 10*level
         self.speed = 30 * (4 - level)
         self.fcreator = fcreator
         fcreator.n_bugs += 1

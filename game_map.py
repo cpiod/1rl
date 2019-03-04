@@ -37,8 +37,8 @@ class GameMap:
         # max_lum = 1
         # sample = noise.sample_ogrid(ogrid)*(max_lum-min_lum) + min_lum
 
-    def add_loot(self, turns, entities):
-        n_loot = 5 + sum([random.randint(1,4) for i in range(2)])
+    def add_loot(self, turns, player, entities):
+        n_loot = 10 + sum([random.randint(1,4) for i in range(2)])
         while n_loot > 0:
             arity = random.choice([1,1,1,2,2,3,4,5])
             rlist = [r for r in self.rooms_with_arity(arity) if r.n_loot < 2] # 2 items per room max
@@ -47,7 +47,7 @@ class GameMap:
                 (x,y) = self.random_cell_in_room(room)
                 if not self.tiles[x][y].item:
                     room.n_loot += 1
-                    self.tiles[x][y].put_item(rloot.get_random_loot(turns), entities)
+                    self.tiles[x][y].put_item(rloot.get_random_loot(turns, player), entities)
                     n_loot -= 1
 
     def rooms_with_arity(self, max_arity):
@@ -99,7 +99,7 @@ class GameMap:
         (player.x, player.y) = self.random_cell()
         (x, y) = self.random_cell()
         self.place_stairs(x,y)
-        self.add_loot(turns, entities)
+        self.add_loot(turns, player, entities)
         self.recompute_fov(player.x, player.y)
 
     def recompute_fov(self, x, y, light_walls=True, radius=0):
