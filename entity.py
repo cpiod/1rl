@@ -65,7 +65,8 @@ class Weapon(Entity):
         super().__init__(None, None, wego.value.get("char"), const.base3, wego.value.get("name")+" "+wslot.value.get("name")+" v"+str(level), False, True, const.RenderOrder.ITEM)
         self.wego = wego
         self.level = level
-        self.success_rate = min(1, int(100*(wslot.value.get("success_rate_base")+level*0.05))/100)
+        # self.success_rate = min(1, int(100*(wslot.value.get("success_rate_base")+level*0.05))/100)
+        self.success_rate = wslot.value.get("success_rate_base")
         self.duration = wslot.value.get("duration_base")
         self.wslot = wslot
         self.is_in_inventory = False
@@ -107,8 +108,8 @@ class Feature(Entity):
     def __init__(self, fslot, fego, level):
         super().__init__(None, None, fego.value.get("char"), fslot.value.get("desat_color"), fego.value.get("name")+" "+fslot.value.get("name")+" v"+str(level), False, True, const.RenderOrder.ITEM)
         self.n_bugs = [0,0,0]
-        self.n_bugs_max = [20,5,1]
-        self.max_stability = 30 * (level*level)
+        self.n_bugs_max = const.n_bugs_max[level-1]
+        self.max_stability = 100 * (level*level)
         self.stability = int(self.max_stability / 10)
         self.fslot = fslot
         self.fego = fego
@@ -264,21 +265,22 @@ class Monster(Entity):
     """
     def __init__(self, x, y, level, fcreator):
         self.hp = level * level
-        super().__init__(x, y, str(self.hp), fcreator.fslot.value.get("color"), fcreator.fslot.value.get("name")+" bug", True, True, const.RenderOrder.ACTOR)
+        super().__init__(x, y, str(self.hp), fcreator.fslot.value.get("color"), fcreator.fslot.value.get("name")+" bug v"+str(level), True, True, const.RenderOrder.ACTOR)
         self.level = level
         self.fslot = fcreator.fslot
         self.atk = 20 + 10*level
         self.speed = 30 * (4 - level)
         self.fcreator = fcreator
         self.success_rate = const.monster_success_rate[self.level]
-        assert fcreator.n_bugs[self.level] < fcreator.n_bugs_max[self.level]
-        fcreator.n_bugs[self.level] += 1
+        assert fcreator.n_bugs[self.level - 1] < fcreator.n_bugs_max[self.level - 1]
+        fcreator.n_bugs[self.level - 1] += 1
+        self.stability_reward = 3*self.level
 
     def dead(self, entities, stabilize=True):
         entities.remove(self)
-        self.fcreator.n_bugs[self.level] -= 1
-        assert self.fcreator.n_bugs[self.level] >= 0
-        return self.fcreator.stabilize(self.level)
+        self.fcreator.n_bugs[self.level - 1] -= 1
+        assert self.fcreator.n_bugs[self.level - 1] >= 0
+        return self.fcreator.stabilize(self.stability_reward)
 
     def update_symbol(self):
         if self.hp > 0:
@@ -322,9 +324,12 @@ class Monster(Entity):
         dy = other.y - self.y
         return max(abs(dx), abs(dy))
 
+    def get_copy_map(self, game_map):
+        return game_map.get_copy_map()
+
     def move_astar(self, target, entities, game_map):
         # Create a FOV map that has the dimensions of the map
-        pathfinding_map = game_map.get_copy_map()
+        pathfinding_map = self.get_copy_map(game_map)
 
         for entity in entities:
             if entity.collision and entity != self and entity != target:
@@ -361,18 +366,46 @@ class Monster(Entity):
             return 0
 
 class MonsterBug(Monster):
-    pass
+    """
+    Monster bug are tougher
+    """
+    def __init__(self, x, y, level, fcreator):
+        super().__init__(x, y, level, fcreator)
+        self.atk = int(self.atk * 1.5)
 
 class LootBug(Monster):
-    pass
+    """
+    Loot bug have a lower stability reward
+    """
+    def __init__(self, x, y, level, fcreator):
+        super().__init__(x, y, level, fcreator)
+        self.stability_reward = 2 * self.level
 
 class RNGBug(Monster):
-    pass
+    """
+    RNG bugs can't fail their attack
+    """
+    def __init__(self, x, y, level, fcreator):
+        super().__init__(x, y, level, fcreator)
+        self.success_rate = 1
 
-class CombatBug(Monster):
-    pass
+class AnimationBug(Monster):
+    """
+    Animation bug don't have their HP written
+    """
+    def __init__(self, x, y, level, fcreator):
+        super().__init__(x, y, level, fcreator)
+        self.char = "?"
+
+    def update_symbol(self):
+        pass
+
 class MapGenBug(Monster):
-    pass
+    """
+    Mapgen bug can phase
+    """
+    def get_copy_map(self, game_map):
+        return game_map.get_copy_empty_map()
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y):
     for entity in entities:

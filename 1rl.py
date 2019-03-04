@@ -344,8 +344,8 @@ def main():
                         render.render_des(root_console, des_panel, map_height, "")
                         render.render_sch(root_console, sch_panel, turns, map_width)
                         render.render_inv(root_console, inv_panel, player, map_width, sch_height)
-
-                    msglog.add_log("Nevermind.")
+                    else:
+                        msglog.add_log("Nevermind.")
                     menu_state = const.MenuState.STANDARD
 
 
@@ -405,11 +405,13 @@ def main():
             if e in entities:
                 if e.distance_to(player) >= 2:
                     e.move_astar(player, entities, game_map)
-                    enemy_moved = True
+                    if game_map.is_visible(e.x, e.y):
+                        enemy_moved = True
                 else:
                     delta_malus = e.attack(player)
                     if delta_malus == 0:
-                        msglog.add_log("The "+e.name+" misses.")
+                        pass
+                        # msglog.add_log("The "+e.name+" misses.")
                     else:
                         time_malus += delta_malus
                         if time_malus > const.malus_max:
@@ -420,7 +422,7 @@ def main():
         elif current_turn.ttype == const.TurnType.SPAWN:
             creator = player.fequiped.get(current_turn.entity)
             if creator and not creator.is_stable() and sum(creator.n_bugs) < sum(creator.n_bugs_max):
-                chance = 1 - creator.stability / creator.max_stability / const.stability_threshold
+                chance = 1 - creator.stability / creator.max_stability / const.stability_threshold + 0.3
                 if random.random() < chance:
                     e = game_map.spawn(entities, creator)
                     if e:

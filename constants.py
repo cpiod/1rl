@@ -46,13 +46,13 @@ class FeatureSlot(enum.Enum):
     m = {"name": "monsters", "color": magenta, "desat_color": desat_magenta, "bug_class": "MonsterBug"}
     i = {"name": "mapgen", "color": violet, "desat_color": desat_violet, "bug_class": "MapGenBug"}
     p = {"name": "RNG", "color": blue, "desat_color": desat_blue, "bug_class": "RNGBug"}
-    c = {"name": "combat", "color": yellow, "desat_color": desat_yellow, "bug_class": "CombatBug"}
+    c = {"name": "animation", "color": yellow, "desat_color": desat_yellow, "bug_class": "AnimationBug"}
     l = {"name": "loot", "color": green, "desat_color": desat_green, "bug_class": "LootBug"}
 
 class WeaponSlot(enum.Enum):
-    fast = {"name": "printf()", "success_rate_base": 0.3, "duration_base": 3*60, "instable": False, "key": "1"}
-    slow = {"name": "profiler", "success_rate_base": 0.7, "duration_base": 7*60, "instable": False, "key": "2"}
-    hack = {"name": "hack", "success_rate_base": 1, "duration_base": 2*60, "instable": True, "key": "3"}
+    fast = {"name": "printf()", "success_rate_base": 0.5, "duration_base": int(120*5/7.5), "instable": False, "key": "1"}
+    slow = {"name": "profiler", "success_rate_base": 0.75, "duration_base": 120, "instable": False, "key": "2"}
+    hack = {"name": "hack", "success_rate_base": 1, "duration_base": 30, "instable": True, "key": "3"}
 
 class FeatureEgo(enum.Enum):
     c1 = {"name": "evolutive", "char": "c"}
@@ -101,5 +101,8 @@ class MenuState(enum.Enum):
 
 resistance_mul = [1, 0.9, 0.8, 0.7, 0.6, 0.5]
 monster_success_rate = [0.7, 0.75, 0.8]
+n_bugs_max = [[10,0,0],[15,3,0],[20,5,1]]
+
+
 help_adjust = 30
 help_strings = ["1RL","","You have 7 days to complete your game.","","","Commands","","g        pick-up".ljust(help_adjust, ' '),"d        drop".ljust(help_adjust, ' '),"w        equip".ljust(help_adjust, ' '),"123      change active weapon".ljust(help_adjust, ' '),"ENTER    use stairs".ljust(help_adjust, ' ')]

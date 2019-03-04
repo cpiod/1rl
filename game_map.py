@@ -22,6 +22,11 @@ class GameMap:
         self.con = con
         self.height = height
         self.dlevel = 0
+        self.tcod_empty_map = tcod.map.Map(self.width, self.height)
+        for x in range(self.width):
+            for y in range(self.height):
+                self.tcod_empty_map.transparent[y,x] = True
+                self.tcod_empty_map.walkable[y,x] = True
         # ogrid = [np.arange(width, dtype=np.float32),
         # np.arange(height, dtype=np.float32)]
 
@@ -114,7 +119,7 @@ class GameMap:
             (x,y) = self.random_cell()
             if not self.is_visible(x,y) and not any([entity for entity in entities if entity.x == x and entity.y == y]):
                 level = random.randint(1, feature.level)
-                if feature.n_bugs[level] < feature.n_bugs_max[level]:
+                if feature.n_bugs[level - 1] < feature.n_bugs_max[level - 1]:
                     if level > 1:
                         class_name = feature.fslot.value.get("bug_class")
                         the_class = getattr(entity, class_name)
@@ -288,6 +293,9 @@ class GameMap:
 
     def get_copy_map(self):
         return copy.deepcopy(self.tcod_map)
+
+    def get_copy_empty_map(self):
+        return copy.deepcopy(self.tcod_empty_map)
 
     def set_tile_type(self, x, y, ttype):
         self.tiles[x][y] = entity.Tile(x, y, ttype)

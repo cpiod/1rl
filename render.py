@@ -179,7 +179,7 @@ def render_inv(root_console, inv_panel, player, map_width, sch_height):
             tcod.console_print_ex(inv_panel, 1, y, tcod.BKGND_NONE, tcod.LEFT, wslot.value.get("key")+" (none)")
             y += 1
             tcod.console_print_ex(inv_panel, 3, y, tcod.BKGND_NONE, tcod.LEFT, wslot.value.get("name"))
-            string = str(round(wslot.value.get("success_rate_base") * 100))+"% "+str(wslot.value.get("duration_base"))+"mn"
+            string = str(round(wslot.value.get("success_rate_base") * 100))+"% "+str(wslot.value.get("duration_base"))+"s"
             if wslot.value.get("instable"):
                 string = "Stab- "+string
             tcod.console_print_ex(inv_panel, w-1, y, tcod.BKGND_NONE, tcod.RIGHT, string)
