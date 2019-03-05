@@ -279,12 +279,20 @@ def main():
 
                 grab = action.get('pickup')
                 if grab:
-                    if player.is_inventory_full():
-                        msglog.add_log("Your inventory is full.")
-                    else:
-                        if game_map.is_there_item_on_floor(player):
-                            item = game_map.get_item_on_floor(player, entities)
+                    if game_map.is_there_item_on_floor(player):
+                        if game_map.is_weapon_on_floor_directly_equipable(player):
+                            (item,key) = game_map.get_item_on_floor(player, entities)
+                            player.wequip(item, key)
+                            msglog.add_log("You equip a "+item.name+".")
+                            render_inv = True
+                        elif player.is_inventory_full():
+                            msglog.add_log("Your inventory is full.")
+                            assert not render_inv
+                        else:
+                            item,_ = game_map.get_item_on_floor(player, entities)
                             msglog.add_log("You pick up a "+item.name+".")
+                            render_inv = True
+                        if render_inv:
                             if isinstance(item, entity.Weapon):
                                 l = item.wego.value.get("fego")
                                 msglog.add_log("It is effective against "+l[0].value.get("name")+", "+l[1].value.get("name")+" and "+l[2].value.get("name")+" bugs.")
@@ -296,8 +304,8 @@ def main():
                             else:
                                 assert False
                             render_inv = True
-                        else:
-                            msglog.add_log("There is nothing on the floor to pick up.")
+                    else:
+                        msglog.add_log("There is nothing on the floor to pick up.")
 
                 drop = action.get('drop')
                 if drop:
@@ -344,6 +352,20 @@ def main():
                         previous_active = player.active_weapon
                         if isinstance(item, entity.Feature):
                             out = player.fequip(item, equip_key)
+                            synergy = out.get("synergy")
+                            print(synergy)
+                            if synergy:
+                                if synergy == 2:
+                                    msglog.add_log("You feel a small synergy between your two "+item.fego.value.get("name")+" features.", color_active=const.green)
+                                elif synergy == 3:
+                                    msglog.add_log("You feel a good synergy between your three "+item.fego.value.get("name")+" features.", color_active=const.green)
+                                elif synergy == 4:
+                                    msglog.add_log("You feel a great synergy between your four "+item.fego.value.get("name")+" features!", color_active=const.green)
+                                elif synergy == 5:
+                                    msglog.add_log("You feel an insane synergy between your five "+item.fego.value.get("name")+" features!", color_active=const.green)
+                                else:
+                                    assert False
+
                         elif isinstance(item, entity.Weapon):
                             out = player.wequip(item, equip_key)
                         else:

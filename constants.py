@@ -40,6 +40,7 @@ boss_stairs_color = desat_green
 stability_threshold = 0.7
 inventory_max_size = 5
 
+bonus_idem = [0, 0, 0, 1, 1, 2]
 bug_atk = [20, 60, 120]
 bug_speed = [60, 40, 20]
 boss_level_invok = [0, 0, 3]

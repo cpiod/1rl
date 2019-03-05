@@ -180,7 +180,7 @@ class Player(Entity):
         self.inventory = {}
 
         letter_index = ord('a')
-        for i in range(const.inventory_max_size):
+        for i in range(const.inventory_max_size+1):
             self.inventory[chr(letter_index+i)] = None
 
         self.wequiped = {}
@@ -191,9 +191,11 @@ class Player(Entity):
             self.resistances[fslot] = 0
 
     def is_inventory_full(self):
+        assert len([i for i in self.inventory if self.inventory.get(i)]) <= const.inventory_max_size
         return len([i for i in self.inventory if self.inventory.get(i)]) == const.inventory_max_size
 
     def is_inventory_empty(self):
+        assert len([i for i in self.inventory if self.inventory.get(i)]) <= const.inventory_max_size
         return len([i for i in self.inventory if self.inventory.get(i)]) == 0
 
     def remove_from_inventory(self, item, drop_key):
@@ -204,7 +206,7 @@ class Player(Entity):
 
     def add_to_inventory(self, item):
         assert not item.is_in_inventory
-        assert not self.is_inventory_full()
+        # assert not self.is_inventory_full()
         for i in self.inventory:
             if not self.inventory.get(i):
                 self.inventory[i] = item
@@ -247,9 +249,10 @@ class Player(Entity):
             self.inventory[key] = None
         # update player resistance
         self.update_resistance()
+        synergy = self.get_synergy(feature.fego)
         if previous_feature and previous_feature.fego == feature.fego:
-            return {"inheritance": True}
-        return {}
+            return {"inheritance": True, "synergy": synergy}
+        return {"synergy": synergy}
 
     def flevel(self):
         level = 0
@@ -284,20 +287,30 @@ class Player(Entity):
 
         return {}
 
+    def get_synergy(self, fego):
+        nb = 0
+        for fslot in const.FeatureSlot:
+            feature = self.fequiped.get(fslot)
+            if feature and feature.fego == fego:
+                nb += 1
+        if nb > 1:
+            return nb
+        return None
+
     def update_resistance(self):
         for fslot in const.FeatureSlot:
-            r = 0
+            idem = 0
             feature = self.fequiped.get(fslot)
+            r = 0
             if feature:
-                fego = feature.fego
+                r = 2*feature.level
+                if not feature.is_stable():
+                    r -= 1
                 for fslot_equiped in const.FeatureSlot:
                     other = self.fequiped.get(fslot_equiped)
-                    if other and other.fego == fego:
-                        if other.is_stable():
-                            r += other.level
-                        else:
-                            r += 1
-            self.resistances[fslot] = r
+                    if other and other.fego == feature.fego:
+                        idem += 1
+            self.resistances[fslot] = r + const.bonus_idem[idem]
 
 class Monster(Entity):
     """

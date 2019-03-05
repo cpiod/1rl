@@ -380,11 +380,17 @@ class GameMap:
             player.remove_from_inventory(item, drop_key)
             return self.tiles[player.x][player.y].put_item(item, entities)
 
+    def is_weapon_on_floor_directly_equipable(self, player):
+        item = self.tiles[player.x][player.y].item
+        if item and isinstance(item, entity.Weapon) and not player.wequiped.get(item.wslot):
+            return True
+        return False
+
     def get_item_on_floor(self, player, entities):
         if self.tiles[player.x][player.y].item:
             item = self.tiles[player.x][player.y].take_item(entities)
-            player.add_to_inventory(item)
-            return item
+            key = player.add_to_inventory(item)
+            return (item,key)
 
     def description_item_on_floor(self, player):
         if self.tiles[player.x][player.y].item:
