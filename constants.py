@@ -39,20 +39,26 @@ boss_stairs_color = desat_green
 
 stability_threshold = 0.7
 inventory_max_size = 5
-
+mul = 2
 bug_hp = [2, 5, 9]
 bonus_idem = [0, 0, 0, 1, 1, 2]
-bug_atk = [60, 65, 100]
-bug_speed_atk = [180, 120, 60]
-bug_speed_mov = [80, 70, 60]
+bug_atk = [70, 80, 100]
+bug_speed_atk = [180*mul, 120*mul, 60*mul]
+bug_speed_mov = [60*mul, 50*mul, 40*mul]
 boss_level_invok = [1, 2, 3]
-time_descend = 60
-time_equip = 20
-time_equip_weapon = 20
-time_move = 60
-spawn_interval = 60*3
-confusion_duration = 60*20
-malus_max = 30*60
+time_equip = 20*mul
+time_equip_weapon = 20*mul
+time_move = 60*mul
+spawn_interval = 60*mul
+confusion_duration = 60*20*mul
+malus_max = 30*60*mul
+max_stab = [100,300,600]
+stab_reward = [2,4,6]
+resistance_mul = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+monster_success_rate = [0.8, 0.85, 0.9]
+n_bugs_max = [[5,0,0],[2,5,0],[1,2,5]]
+
+
 paradox_list = ["\"Illusions are not real, yet it's real that illusion itself exists.\"", "\"I know one thing: that I know nothing.\"", "\"Can the Wizard of Yendor create a rock too heavy for itself to lift?\"", "\"What happens if Pinocchio says \"My nose will grow now\"?\"", "\"I am lying.\""]
 
 class FeatureSlot(enum.Enum):
@@ -63,14 +69,14 @@ class FeatureSlot(enum.Enum):
     l = {"name": "loot", "color": green, "desat_color": desat_green, "bug_class": "LootBug"}
 
 class WeaponSlot(enum.Enum):
-    fast = {"name": "printf()", "success_rate_base": 0.5, "duration_base": int(120*5/7.5), "instable": False, "key": "1"}
-    slow = {"name": "profiler", "success_rate_base": 0.75, "duration_base": 120, "instable": False, "key": "2"}
-    hack = {"name": "hack", "success_rate_base": 1, "duration_base": 30, "instable": True, "key": "3"}
+    fast = {"name": "printf()", "success_rate_base": 0.5, "duration_base": int(60*5/7.5*mul), "instable": False, "key": "1"}
+    slow = {"name": "profiler", "success_rate_base": 0.75, "duration_base": 60*mul, "instable": False, "key": "2"}
+    hack = {"name": "hack", "success_rate_base": 1, "duration_base": 10*mul, "instable": True, "key": "3"}
 
-fego_prob_c = [1/5,1/5,3/5]
-fego_prob_b = [1/5,1/5,3/5]
-fego_prob_p = [1/5,1/5,3/5]
-fego_prob_m = [1/5,1/5,3/5]
+fego_prob_c = [1/4,1/4,1/2]
+fego_prob_b = [1/4,1/4,1/2]
+fego_prob_p = [1/4,1/4,1/2]
+fego_prob_m = [1/4,1/4,1/2]
 random.shuffle(fego_prob_c)
 random.shuffle(fego_prob_b)
 random.shuffle(fego_prob_p)
@@ -125,10 +131,6 @@ class MenuState(enum.Enum):
     DROP = 2
     EQUIP = 3
     POPUP = 4
-
-resistance_mul = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
-monster_success_rate = [0.7, 0.75, 0.8]
-n_bugs_max = [[10,0,0],[15,2,0],[20,2,1]]
 
 intro_strings = ["Welcome to 1RL","","You have 7 days to create", "your first roguelike!","","Complete your game by choosing its features.","","Beware: unstable features generate bugs!","","Find the good combination of feature", "and weapon egos.", "", "With stable features comes better resistance!", "", "Press ? to get command help."]
 help_adjust = 35

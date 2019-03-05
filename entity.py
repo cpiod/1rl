@@ -147,7 +147,7 @@ class Feature(Entity):
         super().__init__(None, None, fego.value.get("char"), fslot.value.get("desat_color"), fego.value.get("name")+" "+fslot.value.get("name")+" v"+str(level), False, True, const.RenderOrder.ITEM)
         self.n_bugs = [0,0,0]
         self.n_bugs_max = const.n_bugs_max[level-1]
-        self.max_stability = 100 * (level*level)
+        self.max_stability = const.max_stab[level-1]
         self.stability = int(self.max_stability / 10)
         self.fslot = fslot
         self.fego = fego
@@ -155,15 +155,15 @@ class Feature(Entity):
         self.equiped = False
         self.level = level
 
-    def destabilize(self, level):
-        self.stability -= level
+    def destabilize(self, amount):
+        self.stability -= amount
         if self.stability < 0:
             self.stability = 0
 
-    def stabilize(self, level):
+    def stabilize(self, amount):
         if self.stability == self.max_stability:
             return False
-        self.stability += level
+        self.stability += amount
         if self.stability > self.max_stability:
             self.stability = self.max_stability
         return True
@@ -257,9 +257,11 @@ class Player(Entity):
             self.inventory[key] = None
         # update player resistance
         self.update_resistance()
-        synergy = self.get_synergy(feature.fego)
+        # there is no need to recall the synergy
         if previous_feature and previous_feature.fego == feature.fego:
-            return {"inheritance": True, "synergy": synergy}
+            return {"inheritance": previous_feature,"synergy": None}
+
+        synergy = self.get_synergy(feature.fego)
         return {"synergy": synergy}
 
     def flevel(self):
@@ -343,11 +345,10 @@ class Monster(Entity):
         if self.fcreator:
             assert fcreator.n_bugs[self.level - 1] < fcreator.n_bugs_max[self.level - 1]
             fcreator.n_bugs[self.level - 1] += 1
-        self.stability_reward = 3*self.level
+        self.stability_reward = const.stab_reward[self.level-1]
         self.confusion_date = None
 
-    def dead(self, entities, stabilize=True):
-        entities.remove(self)
+    def dead(self, stabilize=True):
         if self.fcreator:
             self.fcreator.n_bugs[self.level - 1] -= 1
             assert self.fcreator.n_bugs[self.level - 1] >= 0
@@ -404,6 +405,11 @@ class Monster(Entity):
         # Create a FOV map that has the dimensions of the map
         pathfinding_map = self.get_copy_map(game_map)
 
+        astar = tcod.path.AStar(pathfinding_map)
+        path = astar.get_path(self.x, self.y, target.x, target.y)
+        if path:
+            backup_x, backup_y = path[0]
+
         for entity in entities:
             if entity.collision and entity != self and entity != target:
                 # Set the tile as a wall so it must be navigated around
@@ -416,7 +422,7 @@ class Monster(Entity):
         # Check if the path exists, and in this case, also the path is shorter than 25 tiles
         # The path size matters if you want the monster to use alternative longer paths (for example through other rooms) if for example the player is in a corridor
         # It makes sense to keep path size relatively low to keep the monsters from running around the map if there's an alternative path really far away
-        if path:
+        if path and len(path) < 45:
             # Find the next coordinates in the computed full path
             x, y = path[0]
             if x or y:
@@ -424,9 +430,13 @@ class Monster(Entity):
                 self.x = x
                 self.y = y
         else:
+            if (backup_x or backup_y) and pathfinding_map.walkable[backup_y,backup_x]:
+                self.x = backup_x
+                self.y = backup_y
+            else:
             # Keep the old move function as a backup so that if there are no paths (for example another monster blocks a corridor)
             # it will still try to move towards the player (closer to the corridor opening)
-            self.move_towards(target.x, target.y, game_map, entities)
+                self.move_towards(target.x, target.y, game_map, entities)
 
 
     def attack(self, player, turns):
@@ -463,7 +473,6 @@ class Boss(Monster):
         pass
 
     def attack(self, player, turns):
-        # print(self.hp/self.max_hp, len(self.invocations)/6)
         if self.hp/self.max_hp <= len(self.invocations)/6:
             out = self.invocations[0]
             del self.invocations[0]
@@ -484,7 +493,7 @@ class LootBug(Monster):
     """
     def __init__(self, x, y, level, fcreator, fslot=None):
         super().__init__(x, y, level, fcreator, fslot)
-        self.stability_reward = 2 * self.level
+        self.stability_reward = 1.5 * self.stability_reward
 
 class RNGBug(Monster):
     """

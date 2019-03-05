@@ -153,10 +153,15 @@ def main():
     boss = None
     while not tcod.console_is_window_closed():
         if new_turn:
+
+            assert turns.nb_turns(const.TurnType.PLAYER) == 1, turns.nb_turns(const.TurnType.PLAYER)
+            assert turns.nb_turns(const.TurnType.SPAWN) == 5, turns.nb_turns(const.TurnType.SPAWN)
+            assert turns.nb_turns(const.TurnType.ENNEMY) == len([e for e in entities if isinstance(e, entity.Monster)]),(turns.nb_turns(const.TurnType.ENNEMY),len([e for e in entities if isinstance(e, entity.Monster)]),entities,turns.turns)
+
             current_turn = turns.get_turn()
+
             render.render_sch(root_console, sch_panel, turns, map_width)
             new_turn = False
-            # print("Turn "+str(current_turn.date)+": "+current_turn.ttype.name)
             if current_turn.ttype == const.TurnType.PLAYER and time_malus > 0:
                 msglog.add_log("You lose "+str(time_malus)+"s!")
 
@@ -246,6 +251,7 @@ def main():
                         turns.add_turn(time_malus + const.time_equip_weapon, const.TurnType.PLAYER, player)
                         time_malus = 0
                         new_turn = True
+                        break
 
                 help_popup = action.get('help')
                 if help_popup:
@@ -264,18 +270,20 @@ def main():
                             msglog.add_log("You go down the stairs.")
                             for e in entities:
                                 if isinstance(e, entity.Monster):
-                                    e.dead(entities, stabilize=False)
+                                    e.dead(stabilize=False)
+                                    turns.remove_turn(e)
                             entities = [player]
                             if stairs:
                                 game_map.make_map_bsp(turns, entities, player)
                             else:
                                 boss = game_map.make_boss_map(turns, entities, player)
                                 msglog.add_log("To release your game, you need to fight your inner ennemy: self-doubt.", const.red)
-                            turns.add_turn(time_malus + const.time_descend, const.TurnType.PLAYER, player)
+                            turns.add_turn(time_malus + const.time_move, const.TurnType.PLAYER, player)
                             time_malus = 0
                             render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
                             enemy_moved = True
                             new_turn = True
+                            break
                     else:
                         msglog.add_log("You see no stairs.")
 
@@ -351,6 +359,7 @@ def main():
                 if equip_key:
                     item = player.inventory.get(equip_key)
                     if item:
+                        menu_state = const.MenuState.STANDARD
                         previous_active = player.active_weapon
                         if isinstance(item, entity.Feature):
                             out = player.fequip(item, equip_key)
@@ -369,6 +378,7 @@ def main():
 
                         elif isinstance(item, entity.Weapon):
                             out = player.wequip(item, equip_key)
+                            enemy_moved = True # update telepathy
                         else:
                             assert False
                         previous = out.get("unstable-previous")
@@ -376,12 +386,13 @@ def main():
                         level_problem_previous = out.get("level-problem-previous")
                         inheritance = out.get("inheritance")
                         if inheritance:
-                            msglog.add_log("You upgraded your "+item.fego.value.get("name")+" feature: it is already quite stable!", color_active=const.green)
-                            item.stability = max(item.stability, int(item.max_stability / 3))
+                            msglog.add_log("You upgraded your "+item.fego.value.get("name")+" "+item.fslot.value.get("name")+": it is already quite stable!", color_active=const.green)
+                            item.stability = max(item.stability, inheritance.stability)
                             render_inv = True
                             turns.add_turn(time_malus + const.time_equip, const.TurnType.PLAYER, player)
                             time_malus = 0
                             new_turn = True
+                            break
                         elif level_problem_previous:
                             msglog.add_log("You can't equip a v"+str(item.level)+" feature on a v"+str(level_problem_previous.level)+" feature.")
                         elif level_problem_no_previous:
@@ -397,9 +408,9 @@ def main():
                             turns.add_turn(time_malus + const.time_equip, const.TurnType.PLAYER, player)
                             time_malus = 0
                             new_turn = True
+                            break
                         else:
-                            msglog.add_log("You try to equip the "+item.name+" but your "+previous.name+" is too unstable!")
-                        menu_state = const.MenuState.STANDARD
+                            msglog.add_log("You try to equip the "+item.name+" but your "+previous.name+" is too unstable to be removed!")
 
                     else:
                         msglog.add_log("You don't have this item!")
@@ -433,6 +444,7 @@ def main():
                         time_malus = 0
                         new_turn = True
                         force_log = True
+                        break
                     else:
                         destination_x = player.x + dx
                         destination_y = player.y + dy
@@ -454,6 +466,7 @@ def main():
                                 time_malus = 0
                                 new_turn = True
                                 enemy_moved = True
+                                break
                         elif not game_map.is_blocked(destination_x, destination_y):
                             player.move(dx, dy)
                             des = game_map.description_item_on_floor(player)
@@ -464,13 +477,15 @@ def main():
                             fov_recompute = True
                             new_turn = True
                             force_log = True
+                            break
 
         elif current_turn.ttype == const.TurnType.ENNEMY:
             e = current_turn.entity
+            assert e.hp > 0, e.hp
             if e in entities:
                 if e.distance_to(player) >= 2:
                     e.move_astar(player, entities, game_map)
-                    if game_map.is_visible(e.x, e.y):
+                    if game_map.is_visible(e.x, e.y) or (player.active_weapon and isinstance(player.active_weapon, entity.ConsciousWeapon)):
                         enemy_moved = True
                     turns.add_turn(e.speed_mov, const.TurnType.ENNEMY, e)
                 else:
@@ -502,7 +517,7 @@ def main():
             if not boss:
                 creator = player.fequiped.get(current_turn.entity)
                 if creator and not creator.is_stable() and sum(creator.n_bugs) < sum(creator.n_bugs_max):
-                    chance = 1 - creator.stability / creator.max_stability / const.stability_threshold + 0.3
+                    chance = 1 - creator.stability / creator.max_stability / const.stability_threshold + 0.4
                     if random.random() < chance:
                         e = game_map.spawn(entities, creator)
                         if e:
@@ -549,17 +564,20 @@ def main():
 def attack(weapon, target, msglog, player, entities, turns, log_effective=True):
     (dmg,duration) = weapon.attack(target, msglog, turns)
     if weapon.wslot.value.get("instable"):
-        msglog.add_log("Your "+target.fcreator.name+" is less stable!")
-        target.fcreator.destabilize(target.level)
+        if random.randint(1,2) == 0:
+            msglog.add_log("Your "+target.fcreator.name+" is less stable!")
+            target.fcreator.destabilize(target.stability_reward)
         player.update_resistance()
     if target.hp <= 0:
         enemy_moved = True
         if log_effective and weapon.is_effective_on(target.fslot):
             msglog.add_log("You squashed the "+target.name+"!")
-        more_stable = target.dead(entities)
+        more_stable = target.dead()
+        entities.remove(target)
+        turns.remove_turn(target)
         player.update_resistance()
-        if more_stable:
-            msglog.add_log("Your "+target.fcreator.name+" is more stable.")
+        # if more_stable:
+            # msglog.add_log("Your "+target.fcreator.name+" is more stable.")
     return duration
 
 def resource_path(relative):
