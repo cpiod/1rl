@@ -178,7 +178,10 @@ def render_inv(root_console, inv_panel, player, map_width, sch_height):
             at_least_one = True
             tcod.console_set_char_background(inv_panel, x, y, fslot.value.get("color"), tcod.BKGND_SET)
             x += 1
-            tcod.console_print_ex(inv_panel, x, y, tcod.BKGND_NONE, tcod.LEFT, ":"+str(r))
+            if fslot in player.synergy:
+                tcod.console_print_ex(inv_panel, x, y, tcod.BKGND_NONE, tcod.LEFT, ":"+str(r)+"*")
+            else:
+                tcod.console_print_ex(inv_panel, x, y, tcod.BKGND_NONE, tcod.LEFT, ":"+str(r))
             x += 4
         else:
             x += 5

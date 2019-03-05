@@ -138,4 +138,6 @@ help_strings = ["Commands","",\
                 ("w".ljust(help_adjust_name, ' ')+"equip").ljust(help_adjust, ' '),\
                 ("[123]".ljust(help_adjust_name, ' ')+"change weapon").ljust(help_adjust, ' '),\
                 ("ENTER".ljust(help_adjust_name, ' ')+"use stairs").ljust(help_adjust, ' '),\
+                ("hover".ljust(help_adjust_name, ' ')+"get name").ljust(help_adjust, ' '),\
+                ("click".ljust(help_adjust_name, ' ')+"describe").ljust(help_adjust, ' '),\
                 ("?".ljust(help_adjust_name, ' ')+"help").ljust(help_adjust, ' ')]

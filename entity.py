@@ -183,12 +183,21 @@ class Player(Entity):
         for i in range(const.inventory_max_size+1):
             self.inventory[chr(letter_index+i)] = None
 
+        self.synergy = []
         self.wequiped = {}
         self.fequiped = {}
         self.resistances = {}
         self.active_weapon = None
         for fslot in const.FeatureSlot:
             self.resistances[fslot] = 0
+
+    def can_go_boss(self):
+        # return True # TODO
+        for fslot in const.FeatureSlot:
+            f = self.fequiped.get(fslot)
+            if not f or not f.is_stable():
+                return False
+        return True
 
     def is_inventory_full(self):
         assert len([i for i in self.inventory if self.inventory.get(i)]) <= const.inventory_max_size
@@ -298,6 +307,7 @@ class Player(Entity):
         return None
 
     def update_resistance(self):
+        self.synergy = []
         for fslot in const.FeatureSlot:
             idem = 0
             feature = self.fequiped.get(fslot)
@@ -310,6 +320,8 @@ class Player(Entity):
                     other = self.fequiped.get(fslot_equiped)
                     if other and other.fego == feature.fego:
                         idem += 1
+            if idem > 1:
+                self.synergy.append(fslot)
             self.resistances[fslot] = r + const.bonus_idem[idem]
 
 class Monster(Entity):

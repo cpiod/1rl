@@ -149,7 +149,6 @@ def main():
     last_player_date = 0
     mouse = (500,500) #OOB
     new_mouse = False
-    boss_fight = False
     boss = None
     while not tcod.console_is_window_closed():
         if new_turn:
@@ -178,11 +177,11 @@ def main():
                 render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
                 enemy_moved = False
 
-            if new_mouse and not boss_fight:# and menu_state != const.MenuState.POPUP:
+            if new_mouse and not boss:# and menu_state != const.MenuState.POPUP:
                 render.render_des(root_console, des_panel, map_height, render.get_names_under_mouse(mouse, entities, game_map, log_width))
                 new_mouse = False
 
-            if boss_fight:
+            if boss:
                 render.render_boss_hp(root_console, des_panel, map_height, boss)
 
             fov_recompute = False
@@ -258,22 +257,24 @@ def main():
                     boss_stairs = game_map.is_boss_stairs(player.x, player.y)
                     assert not (stairs and boss_stairs)
                     if stairs or boss_stairs:
-                        msglog.add_log("You go down the stairs.")
-                        for e in entities:
-                            if isinstance(e, entity.Monster):
-                                e.dead(entities, stabilize=False)
-                        entities = [player]
-                        if stairs:
-                            game_map.make_map_bsp(turns, entities, player)
+                        if boss_stairs and not player.can_go_boss():
+                            msglog.add_log("You can't release the game yet, you don't have five stable features!")
                         else:
-                            boss = game_map.make_boss_map(turns, entities, player)
-                            boss_fight = True
-                            msglog.add_log("To release your game, you need to fight your inner ennemy: self-doubt.", const.red)
-                        turns.add_turn(time_malus + const.time_descend, const.TurnType.PLAYER, player)
-                        time_malus = 0
-                        render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
-                        enemy_moved = True
-                        new_turn = True
+                            msglog.add_log("You go down the stairs.")
+                            for e in entities:
+                                if isinstance(e, entity.Monster):
+                                    e.dead(entities, stabilize=False)
+                            entities = [player]
+                            if stairs:
+                                game_map.make_map_bsp(turns, entities, player)
+                            else:
+                                boss = game_map.make_boss_map(turns, entities, player)
+                                msglog.add_log("To release your game, you need to fight your inner ennemy: self-doubt.", const.red)
+                            turns.add_turn(time_malus + const.time_descend, const.TurnType.PLAYER, player)
+                            time_malus = 0
+                            render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
+                            enemy_moved = True
+                            new_turn = True
                     else:
                         msglog.add_log("You see no stairs.")
 
@@ -353,7 +354,6 @@ def main():
                         if isinstance(item, entity.Feature):
                             out = player.fequip(item, equip_key)
                             synergy = out.get("synergy")
-                            print(synergy)
                             if synergy:
                                 if synergy == 2:
                                     msglog.add_log("You feel a small synergy between your two "+item.fego.value.get("name")+" features.", color_active=const.green)
@@ -411,7 +411,7 @@ def main():
                     if menu_state == const.MenuState.POPUP:
                         render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
                         render.render_log(root_console, log_panel, msglog, map_height)
-                        if boss_fight:
+                        if boss:
                             render.render_boss_hp(root_console, des_panel, map_height, boss)
                         else:
                             render.render_des(root_console, des_panel, map_height, "")
@@ -443,8 +443,12 @@ def main():
                             if not weapon:
                                 msglog.add_log("You have no weapon to attack with! Equip with w.")
                             else:
-                                duration = attack(weapon, target, msglog, player, entities, turns)
-                                render_inv = True
+                                if target == boss and weapon.wslot.value.get("instable"):
+                                    msglog.add_log("Your hack has no effect on "+boss.name)
+                                    duration = weapon.duration
+                                else:
+                                    duration = attack(weapon, target, msglog, player, entities, turns)
+                                    render_inv = True
                                 turns.add_turn(time_malus + duration, const.TurnType.PLAYER, player)
                                 time_malus = 0
                                 new_turn = True
@@ -491,7 +495,7 @@ def main():
             new_turn = True
 
         elif current_turn.ttype == const.TurnType.SPAWN:
-            if not boss_fight:
+            if not boss:
                 creator = player.fequiped.get(current_turn.entity)
                 if creator and not creator.is_stable() and sum(creator.n_bugs) < sum(creator.n_bugs_max):
                     chance = 1 - creator.stability / creator.max_stability / const.stability_threshold + 0.3
