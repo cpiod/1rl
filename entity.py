@@ -192,7 +192,6 @@ class Player(Entity):
             self.resistances[fslot] = 0
 
     def can_go_boss(self):
-        # return True # TODO
         for fslot in const.FeatureSlot:
             f = self.fequiped.get(fslot)
             if not f or not f.is_stable():
@@ -333,11 +332,12 @@ class Monster(Entity):
             self.fslot = fcreator.fslot
         else:
             self.fslot = fslot
-        self.hp = level * level
+        self.hp = const.bug_hp[level-1]
         super().__init__(x, y, str(self.hp), self.fslot.value.get("color"), self.fslot.value.get("name")+" bug v"+str(level), True, True, const.RenderOrder.ACTOR)
         self.level = level
         self.atk = const.bug_atk[level-1]
-        self.speed = const.bug_speed[level-1]
+        self.speed_atk = const.bug_speed_atk[level-1]
+        self.speed_mov = const.bug_speed_mov[level-1]
         self.fcreator = fcreator
         self.success_rate = const.monster_success_rate[self.level - 1]
         if self.fcreator:
@@ -450,8 +450,9 @@ class Boss(Monster):
         self.hp = self.max_hp
         Entity.__init__(self, x, y, "@", const.red, "Self-doubt", True, True, const.RenderOrder.ACTOR)
         self.fslot = None
-        self.atk = 20
-        self.speed = 10
+        self.atk = 100
+        self.speed_atk = 20
+        self.speed_mov = 10
         self.success_rate = 1
         self.stability_reward = 0
         self.confusion_date = None

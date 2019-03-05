@@ -74,7 +74,7 @@ class GameMap:
         (player.x, player.y) = (int(center_x / 2), int(center_y))
         boss = entity.Boss(int(center_x * 1.5), int(center_y))
         entities.append(boss)
-        turns.add_turn(boss.speed, const.TurnType.ENNEMY, boss)
+        turns.add_turn(boss.speed_mov, const.TurnType.ENNEMY, boss)
         self.recompute_fov(player.x, player.y)
         return boss
 

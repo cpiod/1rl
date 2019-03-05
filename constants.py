@@ -40,10 +40,12 @@ boss_stairs_color = desat_green
 stability_threshold = 0.7
 inventory_max_size = 5
 
+bug_hp = [2, 5, 9]
 bonus_idem = [0, 0, 0, 1, 1, 2]
-bug_atk = [20, 60, 120]
-bug_speed = [60, 40, 20]
-boss_level_invok = [0, 0, 3]
+bug_atk = [60, 65, 100]
+bug_speed_atk = [180, 120, 60]
+bug_speed_mov = [80, 70, 60]
+boss_level_invok = [1, 2, 3]
 time_descend = 60
 time_equip = 20
 time_equip_weapon = 20
@@ -124,7 +126,7 @@ class MenuState(enum.Enum):
     EQUIP = 3
     POPUP = 4
 
-resistance_mul = [1, 0.9, 0.8, 0.7, 0.6, 0.5]
+resistance_mul = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
 monster_success_rate = [0.7, 0.75, 0.8]
 n_bugs_max = [[10,0,0],[15,2,0],[20,2,1]]
 

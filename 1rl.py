@@ -121,6 +121,7 @@ def main():
     first_weapon = None
     while first_weapon == None:
         first_weapon = random_loot.get_random_weapon(turns, player)
+        # the player should not begin with a hack
         if first_weapon.wslot.value.get("instable"):
             first_weapon = None
 
@@ -375,7 +376,7 @@ def main():
                         level_problem_previous = out.get("level-problem-previous")
                         inheritance = out.get("inheritance")
                         if inheritance:
-                            msglog.add_log("You upgraded your "+item.fego.value.get("name")+" feature: it is already quite stable!")
+                            msglog.add_log("You upgraded your "+item.fego.value.get("name")+" feature: it is already quite stable!", color_active=const.green)
                             item.stability = max(item.stability, int(item.max_stability / 3))
                             render_inv = True
                             turns.add_turn(time_malus + const.time_equip, const.TurnType.PLAYER, player)
@@ -386,7 +387,7 @@ def main():
                         elif level_problem_no_previous:
                             msglog.add_log("You need to equip a v1 "+item.fslot.value.get("name")+" feature first.")
                         elif not previous:
-                            msglog.add_log("You equip a "+item.name)
+                            msglog.add_log("You equip a "+item.name+".")
                             if isinstance(item, entity.Weapon):
                                 msglog.add_log("You can change your active weapon with [123].")
                                 if not previous_active:
@@ -452,6 +453,7 @@ def main():
                                 turns.add_turn(time_malus + duration, const.TurnType.PLAYER, player)
                                 time_malus = 0
                                 new_turn = True
+                                enemy_moved = True
                         elif not game_map.is_blocked(destination_x, destination_y):
                             player.move(dx, dy)
                             des = game_map.description_item_on_floor(player)
@@ -470,6 +472,7 @@ def main():
                     e.move_astar(player, entities, game_map)
                     if game_map.is_visible(e.x, e.y):
                         enemy_moved = True
+                    turns.add_turn(e.speed_mov, const.TurnType.ENNEMY, e)
                 else:
                     d = e.attack(player, turns)
                     delta_malus = d.get("dmg")
@@ -481,7 +484,7 @@ def main():
                             for n in range(nb):
                                 new_e = game_map.spawn_boss(entities, invok, level)
                                 if new_e:
-                                    turns.add_turn(e.speed, const.TurnType.ENNEMY, new_e)
+                                    turns.add_turn(e.speed_mov, const.TurnType.ENNEMY, new_e)
                     elif delta_malus:
                         time_malus += delta_malus
                         if time_malus > const.malus_max:
@@ -490,8 +493,9 @@ def main():
                         if player.active_weapon and isinstance(player.active_weapon, entity.BasicWeapon) and random.randint(1,3) == 1:
                             msglog.add_log("The "+e.name+" is burned by your caustic and "+player.active_weapon.name+"!")
                             attack(player.active_weapon, e, msglog, player, entities, turns, log_effective=False)
+                            render_inv = True
                         # msglog.add_log("The "+e.name+" misses.")
-                turns.add_turn(e.speed, const.TurnType.ENNEMY, e)
+                    turns.add_turn(e.speed_atk, const.TurnType.ENNEMY, e)
             new_turn = True
 
         elif current_turn.ttype == const.TurnType.SPAWN:
@@ -502,7 +506,7 @@ def main():
                     if random.random() < chance:
                         e = game_map.spawn(entities, creator)
                         if e:
-                            turns.add_turn(e.speed, const.TurnType.ENNEMY, e)
+                            turns.add_turn(e.speed_mov, const.TurnType.ENNEMY, e)
                 turns.add_turn(const.spawn_interval, const.TurnType.SPAWN, current_turn.entity)
             new_turn = True
 
