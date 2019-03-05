@@ -84,10 +84,10 @@ def main():
     turns.add_turn(3600*24*7 - 3600, const.TurnType.MSG, log.Msg("1 hour left! Quick!", const.desat_red))
     turns.add_turn(0, const.TurnType.PLAYER, player)
     turns.add_turn(3600*24*7, const.TurnType.GAME_OVER, None)
-    i = 30
+    i = 0
     for fslot in const.FeatureSlot:
-        turns.add_turn(i, const.TurnType.SPAWN, fslot)
-        i += 30
+        turns.add_turn(int(i), const.TurnType.SPAWN, fslot)
+        i += const.spawn_interval/len(const.FeatureSlot)
 
     # map generation
     game_map = gmap.GameMap(map_width, map_height, con)
@@ -443,16 +443,26 @@ def main():
                     if game_map.is_visible(e.x, e.y):
                         enemy_moved = True
                 else:
-                    delta_malus = e.attack(player, turns)
-                    if delta_malus == 0:
+                    d = e.attack(player, turns)
+                    delta_malus = d.get("dmg")
+                    invok = d.get("invok")
+                    if invok:
+                        msglog.add_log(e.name+" invoks "+invok.value.get("name")+" bugs!")
+                        for level in range(1,4):
+                            nb = const.boss_level_invok[level-1]
+                            for n in range(nb):
+                                new_e = game_map.spawn_boss(entities, invok, level)
+                                if new_e:
+                                    turns.add_turn(e.speed, const.TurnType.ENNEMY, new_e)
+                    elif delta_malus:
+                        time_malus += delta_malus
+                        if time_malus > const.malus_max:
+                            time_malus = const.malus_max
+                    else:
                         if player.active_weapon and isinstance(player.active_weapon, entity.BasicWeapon) and random.randint(1,3) == 1:
                             msglog.add_log("The "+e.name+" is burned by your caustic and "+player.active_weapon.name+"!")
                             attack(player.active_weapon, e, msglog, player, entities, turns, log_effective=False)
                         # msglog.add_log("The "+e.name+" misses.")
-                    else:
-                        time_malus += delta_malus
-                        if time_malus > const.malus_max:
-                            time_malus = const.malus_max
                 turns.add_turn(e.speed, const.TurnType.ENNEMY, e)
             new_turn = True
 
@@ -486,6 +496,11 @@ def main():
             tcod.console_flush()
             break
 
+        if boss and boss.hp <= 0:
+            render.render_boss_hp(root_console, des_panel, map_height, boss)
+            turns.turns = []
+            turns.add_turn(0, const.TurnType.WIN, None)
+
     time.sleep(3)
     for event in tcod.event.wait():
         pass
@@ -496,6 +511,7 @@ def main():
                 raise SystemExit()
             elif event.type == "KEYDOWN" or event.type == "MOUSEBUTTONDOWN":
                 again = False
+            tcod.console_flush()
 
 
 def attack(weapon, target, msglog, player, entities, turns, log_effective=True):

@@ -303,25 +303,32 @@ class Monster(Entity):
     """
     A bug
     """
-    def __init__(self, x, y, level, fcreator):
+    def __init__(self, x, y, level, fcreator, fslot=None):
+        if fslot == None:
+            self.fslot = fcreator.fslot
+        else:
+            self.fslot = fslot
         self.hp = level * level
-        super().__init__(x, y, str(self.hp), fcreator.fslot.value.get("color"), fcreator.fslot.value.get("name")+" bug v"+str(level), True, True, const.RenderOrder.ACTOR)
+        super().__init__(x, y, str(self.hp), self.fslot.value.get("color"), self.fslot.value.get("name")+" bug v"+str(level), True, True, const.RenderOrder.ACTOR)
         self.level = level
-        self.fslot = fcreator.fslot
-        self.atk = 20 + 10*level
-        self.speed = 30 * (4 - level)
+        self.atk = const.bug_atk[level-1]
+        self.speed = const.bug_speed[level-1]
         self.fcreator = fcreator
-        self.success_rate = const.monster_success_rate[self.level]
-        assert fcreator.n_bugs[self.level - 1] < fcreator.n_bugs_max[self.level - 1]
-        fcreator.n_bugs[self.level - 1] += 1
+        self.success_rate = const.monster_success_rate[self.level - 1]
+        if self.fcreator:
+            assert fcreator.n_bugs[self.level - 1] < fcreator.n_bugs_max[self.level - 1]
+            fcreator.n_bugs[self.level - 1] += 1
         self.stability_reward = 3*self.level
         self.confusion_date = None
 
     def dead(self, entities, stabilize=True):
         entities.remove(self)
-        self.fcreator.n_bugs[self.level - 1] -= 1
-        assert self.fcreator.n_bugs[self.level - 1] >= 0
-        return self.fcreator.stabilize(self.stability_reward)
+        if self.fcreator:
+            self.fcreator.n_bugs[self.level - 1] -= 1
+            assert self.fcreator.n_bugs[self.level - 1] >= 0
+            return self.fcreator.stabilize(self.stability_reward)
+        else:
+            return False
 
     def update_symbol(self):
         if self.hp > 0:
@@ -407,13 +414,14 @@ class Monster(Entity):
             r = player.resistances[self.fslot]
             mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
             delta_malus = round(self.atk*r)
-            return delta_malus
+            return {"dmg": delta_malus}
         else:
-            return 0
+            return {}
 
 class Boss(Monster):
     def __init__(self, x, y):
-        self.max_hp = 30
+        self.fcreator = None
+        self.max_hp = 100
         self.hp = self.max_hp
         Entity.__init__(self, x, y, "@", const.red, "Self-doubt", True, True, const.RenderOrder.ACTOR)
         self.fslot = None
@@ -422,48 +430,50 @@ class Boss(Monster):
         self.success_rate = 1
         self.stability_reward = 0
         self.confusion_date = None
+        self.invocations = list(const.FeatureSlot)
+        random.shuffle(self.invocations)
 
     def update_symbol(self):
         pass
 
     def attack(self, player, turns):
-        return round(self.atk)
-
-    def dead(self, entities, stabilize=True):
-        entities.remove(self)
-        return False
-
+        # print(self.hp/self.max_hp, len(self.invocations)/6)
+        if self.hp/self.max_hp <= len(self.invocations)/6:
+            out = self.invocations[0]
+            del self.invocations[0]
+            return {"invok": out}
+        return {"dmg": round(self.atk)}
 
 class MonsterBug(Monster):
     """
     Monster bug are tougher
     """
-    def __init__(self, x, y, level, fcreator):
-        super().__init__(x, y, level, fcreator)
+    def __init__(self, x, y, level, fcreator, fslot=None):
+        super().__init__(x, y, level, fcreator, fslot)
         self.atk = int(self.atk * 1.5)
 
 class LootBug(Monster):
     """
     Loot bug have a lower stability reward
     """
-    def __init__(self, x, y, level, fcreator):
-        super().__init__(x, y, level, fcreator)
+    def __init__(self, x, y, level, fcreator, fslot=None):
+        super().__init__(x, y, level, fcreator, fslot)
         self.stability_reward = 2 * self.level
 
 class RNGBug(Monster):
     """
     RNG bugs can't fail their attack
     """
-    def __init__(self, x, y, level, fcreator):
-        super().__init__(x, y, level, fcreator)
+    def __init__(self, x, y, level, fcreator, fslot=None):
+        super().__init__(x, y, level, fcreator, fslot)
         self.success_rate = 1
 
 class AnimationBug(Monster):
     """
     Animation bug don't have their HP written
     """
-    def __init__(self, x, y, level, fcreator):
-        super().__init__(x, y, level, fcreator)
+    def __init__(self, x, y, level, fcreator, fslot=None):
+        super().__init__(x, y, level, fcreator, fslot)
         self.char = "?"
 
     def update_symbol(self):

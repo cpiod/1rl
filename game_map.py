@@ -136,6 +136,20 @@ class GameMap:
     def is_visible(self, x, y):
         return self.tcod_map.fov[y,x]
 
+    def spawn_boss(self, entities, fslot, level):
+        for i in range(50):
+            (x,y) = self.random_cell()
+            if not any([entity for entity in entities if entity.x == x and entity.y == y]):
+                if level > 1:
+                    class_name = fslot.value.get("bug_class")
+                    the_class = getattr(entity, class_name)
+                    monster = the_class(x, y, level, None, fslot)
+                else:
+                    monster = entity.Monster(x, y, level, None, fslot)
+                entities.append(monster)
+                return monster
+        return None
+
     def spawn(self, entities, feature):
         # We try at most 50 times to spawn it
         for i in range(50):
