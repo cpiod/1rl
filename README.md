@@ -33,10 +33,10 @@ Then clone the repository:
 
 Then package it:
 
-    $ python3 -m PyInstaller 1rl.py --additional-hooks-dir=. -F --add-data "font.png:font.png" --add-data "splash.png:splash.png"
+    $ python3 -m PyInstaller 1rl.py --additional-hooks-dir=. -F --add-data "font.png:." --add-data "splash.png:."
 
 The binary is in `dist`.
 
 ## Acknowledgement
 
-This game is based on the [python-tcod](https://github.com/libtcod/python-tcod) library. Splash art by [Master484](http://m484games.ucoz.com/)
+This game is based on the [python-tcod](https://github.com/libtcod/python-tcod) library. Splash art by [Master484](http://m484games.ucoz.com/).

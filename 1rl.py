@@ -10,6 +10,8 @@ import log
 import scheduling as sch
 import random_loot
 import random
+import sys
+import os.path
 
 def main():
     screen_width = 100
@@ -38,7 +40,7 @@ def main():
     entities = [player]
 
     # tcod init
-    tcod.console_set_custom_font('font.png', tcod.FONT_LAYOUT_ASCII_INROW)
+    tcod.console_set_custom_font(resource_path('font.png'), tcod.FONT_LAYOUT_ASCII_INROW)
     root_console = tcod.console_init_root(screen_width, screen_height, '1RL – 7DRL 2019')
 
     # map console
@@ -98,7 +100,7 @@ def main():
     msglog = log.Log(log_width - 2, log_height - 2)
 
     # Splash
-    img = tcod.image_load("splash.png")
+    img = tcod.image_load(resource_path("splash.png"))
     img.blit_2x(root_console, 0, 0)
     tcod.console_print_ex(root_console, 75, 10, tcod.BKGND_NONE, tcod.CENTER, "Press any key to create your\nfirst 7DRL game!")
     tcod.console_print_ex(root_console, 50, 47, tcod.BKGND_NONE, tcod.CENTER, "A cheap plastic imitation of a game dev, 2019")
@@ -529,6 +531,14 @@ def attack(weapon, target, msglog, player, entities, turns, log_effective=True):
         if more_stable:
             msglog.add_log("Your "+target.fcreator.name+" is more stable.")
     return duration
+
+def resource_path(relative):
+    try:
+        # in pyinstaller
+        return os.path.join(sys._MEIPASS,relative)
+    except AttributeError:
+        # locally
+        return relative
 
 if __name__ == '__main__':
     main()
