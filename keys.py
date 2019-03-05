@@ -40,15 +40,15 @@ def handle_drop_keys(key, modifiers):
 
 def handle_player_turn_keys(key, modifiers):
     # Movement keys
-    if key == "tcod.event.K_UP" or key == 'k' or key == "tcod.event.K_KP_8":
+    if key == "tcod.event.K_UP" or key == 'tcod.event.K_k' or key == "tcod.event.K_KP_8":
         return {'move': (0, -1)}
     # elif key == "tcod.event.K_DOWN" and is_shift(modifiers):
         # return {'move': (0, 2)}
-    elif key == "tcod.event.K_DOWN" or key == 'j' or key == "tcod.event.K_KP_2":
+    elif key == "tcod.event.K_DOWN" or key == 'tcod.event.K_j' or key == "tcod.event.K_KP_2":
         return {'move': (0, 1)}
-    elif key == "tcod.event.K_LEFT" or key == 'h' or key == "tcod.event.K_KP_4":
+    elif key == "tcod.event.K_LEFT" or key == 'tcod.event.K_h' or key == "tcod.event.K_KP_4":
         return {'move': (-1, 0)}
-    elif key == "tcod.event.K_RIGHT" or key == 'l' or key == "tcod.event.K_KP_6":
+    elif key == "tcod.event.K_RIGHT" or key == 'tcod.event.K_l' or key == "tcod.event.K_KP_6":
         return {'move': (1, 0)}
     elif key == 'tcod.event.K_y' or key == "tcod.event.K_KP_7":
         return {'move': (-1, -1)}
@@ -77,7 +77,7 @@ def handle_player_turn_keys(key, modifiers):
     or (key == 'tcod.event.K_COMMA' and is_shift(modifiers)):
         return {'help': True}
 
-    elif key == 'tcod.event.K_g':
+    elif key == 'tcod.event.K_g' or key == 'tcod.event.K_COMMA':
         return {'pickup': True}
 
     elif key == 'tcod.event.K_w':

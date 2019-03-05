@@ -13,7 +13,7 @@ def get_random_feature(turns, player):
     flevel = player.flevel()
     rand = 8*flevel + 1 * (7 - remaining_d) + sum([random.randint(1,6) for i in range(1)])
     level = int(max(1,min(3, rand/10+1)))
-    fego = random.choice(list(const.FeatureEgo))
+    fego = random.choices(list(const.FeatureEgo),const.fego_prob)[0]
     fslot = random.choice(list(const.FeatureSlot))
     return entity.Feature(fslot, fego, level)
 

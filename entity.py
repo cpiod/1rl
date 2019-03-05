@@ -134,7 +134,7 @@ class ParadoxicalWeapon(Weapon):
 class MythicalWeapon(Weapon):
     def __init__(self, wslot, wego, level):
         super().__init__(wslot, wego, level)
-        self.dmg = math.ceil(self.dmg * 1.5)
+        self.duration = int(self.duration * 0.75)
 
     def equip_log(self, msglog):
         msglog.add_log("Your mythical weapon is worthy of the gods.")
@@ -247,6 +247,8 @@ class Player(Entity):
             self.inventory[key] = None
         # update player resistance
         self.update_resistance()
+        if previous_feature and previous_feature.fego == feature.fego:
+            return {"inheritance": True}
         return {}
 
     def flevel(self):
@@ -287,7 +289,6 @@ class Player(Entity):
             r = 0
             feature = self.fequiped.get(fslot)
             if feature:
-                r = 1
                 fego = feature.fego
                 for fslot_equiped in const.FeatureSlot:
                     other = self.fequiped.get(fslot_equiped)
@@ -295,7 +296,7 @@ class Player(Entity):
                         if other.is_stable():
                             r += other.level
                         else:
-                            r += int(other.level/2)
+                            r += 1
             self.resistances[fslot] = r
 
 class Monster(Entity):

@@ -1,5 +1,6 @@
 import tcod
 import enum
+import random
 
 red = tcod.Color(220,50,47)
 magenta = tcod.Color(211,54,130)
@@ -36,12 +37,12 @@ stability_threshold = 0.7
 inventory_max_size = 5
 
 time_descend = 60
-time_equip = 60*3
+time_equip = 20
 time_equip_weapon = 20
 time_move = 60
 spawn_interval = 60*3
 confusion_duration = 60*20
-malus_max = 15*60
+malus_max = 10*60
 paradox_list = ["\"Illusions are not real, yet it's real that illusion itself exists.\"", "\"I know one thing: that I know nothing.\"", "\"Can the Wizard of Yendor create a rock too heavy for itself to lift?\"", "\"What happens if Pinocchio says \"My nose will grow now\"?\"", "\"I am lying.\""]
 
 class FeatureSlot(enum.Enum):
@@ -55,6 +56,16 @@ class WeaponSlot(enum.Enum):
     fast = {"name": "printf()", "success_rate_base": 0.5, "duration_base": int(120*5/7.5), "instable": False, "key": "1"}
     slow = {"name": "profiler", "success_rate_base": 0.75, "duration_base": 120, "instable": False, "key": "2"}
     hack = {"name": "hack", "success_rate_base": 1, "duration_base": 30, "instable": True, "key": "3"}
+
+fego_prob_c = [1/5,1/5,3/5]
+fego_prob_b = [1/5,1/5,3/5]
+fego_prob_p = [1/5,1/5,3/5]
+fego_prob_m = [1/5,1/5,3/5]
+random.shuffle(fego_prob_c)
+random.shuffle(fego_prob_b)
+random.shuffle(fego_prob_p)
+random.shuffle(fego_prob_m)
+fego_prob = fego_prob_c + fego_prob_b + fego_prob_p + fego_prob_m
 
 class FeatureEgo(enum.Enum):
     c1 = {"name": "narcoleptic", "char": "t"}
@@ -103,8 +114,16 @@ class MenuState(enum.Enum):
 
 resistance_mul = [1, 0.9, 0.8, 0.7, 0.6, 0.5]
 monster_success_rate = [0.7, 0.75, 0.8]
-n_bugs_max = [[10,0,0],[15,3,0],[20,5,1]]
+n_bugs_max = [[10,0,0],[15,2,0],[20,2,1]]
 
-
-help_adjust = 30
-help_strings = ["1RL","","You have 7 days to complete your game.","","","Commands","","g        pick-up".ljust(help_adjust, ' '),"d        drop".ljust(help_adjust, ' '),"w        equip".ljust(help_adjust, ' '),"123      change active weapon".ljust(help_adjust, ' '),"ENTER    use stairs".ljust(help_adjust, ' ')]
+intro_strings = ["Welcome to 1RL","","You have 7 days to create", "your first roguelike!","","Complete your game by choosing its features","","Beware: unstable features generate bugs!","","Find the good combination of features", "and weapon ego", "", "Press ? to get command help"]
+help_adjust = 35
+help_adjust_name = 20
+help_strings = ["Commands","",\
+                ("numpad, vi, arrows".ljust(help_adjust_name, ' ')+"move").ljust(help_adjust, ' '),\
+                ("g".ljust(help_adjust_name, ' ')+"pick-up").ljust(help_adjust, ' '),\
+                ("d".ljust(help_adjust_name, ' ')+"drop").ljust(help_adjust, ' '),\
+                ("w".ljust(help_adjust_name, ' ')+"equip").ljust(help_adjust, ' '),\
+                ("[123]".ljust(help_adjust_name, ' ')+"change weapon").ljust(help_adjust, ' '),\
+                ("ENTER".ljust(help_adjust_name, ' ')+"use stairs").ljust(help_adjust, ' '),\
+                ("?".ljust(help_adjust_name, ' ')+"help").ljust(help_adjust, ' ')]

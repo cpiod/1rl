@@ -121,6 +121,10 @@ def main():
     render.render_des(root_console, des_panel, map_height, "")
     render.render_sch(root_console, sch_panel, turns, map_width)
     render.render_inv(root_console, inv_panel, player, map_width, sch_height)
+    menu_state = const.MenuState.POPUP
+    render.render_popup(root_console, popup_panel, screen_width, screen_height, const.intro_strings)
+
+
     tcod.console_flush()
     fov_recompute = False
     render_inv = False
@@ -318,7 +322,15 @@ def main():
                         previous = out.get("unstable-previous")
                         level_problem_no_previous = out.get("level-problem-no-previous")
                         level_problem_previous = out.get("level-problem-previous")
-                        if level_problem_previous:
+                        inheritance = out.get("inheritance")
+                        if inheritance:
+                            msglog.add_log("You upgraded your "+item.fego.value.get("name")+" feature: it is already quite stable!")
+                            item.stability = max(item.stability, int(item.max_stability / 3))
+                            render_inv = True
+                            turns.add_turn(time_malus + const.time_equip, const.TurnType.PLAYER, player)
+                            time_malus = 0
+                            new_turn = True
+                        elif level_problem_previous:
                             msglog.add_log("You can't equip a v"+str(item.level)+" feature on a v"+str(level_problem_previous.level)+" feature.")
                         elif level_problem_no_previous:
                             msglog.add_log("You need to equip a v1 "+item.fslot.value.get("name")+" feature first.")
@@ -375,8 +387,7 @@ def main():
                         if target and target != player:
                             weapon = player.active_weapon
                             if not weapon:
-                                msglog.add_log("You have no weapon to attack with! Equip with 1, 2 or 3.")
-                                assert False
+                                msglog.add_log("You have no weapon to attack with! Equip with w.")
                             else:
                                 duration = attack(weapon, target, msglog, player, entities, turns)
                                 render_inv = True
