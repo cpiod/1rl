@@ -17,12 +17,13 @@ class Room:
         self.neighbors = []
 
 class GameMap:
-    def __init__(self, width, height, con):
+    def __init__(self, width, height, con, show_map=False):
         self.width = width
         self.con = con
         self.height = height
         self.dlevel = 0
         self.tcod_empty_map = tcod.map.Map(self.width, self.height)
+        self.show_map = show_map
         for x in range(self.width):
             for y in range(self.height):
                 self.tcod_empty_map.transparent[y,x] = True
@@ -58,15 +59,33 @@ class GameMap:
     def rooms_with_arity(self, max_arity):
         return [r for r in self.room_list if len(r.neighbors) <= max_arity]
 
-    def make_map_bsp(self, turns, entities, player, show_map=False):
+    def make_boss_map(self, turns, entities, player):
+        self.tiles = [[entity.Tile(x,y) for y in range(self.height)] for x in range(self.width)]
+        self.tcod_map = tcod.map.Map(self.width, self.height)
+        center_x = self.width / 2
+        center_y = self.height / 2
+        a = 20
+        b = 10
+        self.room_list = [Room(int(center_x - a), int(center_y - b), 2*a, 2*b)]
+        for x in range(self.width):
+            for y in range(self.height):
+                if ((x - center_x)/a)**2 + ((y - center_y)/b)**2 <= 1:
+                    self.set_unblocked(x, y)
+        (player.x, player.y) = (int(center_x / 2), int(center_y))
+        boss = entity.Boss(int(center_x * 1.5), int(center_y))
+        entities.append(boss)
+        turns.add_turn(boss.speed, const.TurnType.ENNEMY, boss)
+        self.recompute_fov(player.x, player.y)
+        return boss
+
+    def make_map_bsp(self, turns, entities, player):
         self.tiles = [[entity.Tile(x,y) for y in range(self.height)] for x in range(self.width)]
         self.room_list = None
         self.tcod_map = tcod.map.Map(self.width, self.height)
         self.dlevel += 1
-        self.show_map = show_map
         map_width = self.width
         map_height = self.height
-        if show_map:
+        if self.show_map:
             for x in range(map_width):
                 for y in range(map_height):
                     self.tiles[x][y].is_seen = True
@@ -104,6 +123,10 @@ class GameMap:
         (player.x, player.y) = self.random_cell()
         (x, y) = self.random_cell()
         self.place_stairs(x,y)
+        if turns.is_boss_ready():
+            (x, y) = self.random_cell()
+            self.place_boss_stairs(x,y)
+        self.place_boss_stairs(player.x,player.y) # TODO
         self.add_loot(turns, player, entities)
         self.recompute_fov(player.x, player.y)
 
@@ -170,7 +193,7 @@ class GameMap:
         while True:
             x = random.randrange(r.x, r.x + r.w)
             y = random.randrange(r.y, r.y + r.h)
-            if not self.is_blocked(x,y):
+            if self.is_floor(x,y):
                 return (x,y)
 
     def recursive_make_rooms(self, bsp):
@@ -320,8 +343,20 @@ class GameMap:
     def place_stairs(self, x, y):
         self.set_tile_type(x, y, const.TileType.STAIRS)
 
+    def place_boss_stairs(self, x, y):
+        self.set_tile_type(x, y, const.TileType.BOSS_STAIRS)
+
+    def is_floor(self, x, y):
+        return self.tiles[x][y].ftype == const.TileType.FLOOR
+
     def is_door(self, x, y):
         return self.tiles[x][y].ftype == const.TileType.DOOR
+
+    def is_stairs(self, x, y):
+        return self.tiles[x][y].ftype == const.TileType.STAIRS
+
+    def is_boss_stairs(self, x, y):
+        return self.tiles[x][y].ftype == const.TileType.BOSS_STAIRS
 
     def is_blocked(self, x, y):
         return not self.tcod_map.walkable[y,x]

@@ -21,7 +21,10 @@ base3 = tcod.Color(253,246,227)
 
 door_color = tcod.Color(203,75,22)
 tcod.color_scale_HSV(door_color, 0.7, 1)
+desat_orange = door_color
 
+desat_red = tcod.Color(220,50,47)
+tcod.color_scale_HSV(desat_red, 0.7, 1)
 desat_magenta = tcod.Color(211,54,130)
 tcod.color_scale_HSV(desat_magenta, 0.7, 1)
 desat_violet = tcod.Color(108,113,196)
@@ -32,6 +35,7 @@ desat_green = tcod.Color(133,153,0)
 tcod.color_scale_HSV(desat_green, 0.7, 1)
 desat_yellow = tcod.Color(181,137,0)
 tcod.color_scale_HSV(desat_yellow, 0.7, 1)
+boss_stairs_color = desat_green
 
 stability_threshold = 0.7
 inventory_max_size = 5
@@ -94,11 +98,13 @@ class TurnType(enum.Enum):
     ENNEMY = 0
     PLAYER = 1
     SPAWN = 2
+    MSG = 3
 
 class TileType(enum.Enum):
     WALL = {"name": "", "collision": True, "transparent": False, "char": "#", "color": base2}
     FLOOR = {"name": "", "collision": False, "transparent": True, "char": ".", "color": base2}
     STAIRS = {"name": "stairs", "collision": False, "transparent": True, "char": ">", "color": door_color}
+    BOSS_STAIRS = {"name": "strange stairs", "collision": False, "transparent": True, "char": ">", "color": boss_stairs_color}
     DOOR = {"name": "door", "collision": False, "transparent": False, "char": "+", "color": door_color}
 
 class RenderOrder(enum.Enum):

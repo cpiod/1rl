@@ -1,4 +1,11 @@
 import textwrap
+import constants as const
+
+class Msg():
+    def __init__(self, string, color_active=const.base2, color_inactive=const.base0):
+        self.string = string
+        self.color_active = color_active
+        self.color_inactive = color_inactive
 
 class Log():
     """
@@ -8,7 +15,7 @@ class Log():
         self.height = height
         self.width = width
         self.messages = []
-        self.last = 0
+        self.last = 0 # used to know which messages are bright
 
     def is_there_new(self):
         return self.last != self.height
@@ -16,7 +23,7 @@ class Log():
     def set_rendered(self):
         self.last = self.height
 
-    def add_log(self, message):
+    def add_log(self, message, color_active=const.base2, color_inactive=const.base0):
         # Split the message if necessary, among multiple lines
         new_msg_lines = textwrap.wrap(message, self.width)
         self.last -= len(new_msg_lines)
@@ -26,4 +33,4 @@ class Log():
                 del self.messages[0]
 
             # Add the new line as a Message object, with the text and the color
-            self.messages.append(line)
+            self.messages.append(Msg(line, color_active, color_inactive))

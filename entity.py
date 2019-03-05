@@ -411,6 +411,29 @@ class Monster(Entity):
         else:
             return 0
 
+class Boss(Monster):
+    def __init__(self, x, y):
+        self.max_hp = 30
+        self.hp = self.max_hp
+        Entity.__init__(self, x, y, "@", const.red, "Self-doubt", True, True, const.RenderOrder.ACTOR)
+        self.fslot = None
+        self.atk = 20
+        self.speed = 10
+        self.success_rate = 1
+        self.stability_reward = 0
+        self.confusion_date = None
+
+    def update_symbol(self):
+        pass
+
+    def attack(self, player, turns):
+        return round(self.atk)
+
+    def dead(self, entities, stabilize=True):
+        entities.remove(self)
+        return False
+
+
 class MonsterBug(Monster):
     """
     Monster bug are tougher

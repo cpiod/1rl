@@ -33,6 +33,23 @@ def render_popup(root_console, popup_panel, screen_width, screen_height, strings
         y += 1
     popup_panel.blit(dest=root_console, dest_x = int(screen_width/4), dest_y=int(screen_height/4), bg_alpha=0.7)
 
+def render_boss_hp(root_console, des_panel, map_height, boss):
+    """
+    render the boss hp bar
+    """
+    tcod.console_set_default_foreground(des_panel, const.base3)
+    tcod.console_print_ex(des_panel, 1, 0, tcod.BKGND_NONE, tcod.LEFT, boss.name)
+    x_start = 1
+    x_width = des_panel.width - 2
+    hp_width = round((boss.hp / boss.max_hp * x_width))
+
+    for x in range(x_start, x_start+x_width):
+        tcod.console_set_char_background(des_panel, x, 0, const.base02, tcod.BKGND_SET)
+    for x in range(x_start, x_start + hp_width):
+        tcod.console_set_char_background(des_panel, x, 0, const.red, tcod.BKGND_SET)
+
+    des_panel.blit(dest=root_console, dest_y=map_height)
+
 def render_des(root_console, des_panel, map_height, string):
     tcod.console_set_default_foreground(des_panel, const.base2)
     tcod.console_print_ex(des_panel, 1, 0, tcod.BKGND_NONE, tcod.LEFT, string)
@@ -49,8 +66,10 @@ def render_log(root_console, log_panel, msglog, map_height, force=False):
         y = log_panel.height - 2 - len(msglog.messages)
         for msg in msglog.messages:
             if y >= msglog.last:
-                tcod.console_set_default_foreground(log_panel, const.base2)
-            log_panel.print_(1, y + 1, msg)
+                tcod.console_set_default_foreground(log_panel, msg.color_active)
+            else:
+                tcod.console_set_default_foreground(log_panel, msg.color_inactive)
+            log_panel.print_(1, y + 1, msg.string)
             y += 1
         msglog.set_rendered()
         log_panel.blit(dest=root_console, dest_y=map_height + 1)

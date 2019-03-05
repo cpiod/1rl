@@ -72,6 +72,15 @@ def main():
 
     # scheduling
     turns = sch.Scheduling()
+    turns.add_turn(0, const.TurnType.MSG, log.Msg("Go! You have 7 days left.", const.desat_green))
+    turns.add_turn(3600*24, const.TurnType.MSG, log.Msg("You have 6 days left.", const.desat_green))
+    turns.add_turn(3600*24*2, const.TurnType.MSG, log.Msg("You have 5 days left. Keep going.", const.desat_green))
+    turns.add_turn(3600*24*3, const.TurnType.MSG, log.Msg("You have 4 days left. Remember to sleep correctly.", const.desat_orange))
+    turns.add_turn(3600*24*4, const.TurnType.MSG, log.Msg("You have 3 days left. That's less than half a week…", const.desat_orange))
+    turns.add_turn(3600*24*5, const.TurnType.MSG, log.Msg("You have 2 days left. Don't panic.", const.desat_orange))
+    turns.add_turn(3600*24*6, const.TurnType.MSG, log.Msg("You have 1 day left. Ok, it's maybe time to panic.", const.desat_red))
+    turns.add_turn(3600*24*6.5, const.TurnType.MSG, log.Msg("Only 12 hours left! You need to finish it now!", const.desat_red))
+    turns.add_turn(3600*24*7 - 3600, const.TurnType.MSG, log.Msg("1 hour left! Quick!", const.desat_red))
     turns.add_turn(0, const.TurnType.PLAYER, player)
     i = 2
     for fslot in const.FeatureSlot:
@@ -80,6 +89,7 @@ def main():
 
     # map generation
     game_map = gmap.GameMap(map_width, map_height, con)
+    # game_map.make_boss_map(turns, entities, player)
     game_map.make_map_bsp(turns, entities, player)
 
     # log init
@@ -135,6 +145,8 @@ def main():
     last_player_date = 0
     mouse = (500,500) #OOB
     new_mouse = False
+    boss_fight = False
+    boss = None
     while not tcod.console_is_window_closed():
         if new_turn:
             current_turn = turns.get_turn()
@@ -162,9 +174,12 @@ def main():
                 render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
                 enemy_moved = False
 
-            if new_mouse:# and menu_state != const.MenuState.POPUP:
+            if new_mouse and not boss_fight:# and menu_state != const.MenuState.POPUP:
                 render.render_des(root_console, des_panel, map_height, render.get_names_under_mouse(mouse, entities, game_map, log_width))
                 new_mouse = False
+
+            if boss_fight:
+                render.render_boss_hp(root_console, des_panel, map_height, boss)
 
             fov_recompute = False
             render.render_log(root_console, log_panel, msglog, map_height, force_log)
@@ -235,18 +250,28 @@ def main():
 
                 descend = action.get('descend')
                 if descend:
-                    msglog.add_log("You go down the stairs.")
-                    for e in entities:
-                        if isinstance(e, entity.Monster):
-                            e.dead(entities, stabilize=False)
-                    entities = [player]
-                    game_map.make_map_bsp(turns, entities, player)
-                    turns.add_turn(time_malus + const.time_descend, const.TurnType.PLAYER, player)
-                    time_malus = 0
-                    render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
-                    enemy_moved = True
-                    new_turn = True
-
+                    stairs = game_map.is_stairs(player.x, player.y)
+                    boss_stairs = game_map.is_boss_stairs(player.x, player.y)
+                    assert not (stairs and boss_stairs)
+                    if stairs or boss_stairs:
+                        msglog.add_log("You go down the stairs.")
+                        for e in entities:
+                            if isinstance(e, entity.Monster):
+                                e.dead(entities, stabilize=False)
+                        entities = [player]
+                        if stairs:
+                            game_map.make_map_bsp(turns, entities, player)
+                        else:
+                            boss = game_map.make_boss_map(turns, entities, player)
+                            boss_fight = True
+                            msglog.add_log("To release your game, you need to fight your inner ennemy: self-doubt.", const.red)
+                        turns.add_turn(time_malus + const.time_descend, const.TurnType.PLAYER, player)
+                        time_malus = 0
+                        render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
+                        enemy_moved = True
+                        new_turn = True
+                    else:
+                        msglog.add_log("You see no stairs.")
 
                 grab = action.get('pickup')
                 if grab:
@@ -360,7 +385,10 @@ def main():
                     if menu_state == const.MenuState.POPUP:
                         render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
                         render.render_log(root_console, log_panel, msglog, map_height)
-                        render.render_des(root_console, des_panel, map_height, "")
+                        if boss_fight:
+                            render.render_boss_hp(root_console, des_panel, map_height, boss)
+                        else:
+                            render.render_des(root_console, des_panel, map_height, "")
                         render.render_sch(root_console, sch_panel, turns, map_width)
                         render.render_inv(root_console, inv_panel, player, map_width, sch_height)
                     else:
@@ -427,16 +455,20 @@ def main():
             new_turn = True
 
         elif current_turn.ttype == const.TurnType.SPAWN:
-            creator = player.fequiped.get(current_turn.entity)
-            if creator and not creator.is_stable() and sum(creator.n_bugs) < sum(creator.n_bugs_max):
-                chance = 1 - creator.stability / creator.max_stability / const.stability_threshold + 0.3
-                if random.random() < chance:
-                    e = game_map.spawn(entities, creator)
-                    if e:
-                        turns.add_turn(e.speed, const.TurnType.ENNEMY, e)
-            turns.add_turn(const.spawn_interval, const.TurnType.SPAWN, current_turn.entity)
+            if not boss_fight:
+                creator = player.fequiped.get(current_turn.entity)
+                if creator and not creator.is_stable() and sum(creator.n_bugs) < sum(creator.n_bugs_max):
+                    chance = 1 - creator.stability / creator.max_stability / const.stability_threshold + 0.3
+                    if random.random() < chance:
+                        e = game_map.spawn(entities, creator)
+                        if e:
+                            turns.add_turn(e.speed, const.TurnType.ENNEMY, e)
+                turns.add_turn(const.spawn_interval, const.TurnType.SPAWN, current_turn.entity)
             new_turn = True
 
+        elif current_turn.ttype == const.TurnType.MSG:
+            msglog.add_log(current_turn.entity.string, current_turn.entity.color_active, current_turn.entity.color_inactive)
+            new_turn = True
 
 def attack(weapon, target, msglog, player, entities, turns, log_effective=True):
     (dmg,duration) = weapon.attack(target, msglog, turns)
