@@ -19,8 +19,8 @@ class Scheduling():
     def is_boss_ready(self):
         remaining = 7*24*60*60 - self.current_date
         remaining_d = int(remaining / (24*60*60))
-        return True # TODO
-        # return remaining_d <= 2
+        # return True # TODO
+        return remaining_d <= 2
 
     def get_remaining(self):
         remaining = 7*24*60*60 - self.current_date

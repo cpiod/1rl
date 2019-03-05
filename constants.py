@@ -127,7 +127,7 @@ resistance_mul = [1, 0.9, 0.8, 0.7, 0.6, 0.5]
 monster_success_rate = [0.7, 0.75, 0.8]
 n_bugs_max = [[10,0,0],[15,2,0],[20,2,1]]
 
-intro_strings = ["Welcome to 1RL","","You have 7 days to create", "your first roguelike!","","Complete your game by choosing its features","","Beware: unstable features generate bugs!","","Find the good combination of features", "and weapon ego", "", "Press ? to get command help"]
+intro_strings = ["Welcome to 1RL","","You have 7 days to create", "your first roguelike!","","Complete your game by choosing its features.","","Beware: unstable features generate bugs!","","Find the good combination of feature", "and weapon egos.", "", "With stable features comes better resistance!", "", "Press ? to get command help."]
 help_adjust = 35
 help_adjust_name = 20
 help_strings = ["Commands","",\

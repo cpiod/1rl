@@ -413,7 +413,7 @@ class Monster(Entity):
         if random.random() < self.success_rate:
             r = player.resistances[self.fslot]
             mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
-            delta_malus = round(self.atk*r)
+            delta_malus = round(self.atk*mul)
             return {"dmg": delta_malus}
         else:
             return {}

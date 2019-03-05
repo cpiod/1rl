@@ -31,7 +31,7 @@ def render_popup(root_console, popup_panel, map_width, map_height, strings):
     for s in strings:
         tcod.console_print_ex(popup_panel, int(popup_panel.width / 2), y, tcod.BKGND_NONE, tcod.CENTER, s)
         y += 1
-    popup_panel.blit(dest=root_console, dest_x = int(map_width/6), dest_y=int(map_height/6), bg_alpha=0.7)
+    popup_panel.blit(dest=root_console, dest_x = int(map_width/6), dest_y=int(map_height/6), bg_alpha=0.8)
 
 def render_boss_hp(root_console, des_panel, map_height, boss):
     """
@@ -131,7 +131,10 @@ def render_sch(root_console, sch_panel, turns, map_width):
     w = sch_panel.width
     tcod.console_set_default_foreground(sch_panel, const.base0)
     sch_panel.print_frame(0, 0, w, 3, string="Remaining time")
-    # tcod.console_set_default_foreground(sch_panel, const.red)
+    if remaining_d <= 1:
+        tcod.console_set_default_foreground(sch_panel, const.red)
+    elif remaining_d <= 3:
+        tcod.console_set_default_foreground(sch_panel, const.orange)
     sch_panel.print_(int(w / 2), 1, str(remaining_d)+"d "+str(remaining_h)+"h "+str(remaining_m)+"m "+str(remaining_s)+"s", alignment=tcod.CENTER)
     sch_panel.blit(dest=root_console, dest_x=map_width)
 

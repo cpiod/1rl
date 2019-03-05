@@ -73,14 +73,14 @@ def main():
 
     # scheduling
     turns = sch.Scheduling()
-    turns.add_turn(0, const.TurnType.MSG, log.Msg("Go! You have 7 days left.", const.desat_green))
+    turns.add_turn(0, const.TurnType.MSG, log.Msg("They say the hardest part is actually choosing to make a game. So I guess I've already won?", const.desat_green))
     turns.add_turn(3600*24, const.TurnType.MSG, log.Msg("You have 6 days left.", const.desat_green))
     turns.add_turn(3600*24*2, const.TurnType.MSG, log.Msg("You have 5 days left. Keep going.", const.desat_green))
     turns.add_turn(3600*24*3, const.TurnType.MSG, log.Msg("You have 4 days left. Remember to sleep correctly.", const.desat_orange))
     turns.add_turn(3600*24*4, const.TurnType.MSG, log.Msg("You have 3 days left. That's less than half a week...", const.desat_orange))
     turns.add_turn(3600*24*5, const.TurnType.MSG, log.Msg("You have 2 days left. Don't panic.", const.desat_orange))
-    turns.add_turn(3600*24*6, const.TurnType.MSG, log.Msg("You have 1 day left. Ok, it's maybe time to panic.", const.desat_red))
-    turns.add_turn(3600*24*6.5, const.TurnType.MSG, log.Msg("Only 12 hours left! You need to finish it now!", const.desat_red))
+    turns.add_turn(3600*24*6, const.TurnType.MSG, log.Msg("You have 1 day left. OK, maybe it's time to panic.", const.desat_red))
+    turns.add_turn(3600*24*6.5, const.TurnType.MSG, log.Msg("Only 12 hours left! You need to finish this now!", const.desat_red))
     turns.add_turn(3600*24*7 - 3600, const.TurnType.MSG, log.Msg("1 hour left! Quick!", const.desat_red))
     turns.add_turn(0, const.TurnType.PLAYER, player)
     turns.add_turn(3600*24*7, const.TurnType.GAME_OVER, None)
