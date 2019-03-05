@@ -18,9 +18,6 @@ def main():
     sch_height = 3
     sch_width = 27
 
-    popup_width = int(2 * screen_width / 4)
-    popup_height = int(2 * screen_height / 4)
-
     # Inventory
     inv_height = screen_height - sch_height
     inv_width = sch_width
@@ -32,6 +29,10 @@ def main():
     # Size of the map
     map_width = screen_width - inv_width
     map_height = screen_height - log_height - 1
+
+    # Popup size
+    popup_width = int(2 * map_width / 3)
+    popup_height = int(2 * map_height / 3)
 
     player = entity.Player(None, None)
     entities = [player]
@@ -76,16 +77,17 @@ def main():
     turns.add_turn(3600*24, const.TurnType.MSG, log.Msg("You have 6 days left.", const.desat_green))
     turns.add_turn(3600*24*2, const.TurnType.MSG, log.Msg("You have 5 days left. Keep going.", const.desat_green))
     turns.add_turn(3600*24*3, const.TurnType.MSG, log.Msg("You have 4 days left. Remember to sleep correctly.", const.desat_orange))
-    turns.add_turn(3600*24*4, const.TurnType.MSG, log.Msg("You have 3 days left. That's less than half a week…", const.desat_orange))
+    turns.add_turn(3600*24*4, const.TurnType.MSG, log.Msg("You have 3 days left. That's less than half a week...", const.desat_orange))
     turns.add_turn(3600*24*5, const.TurnType.MSG, log.Msg("You have 2 days left. Don't panic.", const.desat_orange))
     turns.add_turn(3600*24*6, const.TurnType.MSG, log.Msg("You have 1 day left. Ok, it's maybe time to panic.", const.desat_red))
     turns.add_turn(3600*24*6.5, const.TurnType.MSG, log.Msg("Only 12 hours left! You need to finish it now!", const.desat_red))
     turns.add_turn(3600*24*7 - 3600, const.TurnType.MSG, log.Msg("1 hour left! Quick!", const.desat_red))
     turns.add_turn(0, const.TurnType.PLAYER, player)
-    i = 2
+    turns.add_turn(3600*24*7, const.TurnType.GAME_OVER, None)
+    i = 30
     for fslot in const.FeatureSlot:
         turns.add_turn(i, const.TurnType.SPAWN, fslot)
-        i += 2
+        i += 30
 
     # map generation
     game_map = gmap.GameMap(map_width, map_height, con)
@@ -132,7 +134,7 @@ def main():
     render.render_sch(root_console, sch_panel, turns, map_width)
     render.render_inv(root_console, inv_panel, player, map_width, sch_height)
     menu_state = const.MenuState.POPUP
-    render.render_popup(root_console, popup_panel, screen_width, screen_height, const.intro_strings)
+    render.render_popup(root_console, popup_panel, map_width, map_height, const.intro_strings)
 
 
     tcod.console_flush()
@@ -246,7 +248,7 @@ def main():
                 help_popup = action.get('help')
                 if help_popup:
                     menu_state = const.MenuState.POPUP
-                    render.render_popup(root_console, popup_panel, screen_width, screen_height, const.help_strings)
+                    render.render_popup(root_console, popup_panel, map_width, map_height, const.help_strings)
 
                 descend = action.get('descend')
                 if descend:
@@ -469,6 +471,32 @@ def main():
         elif current_turn.ttype == const.TurnType.MSG:
             msglog.add_log(current_turn.entity.string, current_turn.entity.color_active, current_turn.entity.color_inactive)
             new_turn = True
+
+        elif current_turn.ttype == const.TurnType.GAME_OVER:
+            msglog.add_log("Your self-doubt is too strong. You don't feel your game is worth showing to the world. Who said releasing a game was easy?", const.red, const.red)
+            msglog.add_log("Game over.", const.red, const.red)
+            render.render_log(root_console, log_panel, msglog, map_height)
+            tcod.console_flush()
+            break
+
+        elif current_turn.ttype == const.TurnType.WIN:
+            msglog.add_log("Congratulations! You defeated your self-doubt and completed your game!", const.green)
+            msglog.add_log("You ascend to the status of RL game dev...", const.green)
+            render.render_log(root_console, log_panel, msglog, map_height)
+            tcod.console_flush()
+            break
+
+    time.sleep(3)
+    for event in tcod.event.wait():
+        pass
+    again = True
+    while again:
+        for event in tcod.event.wait():
+            if event.type == "QUIT":
+                raise SystemExit()
+            elif event.type == "KEYDOWN" or event.type == "MOUSEBUTTONDOWN":
+                again = False
+
 
 def attack(weapon, target, msglog, player, entities, turns, log_effective=True):
     (dmg,duration) = weapon.attack(target, msglog, turns)

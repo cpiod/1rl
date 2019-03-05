@@ -99,6 +99,8 @@ class TurnType(enum.Enum):
     PLAYER = 1
     SPAWN = 2
     MSG = 3
+    GAME_OVER = 4
+    WIN = 5
 
 class TileType(enum.Enum):
     WALL = {"name": "", "collision": True, "transparent": False, "char": "#", "color": base2}

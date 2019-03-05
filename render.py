@@ -23,7 +23,7 @@ def render_map(root_console, con, entities, player, game_map, screen_width, scre
 
     con.blit(dest=root_console)
 
-def render_popup(root_console, popup_panel, screen_width, screen_height, strings):
+def render_popup(root_console, popup_panel, map_width, map_height, strings):
     tcod.console_clear(popup_panel)
     tcod.console_set_default_foreground(popup_panel, const.base2)
     popup_panel.print_frame(0, 0, popup_panel.width, popup_panel.height)
@@ -31,7 +31,7 @@ def render_popup(root_console, popup_panel, screen_width, screen_height, strings
     for s in strings:
         tcod.console_print_ex(popup_panel, int(popup_panel.width / 2), y, tcod.BKGND_NONE, tcod.CENTER, s)
         y += 1
-    popup_panel.blit(dest=root_console, dest_x = int(screen_width/4), dest_y=int(screen_height/4), bg_alpha=0.7)
+    popup_panel.blit(dest=root_console, dest_x = int(map_width/6), dest_y=int(map_height/6), bg_alpha=0.7)
 
 def render_boss_hp(root_console, des_panel, map_height, boss):
     """
