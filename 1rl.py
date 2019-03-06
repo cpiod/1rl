@@ -489,6 +489,7 @@ def main():
                         enemy_moved = True
                     turns.add_turn(e.speed_mov, const.TurnType.ENNEMY, e)
                 else:
+                    turns.add_turn(e.speed_atk, const.TurnType.ENNEMY, e)
                     d = e.attack(player, turns)
                     delta_malus = d.get("dmg")
                     invok = d.get("invok")
@@ -510,7 +511,6 @@ def main():
                             attack(player.active_weapon, e, msglog, player, entities, turns, log_effective=False)
                             render_inv = True
                         # msglog.add_log("The "+e.name+" misses.")
-                    turns.add_turn(e.speed_atk, const.TurnType.ENNEMY, e)
             new_turn = True
 
         elif current_turn.ttype == const.TurnType.SPAWN:
@@ -522,7 +522,7 @@ def main():
                         e = game_map.spawn(entities, creator)
                         if e:
                             turns.add_turn(e.speed_mov, const.TurnType.ENNEMY, e)
-                turns.add_turn(const.spawn_interval, const.TurnType.SPAWN, current_turn.entity)
+            turns.add_turn(const.spawn_interval, const.TurnType.SPAWN, current_turn.entity)
             new_turn = True
 
         elif current_turn.ttype == const.TurnType.MSG:

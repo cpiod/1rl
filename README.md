@@ -33,7 +33,7 @@ Then clone the repository:
 
 Then package it:
 
-    $ python3 -m PyInstaller 1rl.py --additional-hooks-dir=. -F --add-data "font.png:." --add-data "splash.png:."
+    $ python3 -O -m PyInstaller 1rl.py --additional-hooks-dir=. -F --add-data "font.png:." --add-data "splash.png:."
 
 The binary is in `dist`.
 
