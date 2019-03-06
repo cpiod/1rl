@@ -26,7 +26,8 @@ def render_map(root_console, con, entities, player, game_map, screen_width, scre
 def render_popup(root_console, popup_panel, map_width, map_height, strings):
     tcod.console_clear(popup_panel)
     tcod.console_set_default_foreground(popup_panel, const.base2)
-    popup_panel.print_frame(0, 0, popup_panel.width, popup_panel.height)
+    popup_panel.print_frame(0, 0, popup_panel.width, popup_panel.height, string=strings[0])
+    del strings[0]
     y = int(popup_panel.height /2 - len(strings) / 2)
     for s in strings:
         tcod.console_print_ex(popup_panel, int(popup_panel.width / 2), y, tcod.BKGND_NONE, tcod.CENTER, s)
@@ -135,7 +136,11 @@ def render_sch(root_console, sch_panel, turns, map_width):
         tcod.console_set_default_foreground(sch_panel, const.red)
     elif remaining_d <= 3:
         tcod.console_set_default_foreground(sch_panel, const.orange)
-    sch_panel.print_(int(w / 2), 1, str(remaining_d)+"d "+str(remaining_h)+"h "+str(remaining_m)+"m "+str(remaining_s)+"s", alignment=tcod.CENTER)
+    remaining_d = "{:01d}".format(remaining_d)
+    remaining_h = "{:02d}".format(remaining_h)
+    remaining_m = "{:02d}".format(remaining_m)
+    remaining_s = "{:02d}".format(remaining_s)
+    sch_panel.print_(int(w / 2), 1, remaining_d+"d "+remaining_h+"h "+remaining_m+"m "+remaining_s+"s", alignment=tcod.CENTER)
     sch_panel.blit(dest=root_console, dest_x=map_width)
 
 def render_inv(root_console, inv_panel, player, map_width, sch_height):
@@ -233,17 +238,18 @@ def render_inv(root_console, inv_panel, player, map_width, sch_height):
 
     inv_panel.blit(dest=root_console, dest_x=map_width, dest_y=sch_height)
 
-# def clear_all_entities(con, entities,game_map, player):
-    # for entity in entities:
-        # clear_cell(con, entity.x,entity.y,game_map,player)
-
 def draw_entity(con, entity, game_map, player):
     visible = game_map.is_visible(entity.x, entity.y)
     if visible\
     or (entity.is_seen and (isinstance(entity, ent.Weapon) or isinstance(entity, ent.Feature)))\
     or (isinstance(entity, ent.Monster) and isinstance(player.active_weapon, ent.ConsciousWeapon)):
+        tcod.console_set_char_background(con, entity.x, entity.y, const.base03)
         if visible:
-            tcod.console_set_char_foreground(con, entity.x, entity.y, entity.visible_color)
+            if isinstance(entity, ent.Monster) and entity.confusion_date:
+                tcod.console_set_char_background(con, entity.x, entity.y, entity.visible_color)
+                tcod.console_set_char_foreground(con, entity.x, entity.y, const.base03)
+            else:
+                tcod.console_set_char_foreground(con, entity.x, entity.y, entity.visible_color)
         else:
             tcod.console_set_char_foreground(con, entity.x, entity.y, entity.hidden_color)
         tcod.console_set_char(con, entity.x, entity.y, entity.char)
@@ -256,6 +262,7 @@ def clear_cell(con, x,y,game_map):
     if visible:
         game_map.tiles[x][y].is_seen = True
 
+    tcod.console_set_char_background(con, x, y, const.base03)
     if game_map.tiles[x][y].is_seen:
         if visible:
             tcod.console_set_char_foreground(con, x, y, game_map.tiles[x][y].visible_color)

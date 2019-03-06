@@ -37,6 +37,10 @@ desat_yellow = tcod.Color(181,137,0)
 tcod.color_scale_HSV(desat_yellow, 0.7, 1)
 boss_stairs_color = desat_green
 
+light_green = tcod.Color(133,153,0)*1.5
+light_blue = tcod.Color(38,139,210)*1.5
+
+
 stability_threshold = 0.7
 inventory_max_size = 5
 mul = 2
@@ -47,10 +51,9 @@ bug_speed_atk = [180*mul, 120*mul, 60*mul]
 bug_speed_mov = [60*mul, 50*mul, 40*mul]
 boss_level_invok = [1, 2, 3]
 time_equip = 20*mul
-time_equip_weapon = 20*mul
 time_move = 60*mul
 spawn_interval = 60*mul
-confusion_duration = 60*20*mul
+confusion_duration = 60*10*mul
 malus_max = 30*60*mul
 max_stab = [100,300,600]
 stab_reward = [2,4,6]
@@ -101,10 +104,10 @@ class FeatureEgo(enum.Enum):
     m3 = {"name": "Elvish", "char": "m"}
 
 class WeaponEgo(enum.Enum):
-    c = {"name": "telepathic", "fego": [FeatureEgo.c1, FeatureEgo.c2, FeatureEgo.c3], "char": "t", "w_class": "ConsciousWeapon"}
-    b = {"name": "basic", "fego": [FeatureEgo.b1, FeatureEgo.b2, FeatureEgo.b3], "char": "b", "w_class": "BasicWeapon"}
-    p = {"name": "paradoxical", "fego": [FeatureEgo.p1, FeatureEgo.p2, FeatureEgo.p3], "char": "p", "w_class": "ParadoxicalWeapon"}
-    m = {"name": "mythical", "fego": [FeatureEgo.m1, FeatureEgo.m2, FeatureEgo.m3], "char": "m", "w_class": "MythicalWeapon"}
+    c = {"name": "telepathic", "fego": [FeatureEgo.c1, FeatureEgo.c2, FeatureEgo.c3], "char": "t", "w_class": "ConsciousWeapon", "player_color": base3}
+    b = {"name": "basic", "fego": [FeatureEgo.b1, FeatureEgo.b2, FeatureEgo.b3], "char": "b", "w_class": "BasicWeapon", "player_color": light_green}
+    p = {"name": "paradoxical", "fego": [FeatureEgo.p1, FeatureEgo.p2, FeatureEgo.p3], "char": "p", "w_class": "ParadoxicalWeapon", "player_color": base3}
+    m = {"name": "mythical", "fego": [FeatureEgo.m1, FeatureEgo.m2, FeatureEgo.m3], "char": "m", "w_class": "MythicalWeapon", "player_color": light_blue}
 
 class TurnType(enum.Enum):
     ENNEMY = 0
@@ -132,10 +135,10 @@ class MenuState(enum.Enum):
     EQUIP = 3
     POPUP = 4
 
-intro_strings = ["Welcome to 1RL","","You have 7 days to create", "your first roguelike!","","Complete your game by choosing its features.","","Beware: unstable features generate bugs!","","Find the good combination of feature", "and weapon egos.", "", "With stable features comes better resistance!", "", "Press ? to get command help."]
+intro_strings = ["Welcome to 1RL","You have 7 days to create", "your first roguelike!","","Complete your game by choosing its features.","","Beware: unstable features generate bugs!","","Find the good combination of feature", "and weapon egos.", "", "With stable features comes better resistance!", "", "Press ? to get command help."]
 help_adjust = 35
 help_adjust_name = 20
-help_strings = ["Commands","",\
+help_strings = ["Commands",\
                 ("numpad, vi, arrows".ljust(help_adjust_name, ' ')+"move").ljust(help_adjust, ' '),\
                 ("g".ljust(help_adjust_name, ' ')+"pick-up").ljust(help_adjust, ' '),\
                 ("d".ljust(help_adjust_name, ' ')+"drop").ljust(help_adjust, ' '),\

@@ -146,7 +146,7 @@ def main():
     force_log = False
     time_malus = 0
     new_turn = True
-    enemy_moved = False
+    render_map = False
     last_player_date = 0
     mouse = (500,500) #OOB
     new_mouse = False
@@ -178,10 +178,10 @@ def main():
                     if not e.is_seen and game_map.is_visible(e.x, e.y):
                         e.is_seen = True
                         # if isinstance(e, entity.Monster):
-            if fov_recompute or enemy_moved:
+            if fov_recompute or render_map:
                 new_mouse = True
                 render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
-                enemy_moved = False
+                render_map = False
 
             if new_mouse and not boss:# and menu_state != const.MenuState.POPUP:
                 render.render_des(root_console, des_panel, map_height, render.get_names_under_mouse(mouse, entities, game_map, log_width))
@@ -244,14 +244,10 @@ def main():
                     elif previous_active == new_active:
                         msglog.add_log("This weapon is already wielded")
                     else:
-                        player.active_weapon = new_active
+                        player.change_active_weapon(new_active)
                         player.active_weapon.equip_log(msglog)
-                        enemy_moved = True
+                        render_map = True
                         render_inv = True
-                        turns.add_turn(time_malus + const.time_equip_weapon, const.TurnType.PLAYER, player)
-                        time_malus = 0
-                        new_turn = True
-                        break
 
                 help_popup = action.get('help')
                 if help_popup:
@@ -278,10 +274,10 @@ def main():
                             else:
                                 boss = game_map.make_boss_map(turns, entities, player)
                                 msglog.add_log("To release your game, you need to fight your inner ennemy: self-doubt.", const.red)
-                            turns.add_turn(time_malus + const.time_move, const.TurnType.PLAYER, player)
+                            turns.add_turn(time_malus + player.time_move, const.TurnType.PLAYER, player)
                             time_malus = 0
                             render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
-                            enemy_moved = True
+                            render_map = True
                             new_turn = True
                             break
                     else:
@@ -378,7 +374,7 @@ def main():
 
                         elif isinstance(item, entity.Weapon):
                             out = player.wequip(item, equip_key)
-                            enemy_moved = True # update telepathy
+                            render_map = True # update telepathy
                         else:
                             assert False
                         previous = out.get("unstable-previous")
@@ -402,7 +398,7 @@ def main():
                             if isinstance(item, entity.Weapon):
                                 msglog.add_log("You can change your active weapon with [123].")
                                 if not previous_active:
-                                    enemy_moved = True
+                                    render_map = True
                                     player.active_weapon.equip_log(msglog)
                             render_inv = True
                             turns.add_turn(time_malus + const.time_equip, const.TurnType.PLAYER, player)
@@ -440,7 +436,7 @@ def main():
 
                     if (dx, dy) == (0, 0):
                         msglog.add_log("There is no time to lose!")
-                        turns.add_turn(time_malus + const.time_move, const.TurnType.PLAYER, player)
+                        turns.add_turn(time_malus + player.time_move, const.TurnType.PLAYER, player)
                         time_malus = 0
                         new_turn = True
                         force_log = True
@@ -465,14 +461,14 @@ def main():
                                 turns.add_turn(time_malus + duration, const.TurnType.PLAYER, player)
                                 time_malus = 0
                                 new_turn = True
-                                enemy_moved = True
+                                render_map = True
                                 break
                         elif not game_map.is_blocked(destination_x, destination_y):
                             player.move(dx, dy)
                             des = game_map.description_item_on_floor(player)
                             if des:
                                 msglog.add_log("You see a "+des+" on the floor.")
-                            turns.add_turn(time_malus + const.time_move, const.TurnType.PLAYER, player)
+                            turns.add_turn(time_malus + player.time_move, const.TurnType.PLAYER, player)
                             time_malus = 0
                             fov_recompute = True
                             new_turn = True
@@ -484,9 +480,9 @@ def main():
             assert e.hp > 0, e.hp
             if e in entities:
                 if e.distance_to(player) >= 2:
-                    e.move_astar(player, entities, game_map)
+                    e.move_astar(player, entities, game_map, turns)
                     if game_map.is_visible(e.x, e.y) or (player.active_weapon and isinstance(player.active_weapon, entity.ConsciousWeapon)):
-                        enemy_moved = True
+                        render_map = True
                     turns.add_turn(e.speed_mov, const.TurnType.ENNEMY, e)
                 else:
                     turns.add_turn(e.speed_atk, const.TurnType.ENNEMY, e)
@@ -510,6 +506,7 @@ def main():
                             msglog.add_log("The "+e.name+" is burned by your caustic and "+player.active_weapon.name+"!")
                             attack(player.active_weapon, e, msglog, player, entities, turns, log_effective=False)
                             render_inv = True
+                            render_map = True
                         # msglog.add_log("The "+e.name+" misses.")
             new_turn = True
 
@@ -569,10 +566,9 @@ def attack(weapon, target, msglog, player, entities, turns, log_effective=True):
             target.fcreator.destabilize(target.stability_reward)
         player.update_resistance()
     if target.hp <= 0:
-        enemy_moved = True
         if log_effective and weapon.is_effective_on(target.fslot):
             msglog.add_log("You squashed the "+target.name+"!")
-        more_stable = target.dead()
+        more_stable = target.dead(stabilize=not weapon.wslot.value.get("instable"))
         entities.remove(target)
         turns.remove_turn(target)
         player.update_resistance()

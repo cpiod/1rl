@@ -12,7 +12,6 @@ class Entity:
         self.x = x
         self.y = y
         self.char = char
-        self.color = color
         self.visible_color = color # color when visible
         self.hidden_color = const.base01 # color when hidden
         self.name = name
@@ -109,6 +108,9 @@ class Weapon(Entity):
 
         return (dmg, duration)
 
+    def effect_on_active(self, player):
+        player.time_move = const.time_move
+
 class ConsciousWeapon(Weapon):
     def equip_log(self, msglog):
         msglog.add_log("You feel conscious of bug presence.")
@@ -120,15 +122,15 @@ class BasicWeapon(Weapon):
 class ParadoxicalWeapon(Weapon):
     def attack(self, target, msglog, turns):
         (dmg,duration) = super().attack(target, msglog, turns)
-        if dmg != 0 and target.hp > 0: # we didn't miss and it's still alive
-            if not target.confusion_date and random.randint(1, 3) < 3:
-                msglog.add_log(random.choice(const.paradox_list))
-                msglog.add_log("The "+target.name+" is confused!")
-                target.confusion_date = turns.current_date + const.confusion_duration
+        # if we missed it
+        if dmg == 0 and not target.confusion_date and random.randint(1, 2) == 1:
+            msglog.add_log(random.choice(const.paradox_list))
+            msglog.add_log("The "+target.name+" is confused!")
+            target.confusion_date = turns.current_date + const.confusion_duration
         return (dmg,duration)
 
     def equip_log(self, msglog):
-        msglog.add_log("Your weapon tells you a paradox.")
+        msglog.add_log("Your weapon tells you a confusing paradox.")
 
 
 class MythicalWeapon(Weapon):
@@ -137,7 +139,10 @@ class MythicalWeapon(Weapon):
         self.duration = int(self.duration * 0.75)
 
     def equip_log(self, msglog):
-        msglog.add_log("Your mythical weapon is worthy of the gods.")
+        msglog.add_log("Your mythical weapon grants you superhuman speed.")
+
+    def effect_on_active(self, player):
+        player.time_move = int(const.time_move * 0.75)
 
 class Feature(Entity):
     """
@@ -182,7 +187,7 @@ class Player(Entity):
         letter_index = ord('a')
         for i in range(const.inventory_max_size+1):
             self.inventory[chr(letter_index+i)] = None
-
+        self.time_move = const.time_move
         self.synergy = []
         self.wequiped = {}
         self.fequiped = {}
@@ -190,6 +195,11 @@ class Player(Entity):
         self.active_weapon = None
         for fslot in const.FeatureSlot:
             self.resistances[fslot] = 0
+
+    def change_active_weapon(self, weapon):
+        self.active_weapon = weapon
+        self.visible_color = weapon.wego.value.get("player_color")
+        weapon.effect_on_active(self)
 
     def can_go_boss(self):
         for fslot in const.FeatureSlot:
@@ -285,7 +295,7 @@ class Player(Entity):
 
         if previous_weapon:
             if self.active_weapon == previous_weapon:
-                self.active_weapon = None
+                self.change_active_weapon(weapon)
             previous_weapon.is_in_inventory = True
             previous_weapon.equiped = False
             self.inventory[key] = previous_weapon
@@ -293,7 +303,7 @@ class Player(Entity):
             self.inventory[key] = None
 
         if not self.active_weapon:
-            self.active_weapon = weapon
+            self.change_active_weapon(weapon)
 
         return {}
 
@@ -352,6 +362,8 @@ class Monster(Entity):
         if self.fcreator:
             self.fcreator.n_bugs[self.level - 1] -= 1
             assert self.fcreator.n_bugs[self.level - 1] >= 0
+            if not stabilize:
+                return False
             return self.fcreator.stabilize(self.stability_reward)
         else:
             return False
@@ -401,7 +413,13 @@ class Monster(Entity):
     def get_copy_map(self, game_map):
         return game_map.get_copy_map()
 
-    def move_astar(self, target, entities, game_map):
+    def move_astar(self, target, entities, game_map, turns):
+        if self.confusion_date:
+            if self.confusion_date >= turns.current_date:
+                return
+            else:
+                self.confusion_date = None
+
         # Create a FOV map that has the dimensions of the map
         pathfinding_map = self.get_copy_map(game_map)
 
@@ -441,8 +459,8 @@ class Monster(Entity):
 
     def attack(self, player, turns):
         if self.confusion_date:
-            if self.confusion_date < turns.current_date:
-                return 0
+            if self.confusion_date >= turns.current_date:
+                return {}
             else:
                 self.confusion_date = None
         if random.random() < self.success_rate:
