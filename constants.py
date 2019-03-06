@@ -59,7 +59,7 @@ max_stab = [100,300,600]
 stab_reward = [2,4,6]
 resistance_mul = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
 monster_success_rate = [0.8, 0.85, 0.9]
-n_bugs_max = [[5,0,0],[2,5,0],[1,2,5]]
+n_bugs_max = [[5,0,0],[2,5,1]]
 
 
 paradox_list = ["\"Illusions are not real, yet it's real that illusion itself exists.\"", "\"I know one thing: that I know nothing.\"", "\"Can the Wizard of Yendor create a rock too heavy for itself to lift?\"", "\"What happens if Pinocchio says \"My nose will grow now\"?\"", "\"I am lying.\""]
@@ -135,7 +135,7 @@ class MenuState(enum.Enum):
     EQUIP = 3
     POPUP = 4
 
-intro_strings = ["Welcome to 1RL","You have 7 days to create", "your first roguelike!","","Complete your game by choosing its features.","","Beware: unstable features generate bugs!","","Find the good combination of feature", "and weapon egos.", "", "With stable features comes better resistance!", "", "Press ? to get command help."]
+intro_strings = ["Welcome to 1RL","You have 7 days to create", "your first roguelike!","","Complete your game by choosing its features.","","Beware: unstable features generate bugs!","","Fight bugs with weapons.", "", "Get higher resistance from better features.", "", "", "Press ? to get command help."]
 help_adjust = 35
 help_adjust_name = 20
 help_strings = ["Commands",\

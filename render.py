@@ -126,7 +126,7 @@ def render_weapon(inv_panel, weapon, default_fore, y, active_weapon):
     string = weapon.stat_string()
     tcod.console_print_ex(inv_panel, inv_panel.width-1, y, tcod.BKGND_NONE, tcod.RIGHT, string)
 
-def render_sch(root_console, sch_panel, turns, map_width):
+def render_sch(root_console, sch_panel, turns, map_width, time_malus):
     # Time
     (remaining_d, remaining_h, remaining_m, remaining_s) = turns.get_remaining()
     w = sch_panel.width
@@ -140,7 +140,13 @@ def render_sch(root_console, sch_panel, turns, map_width):
     remaining_h = "{:02d}".format(remaining_h)
     remaining_m = "{:02d}".format(remaining_m)
     remaining_s = "{:02d}".format(remaining_s)
-    sch_panel.print_(int(w / 2), 1, remaining_d+"d "+remaining_h+"h "+remaining_m+"m "+remaining_s+"s", alignment=tcod.CENTER)
+    time_string = remaining_d+"d "+remaining_h+"h "+remaining_m+"m "+remaining_s+"s"
+    if time_malus == 0:
+        malus = ""
+    else:
+        malus = "-"+str(time_malus)+"s"
+    sch_panel.print(3, 1, time_string, alignment=tcod.LEFT)
+    sch_panel.print(4+len(time_string), 1, malus, alignment=tcod.LEFT, fg=const.red)
     sch_panel.blit(dest=root_console, dest_x=map_width)
 
 def render_inv(root_console, inv_panel, player, map_width, sch_height):

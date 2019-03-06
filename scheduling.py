@@ -7,6 +7,7 @@ class Scheduling():
         self.current_turn = None
 
     def add_turn(self, delta_time, ttype, entity):
+        assert int(delta_time) == delta_time, delta_time
         self.add_turn_absolute(Turn(self.current_date + delta_time, ttype, entity))
 
     def add_turn_absolute(self, turn):
@@ -28,6 +29,7 @@ class Scheduling():
         out = heapq.heappop(self.turns)
         self.current_turn = out
         self.current_date = out.date
+        assert int(out.date) == out.date, out.date
         return out
 
     def is_boss_ready(self):
@@ -39,8 +41,8 @@ class Scheduling():
         remaining = 7*24*60*60 - self.current_date
         remaining_d = int(remaining / (24*60*60))
         remaining_h = int((remaining / (60*60))) % 24
-        remaining_m = int((remaining / (60))) % 60
-        remaining_s = remaining % 60
+        remaining_m = int((remaining / 60)) % 60
+        remaining_s = int(remaining) % 60
         return (remaining_d, remaining_h, remaining_m, remaining_s)
 
 

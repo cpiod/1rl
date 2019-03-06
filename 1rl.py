@@ -75,15 +75,15 @@ def main():
 
     # scheduling
     turns = sch.Scheduling()
-    turns.add_turn(0, const.TurnType.MSG, log.Msg("They say the hardest part is actually choosing to make a game. So I guess I've already won?", const.desat_green))
-    turns.add_turn(3600*24, const.TurnType.MSG, log.Msg("You have 6 days left.", const.desat_green))
-    turns.add_turn(3600*24*2, const.TurnType.MSG, log.Msg("You have 5 days left. Keep going.", const.desat_green))
-    turns.add_turn(3600*24*3, const.TurnType.MSG, log.Msg("You have 4 days left. Remember to sleep correctly.", const.desat_orange))
-    turns.add_turn(3600*24*4, const.TurnType.MSG, log.Msg("You have 3 days left. That's less than half a week...", const.desat_orange))
-    turns.add_turn(3600*24*5, const.TurnType.MSG, log.Msg("You have 2 days left. Don't panic.", const.desat_orange))
-    turns.add_turn(3600*24*6, const.TurnType.MSG, log.Msg("You have 1 day left. OK, maybe it's time to panic.", const.desat_red))
-    turns.add_turn(3600*24*6.5, const.TurnType.MSG, log.Msg("Only 12 hours left! You need to finish this now!", const.desat_red))
-    turns.add_turn(3600*24*7 - 3600, const.TurnType.MSG, log.Msg("1 hour left! Quick!", const.desat_red))
+    turns.add_turn(0, const.TurnType.MSG, log.Msg("They say the hardest part is actually choosing to make a game. So I guess I've already won?", const.green, const.desat_green))
+    turns.add_turn(3600*24, const.TurnType.MSG, log.Msg("You have 6 days left.", const.green, const.desat_green))
+    turns.add_turn(3600*24*2, const.TurnType.MSG, log.Msg("You have 5 days left. Keep going.", const.green, const.desat_green))
+    turns.add_turn(3600*24*3, const.TurnType.MSG, log.Msg("You have 4 days left. Remember to eat and sleep correctly.", const.orange, const.desat_orange))
+    turns.add_turn(3600*24*4, const.TurnType.MSG, log.Msg("You have 3 days left. That's less than half a week...", const.orange, const.desat_orange))
+    turns.add_turn(3600*24*5, const.TurnType.MSG, log.Msg("You have 2 days left. Don't panic.", const.orange, const.desat_orange))
+    turns.add_turn(3600*24*6, const.TurnType.MSG, log.Msg("Only 1 day left. OK, maybe it's time to panic.", const.red, const.desat_red))
+    turns.add_turn(3600*24*6.5, const.TurnType.MSG, log.Msg("Only 12 hours left! You need to finish this now!", const.red, const.desat_red))
+    turns.add_turn(3600*24*7 - 3600, const.TurnType.MSG, log.Msg("1 hour left! Quick!", const.red, const.desat_red))
     turns.add_turn(0, const.TurnType.PLAYER, player)
     turns.add_turn(3600*24*7, const.TurnType.GAME_OVER, None)
     i = 0
@@ -114,16 +114,13 @@ def main():
             elif event.type == "KEYDOWN" or event.type == "MOUSEBUTTONDOWN":
                 again = False
 
-    first_feature = random_loot.get_random_feature(turns, player)
+    first_feature = random_loot.get_random_feature(random.choice(list(const.FeatureSlot)), turns, player)
     key = player.add_to_inventory(first_feature)
     # player.fequip(first_feature, key)
 
     first_weapon = None
-    while first_weapon == None:
-        first_weapon = random_loot.get_random_weapon(turns, player)
-        # the player should not begin with a hack
-        if first_weapon.wslot.value.get("instable"):
-            first_weapon = None
+    # no hack as first weapon
+    first_weapon = random_loot.get_random_weapon(random.choice([const.WeaponSlot.slow, const.WeaponSlot.fast]), turns, player)
 
     key = player.add_to_inventory(first_weapon)
     # player.wequip(first_weapon, key)
@@ -134,7 +131,7 @@ def main():
     render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
     render.render_log(root_console, log_panel, msglog, map_height)
     render.render_des(root_console, des_panel, map_height, "")
-    render.render_sch(root_console, sch_panel, turns, map_width)
+    render.render_sch(root_console, sch_panel, turns, map_width, 0)
     render.render_inv(root_console, inv_panel, player, map_width, sch_height)
     menu_state = const.MenuState.POPUP
     render.render_popup(root_console, popup_panel, map_width, map_height, const.intro_strings)
@@ -147,7 +144,7 @@ def main():
     time_malus = 0
     new_turn = True
     render_map = False
-    last_player_date = 0
+    # last_player_date = 0
     mouse = (500,500) #OOB
     new_mouse = False
     boss = None
@@ -160,18 +157,18 @@ def main():
 
             current_turn = turns.get_turn()
 
-            render.render_sch(root_console, sch_panel, turns, map_width)
+            render.render_sch(root_console, sch_panel, turns, map_width, time_malus)
             new_turn = False
-            if current_turn.ttype == const.TurnType.PLAYER and time_malus > 0:
-                msglog.add_log("You lose "+str(time_malus)+"s!")
+            # if current_turn.ttype == const.TurnType.PLAYER and time_malus > 60*5:
+                # msglog.add_log("You lose "+str(time_malus)+"s because of the bugs' attacks!")
 
         tcod.console_flush()
         if current_turn.ttype == const.TurnType.PLAYER:
-            delta_time = int((turns.current_date - last_player_date) / 60)
-            ticktock = ""
-            if delta_time >= 10:
-                msglog.add_log("Tick... Tock...")
-            last_player_date = turns.current_date
+            # delta_time = int((turns.current_date - last_player_date) / 60)
+            # ticktock = ""
+            # if delta_time >= 10:
+                # msglog.add_log("Tick... Tock...")
+            # last_player_date = turns.current_date
             if fov_recompute:
                 game_map.recompute_fov(player.x, player.y)
                 for e in entities:
@@ -362,13 +359,13 @@ def main():
                             synergy = out.get("synergy")
                             if synergy:
                                 if synergy == 2:
-                                    msglog.add_log("You feel a small synergy between your two "+item.fego.value.get("name")+" features.", color_active=const.green)
+                                    msglog.add_log("You feel a small synergy between your two "+item.fego.value.get("name")+" features.", color_active=const.green, color_inactive=const.desat_green)
                                 elif synergy == 3:
-                                    msglog.add_log("You feel a good synergy between your three "+item.fego.value.get("name")+" features.", color_active=const.green)
+                                    msglog.add_log("You feel a good synergy between your three "+item.fego.value.get("name")+" features.", color_active=const.green, color_inactive=const.desat_green)
                                 elif synergy == 4:
-                                    msglog.add_log("You feel a great synergy between your four "+item.fego.value.get("name")+" features!", color_active=const.green)
+                                    msglog.add_log("You feel a great synergy between your four "+item.fego.value.get("name")+" features!", color_active=const.green, color_inactive=const.desat_green)
                                 elif synergy == 5:
-                                    msglog.add_log("You feel an insane synergy between your five "+item.fego.value.get("name")+" features!", color_active=const.green)
+                                    msglog.add_log("You feel an insane synergy between your five "+item.fego.value.get("name")+" features!", color_active=const.green, color_inactive=const.desat_green)
                                 else:
                                     assert False
 
@@ -382,7 +379,7 @@ def main():
                         level_problem_previous = out.get("level-problem-previous")
                         inheritance = out.get("inheritance")
                         if inheritance:
-                            msglog.add_log("You upgraded your "+item.fego.value.get("name")+" "+item.fslot.value.get("name")+": it is already quite stable!", color_active=const.green)
+                            msglog.add_log("You upgraded your "+item.fego.value.get("name")+" "+item.fslot.value.get("name")+": it is already quite stable!", color_active=const.green, color_inactive=const.desat_green)
                             item.stability = max(item.stability, inheritance.stability)
                             render_inv = True
                             turns.add_turn(time_malus + const.time_equip, const.TurnType.PLAYER, player)
@@ -423,7 +420,7 @@ def main():
                             render.render_boss_hp(root_console, des_panel, map_height, boss)
                         else:
                             render.render_des(root_console, des_panel, map_height, "")
-                        render.render_sch(root_console, sch_panel, turns, map_width)
+                        render.render_sch(root_console, sch_panel, turns, map_width, time_malus)
                         render.render_inv(root_console, inv_panel, player, map_width, sch_height)
                     else:
                         msglog.add_log("Nevermind.")
@@ -435,7 +432,7 @@ def main():
                     dx, dy = move
 
                     if (dx, dy) == (0, 0):
-                        msglog.add_log("There is no time to lose!")
+                        # msglog.add_log("There is no time to lose!")
                         turns.add_turn(time_malus + player.time_move, const.TurnType.PLAYER, player)
                         time_malus = 0
                         new_turn = True
@@ -498,12 +495,13 @@ def main():
                                 if new_e:
                                     turns.add_turn(e.speed_mov, const.TurnType.ENNEMY, new_e)
                     elif delta_malus:
+                        assert int(delta_malus) == delta_malus, delta_malus
                         time_malus += delta_malus
                         if time_malus > const.malus_max:
                             time_malus = const.malus_max
                     else:
-                        if player.active_weapon and isinstance(player.active_weapon, entity.BasicWeapon) and random.randint(1,3) == 1:
-                            msglog.add_log("The "+e.name+" is burned by your caustic and "+player.active_weapon.name+"!")
+                        if player.active_weapon and isinstance(player.active_weapon, entity.BasicWeapon) and random.randint(1,3) < 3:
+                            msglog.add_log("The "+e.name+" is burned by your "+player.active_weapon.name+"!")
                             attack(player.active_weapon, e, msglog, player, entities, turns, log_effective=False)
                             render_inv = True
                             render_map = True
@@ -566,8 +564,8 @@ def attack(weapon, target, msglog, player, entities, turns, log_effective=True):
             target.fcreator.destabilize(target.stability_reward)
         player.update_resistance()
     if target.hp <= 0:
-        if log_effective and weapon.is_effective_on(target.fslot):
-            msglog.add_log("You squashed the "+target.name+"!")
+        # if log_effective and weapon.is_effective_on(target.fslot):
+            # msglog.add_log("You squashed the "+target.name+"!")
         more_stable = target.dead(stabilize=not weapon.wslot.value.get("instable"))
         entities.remove(target)
         turns.remove_turn(target)

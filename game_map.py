@@ -44,17 +44,29 @@ class GameMap:
         # sample = noise.sample_ogrid(ogrid)*(max_lum-min_lum) + min_lum
 
     def add_loot(self, turns, player, entities):
-        n_loot = 15 + sum([random.randint(1,4) for i in range(4)])
-        while n_loot > 0:
-            arity = random.choice([1,1,1,2,2,3,4,5])
-            rlist = [r for r in self.rooms_with_arity(arity) if r.n_loot < 2] # 2 items per room max
-            if rlist:
-                room = random.choice(rlist)
-                (x,y) = self.random_cell_in_room(room)
-                if not self.tiles[x][y].item:
-                    room.n_loot += 1
-                    self.tiles[x][y].put_item(rloot.get_random_loot(turns, player), entities)
-                    n_loot -= 1
+        n_slot = {}
+        for fslot in const.FeatureSlot:
+            n_slot[fslot] = sum([random.randint(1,4) for i in range(2)])
+        for wslot in const.WeaponSlot:
+            n_slot[wslot] = sum([random.randint(1,4) for i in range(1)])
+
+        for slot in n_slot:
+            n_generated = n_slot.get(slot)
+            for n in range(n_generated):
+                # print(slot,n)
+                n_try = 50
+                while n_try > 0:
+                    n_try -= 1
+                    arity = random.choice([1,1,1,2,2,3,4,5])
+                    rlist = [r for r in self.rooms_with_arity(arity) if r.n_loot < 2] # 2 items per room max
+                    if rlist:
+                        room = random.choice(rlist)
+                        (x,y) = self.random_cell_in_room(room)
+                        if not self.tiles[x][y].item:
+                            room.n_loot += 1
+                            self.tiles[x][y].put_item(rloot.get_random_loot(slot, turns, player), entities)
+                            print(self.tiles[x][y].item.name)
+                            break
 
     def rooms_with_arity(self, max_arity):
         return [r for r in self.room_list if len(r.neighbors) <= max_arity]

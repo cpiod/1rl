@@ -110,6 +110,7 @@ class Weapon(Entity):
 
     def effect_on_active(self, player):
         player.time_move = const.time_move
+        player.name = "You"
 
 class ConsciousWeapon(Weapon):
     def equip_log(self, msglog):
@@ -118,6 +119,11 @@ class ConsciousWeapon(Weapon):
 class BasicWeapon(Weapon):
     def equip_log(self, msglog):
         msglog.add_log("You feel surrounded by a caustic aura.")
+
+    def effect_on_active(self, player):
+        super().effect_on_active(player)
+        player.name = "You (protected by a caustic aura)"
+
 
 class ParadoxicalWeapon(Weapon):
     def attack(self, target, msglog, turns):
@@ -134,15 +140,13 @@ class ParadoxicalWeapon(Weapon):
 
 
 class MythicalWeapon(Weapon):
-    def __init__(self, wslot, wego, level):
-        super().__init__(wslot, wego, level)
-        self.duration = int(self.duration * 0.75)
-
     def equip_log(self, msglog):
         msglog.add_log("Your mythical weapon grants you superhuman speed.")
 
     def effect_on_active(self, player):
+        super().effect_on_active(player)
         player.time_move = int(const.time_move * 0.75)
+        player.name = "You (fast)"
 
 class Feature(Entity):
     """
