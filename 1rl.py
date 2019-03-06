@@ -564,7 +564,7 @@ def main():
 def attack(weapon, target, msglog, player, entities, turns, log_effective=True):
     (dmg,duration) = weapon.attack(target, msglog, turns)
     if weapon.wslot.value.get("instable"):
-        if random.randint(1,2) == 0:
+        if random.randint(1,2) == 1:
             msglog.add_log("Your "+target.fcreator.name+" is less stable!")
             target.fcreator.destabilize(target.stability_reward)
         player.update_resistance()
