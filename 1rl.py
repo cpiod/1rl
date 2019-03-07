@@ -14,7 +14,7 @@ import sys
 import os.path
 
 def main():
-    screen_width = 100
+    screen_width = 128
     screen_height = 48
 
     sch_height = 3
@@ -33,8 +33,8 @@ def main():
     map_height = screen_height - log_height - 1
 
     # Popup size
-    popup_width = round(2 * map_width / 3)
-    popup_height = round(2 * map_height / 3)
+    popup_width = round(7 * map_width / 12)
+    popup_height = round(7 * map_height / 12)
 
     player = entity.Player(None, None)
     entities = [player]
@@ -100,14 +100,18 @@ def main():
     msglog = log.Log(log_width - 2, log_height - 2)
 
     # Splash
+    tcod.console_set_default_background(root_console, const.base03)
+    tcod.console_clear(root_console)
     img = tcod.image_load(resource_path("splash.png"))
-    img.blit_2x(root_console, 0, 0)
-    tcod.console_print_ex(root_console, 75, 10, tcod.BKGND_NONE, tcod.CENTER, "Press any key to create your\nfirst 7DRL game!")
-    tcod.console_print_ex(root_console, 50, 47, tcod.BKGND_NONE, tcod.CENTER, "A cheap plastic imitation of a game dev, 2019")
-    tcod.console_flush()
+    img.blit_2x(root_console, 10, 5)
+    tcod.console_set_default_foreground(root_console, const.yellow)
+    tcod.console_print_ex(root_console, 85, 15, tcod.BKGND_NONE, tcod.CENTER, "Press any key to create your\nfirst 7DRL game!")
+    tcod.console_print_ex(root_console, int(screen_width/2), screen_height-2, tcod.BKGND_NONE, tcod.CENTER, "By cheap plastic imitation of a game dev")
+    tcod.console_print_ex(root_console, int(screen_width/2), screen_height-1, tcod.BKGND_NONE, tcod.CENTER, "for the 7DRL 2019")
 
     again = True
     while again:
+        tcod.console_flush()
         for event in tcod.event.wait():
             if event.type == "QUIT":
                 raise SystemExit()
@@ -270,6 +274,10 @@ def main():
                 if help_popup:
                     menu_state = const.MenuState.POPUP
                     render.render_popup(root_console, popup_panel, map_width, map_height, const.help_strings)
+
+                fullscreen = action.get("fullscreen")
+                if fullscreen:
+                    tcod.console_set_fullscreen(not tcod.console_is_fullscreen())
 
                 descend = action.get('descend')
                 if descend:

@@ -138,13 +138,16 @@ class MenuState(enum.Enum):
 intro_strings = ["Welcome to 1RL","You have 7 days to create", "your first roguelike!","","Complete your game by choosing its features.","","Beware: unstable features generate bugs!","","Fight bugs with weapons.", "Get higher resistance from better features.", "", "Click on anything to get details.","Press ? to get command help."]
 help_adjust = 16
 help_adjust_name = 15
-help_strings = ["Commands",\
+help_strings = ["Help",\
                 "numpad/vi/arrows".ljust(help_adjust, ' ')+"move/attack".rjust(help_adjust_name, ' '),\
-                "g".ljust(help_adjust_name, ' ')+"pick-up".rjust(help_adjust, ' '),\
+                "g".ljust(help_adjust_name, ' ')+"pick up".rjust(help_adjust, ' '),\
                 "d".ljust(help_adjust_name, ' ')+"drop".rjust(help_adjust, ' '),\
                 "w".ljust(help_adjust_name, ' ')+"equip".rjust(help_adjust, ' '),\
                 "[123]".ljust(help_adjust_name, ' ')+"change weapon".rjust(help_adjust, ' '),\
                 "ENTER".ljust(help_adjust_name, ' ')+"use stairs".rjust(help_adjust, ' '),\
+                "",
+                "f".ljust(help_adjust_name, ' ')+"fullscreen".rjust(help_adjust, ' '),\
                 "hover".ljust(help_adjust_name, ' ')+"get name".rjust(help_adjust, ' '),\
                 "click".ljust(help_adjust_name, ' ')+"describe".rjust(help_adjust, ' '),\
-                "?".ljust(help_adjust_name, ' ')+"help".rjust(help_adjust, ' ')]
+                "?".ljust(help_adjust_name, ' ')+"help".rjust(help_adjust, ' '),\
+               "", "", "This is a GPLv3 game.","Feel free to contribute at https://github.com/PFGimenez/1rl"]

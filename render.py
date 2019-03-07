@@ -45,7 +45,7 @@ def render_popup(root_console, popup_panel, map_width, map_height, strings):
     for s in wraped_strings:
         tcod.console_print_ex(popup_panel, int(popup_panel.width / 2), y, tcod.BKGND_NONE, tcod.CENTER, s)
         y += 1
-    popup_panel.blit(dest=root_console, dest_x = int(map_width/6), dest_y=int(map_height/6), bg_alpha=0.9)
+    popup_panel.blit(dest=root_console, dest_x = round(5*map_width/24), dest_y=round(5*map_height/24), bg_alpha=0.9)
 
 def render_boss_hp(root_console, des_panel, map_height, boss):
     """
