@@ -15,6 +15,7 @@ class Room:
         self.h = h
         self.n_loot = 0
         self.neighbors = []
+        self.sample = None
 
 class GameMap:
     def __init__(self, width, height, con, show_map=False):
@@ -28,20 +29,20 @@ class GameMap:
             for y in range(self.height):
                 self.tcod_empty_map.transparent[y,x] = True
                 self.tcod_empty_map.walkable[y,x] = True
-        # ogrid = [np.arange(width, dtype=np.float32),
-        # np.arange(height, dtype=np.float32)]
 
-        # noise = tcod.noise.Noise(
-        #     dimensions=2,
-        #     algorithm=tcod.NOISE_PERLIN,
-        #     implementation=tcod.noise.TURBULENCE,
-        #     hurst=0.9,
-        #     lacunarity=1.6,
-        #     octaves=5
-        #     )
-        # min_lum = 0.5
-        # max_lum = 1
-        # sample = noise.sample_ogrid(ogrid)*(max_lum-min_lum) + min_lum
+    def get_sample(self):
+        ogrid = [np.arange(self.width, dtype=np.float32), np.arange(self.height, dtype=np.float32)]
+
+        noise = tcod.noise.Noise(
+            dimensions=2,
+            algorithm=tcod.NOISE_PERLIN,
+            implementation=tcod.noise.TURBULENCE,
+            hurst=0.9,
+            lacunarity=1.6,
+            octaves=5)
+        min_lum = 0.5
+        max_lum = 1
+        self.sample = noise.sample_ogrid(ogrid)*(max_lum-min_lum) + min_lum
 
     def add_loot(self, turns, player, entities):
         n_slot = {}
@@ -65,14 +66,15 @@ class GameMap:
                         if not self.tiles[x][y].item:
                             room.n_loot += 1
                             self.tiles[x][y].put_item(rloot.get_random_loot(slot, turns, player), entities)
-                            print(self.tiles[x][y].item.name)
+                            # print(self.tiles[x][y].item.name)
                             break
 
     def rooms_with_arity(self, max_arity):
         return [r for r in self.room_list if len(r.neighbors) <= max_arity]
 
     def make_boss_map(self, turns, entities, player):
-        self.tiles = [[entity.Tile(x,y) for y in range(self.height)] for x in range(self.width)]
+        self.get_sample()
+        self.tiles = [[entity.Tile(x,y,color_coeff=self.sample[x][y]) for y in range(self.height)] for x in range(self.width)]
         self.tcod_map = tcod.map.Map(self.width, self.height)
         center_x = self.width / 2
         center_y = self.height / 2
@@ -91,7 +93,8 @@ class GameMap:
         return boss
 
     def make_map_bsp(self, turns, entities, player):
-        self.tiles = [[entity.Tile(x,y) for y in range(self.height)] for x in range(self.width)]
+        self.get_sample()
+        self.tiles = [[entity.Tile(x,y,color_coeff=self.sample[x][y]) for y in range(self.height)] for x in range(self.width)]
         self.room_list = None
         self.tcod_map = tcod.map.Map(self.width, self.height)
         self.dlevel += 1
@@ -347,7 +350,7 @@ class GameMap:
         return copy.deepcopy(self.tcod_empty_map)
 
     def set_tile_type(self, x, y, ttype):
-        self.tiles[x][y] = entity.Tile(x, y, ttype)
+        self.tiles[x][y] = entity.Tile(x, y, color_coeff=self.sample[x][y], ttype=ttype)
         if self.show_map:
             self.tiles[x][y].is_seen = True
         self.tcod_map.transparent[y,x] = ttype.value.get("transparent")

@@ -34,9 +34,9 @@ class Tile(Entity):
     A floor, a door or a wall
     """
 
-    def __init__(self, x, y, ftype=const.TileType.WALL):
-        super().__init__(x, y, ftype.value.get("char"), ftype.value.get("color"), ftype.value.get("name"), ftype.value.get("collision"), ftype.value.get("transparent"), const.RenderOrder.TILE)
-        self.ftype = ftype
+    def __init__(self, x, y, color_coeff=1, ttype=const.TileType.WALL):
+        super().__init__(x, y, ttype.value.get("char"), ttype.value.get("color")*color_coeff, ttype.value.get("name"), ttype.value.get("collision"), ttype.value.get("transparent"), const.RenderOrder.TILE)
+        self.ftype = ttype
         self.item = None
 
     def put_item(self, item, entities):

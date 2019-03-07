@@ -12,12 +12,10 @@ def get_random_loot(slot, turns, player):
 def get_random_feature(fslot, turns, player):
     (remaining_d, _, _, _) = turns.get_remaining()
     feature = player.fequiped.get(fslot)
-    if not feature: # no feature ? then level 1 only
-        proba = [1,0]
+    if not feature: # no feature ?
+        proba = [0.9,0.1]
     else:
-        if feature.level == 1 and not feature.is_stable:
-            proba = [0.7,0.3]
-        elif feature.level == 1 and feature.is_stable:
+        if feature.level == 1:
             proba = [0.3,0.7]
         else:
             assert feature.level == 2, feature_level
