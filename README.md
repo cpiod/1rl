@@ -19,7 +19,7 @@ This is my first participation to a game jam, namely 7DRL 2019. So this is kind 
 
 ## Manual compilation (Unix)
 
-You will need sdl2-dev package.
+You will need libsdl2-dev package (2.0.5+).
 
 First, install tcod and pyinstaller:
 
@@ -39,4 +39,4 @@ The binary is in `dist`.
 
 ## Acknowledgement
 
-This game is based on the [python-tcod](https://github.com/libtcod/python-tcod) library. Splash art by [Master484](http://m484games.ucoz.com/).
+This game uses the [python-tcod](https://github.com/libtcod/python-tcod) library. Splash art by [Master484](http://m484games.ucoz.com/).

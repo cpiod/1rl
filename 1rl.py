@@ -536,9 +536,16 @@ def main():
                                     turns.add_turn(e.speed_mov, const.TurnType.ENNEMY, new_e)
                     elif delta_malus:
                         assert int(delta_malus) == delta_malus, delta_malus
-                        time_malus += delta_malus
-                        if time_malus > const.malus_max:
-                            time_malus = const.malus_max
+                        if e.fslot:
+                            r = player.resistances[e.fslot]
+                            mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
+                        else:
+                            r = round(sum(player.resistances.values())/5)
+                            mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
+                        if time_malus + delta_malus <= mul*const.malus_max:
+                            time_malus += delta_malus
+                            if time_malus > const.malus_max:
+                                time_malus = const.malus_max
                     else:
                         if player.active_weapon and isinstance(player.active_weapon, entity.BasicWeapon) and not isinstance(e, entity.Boss) and random.randint(1,3) < 3:
                             msglog.add_log("The "+e.name+" is burned by your "+player.active_weapon.name+"!")

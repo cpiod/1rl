@@ -45,7 +45,7 @@ stability_threshold = 0.7
 inventory_max_size = 5
 mul = 2
 bug_hp = [2, 5, 9]
-bonus_idem = [0, 0, 1, 2, 2, 3]
+bonus_idem = [0, 0, 1, 2, 3, 4]
 bug_atk = [70, 80, 100]
 bug_speed_atk = [180*mul, 120*mul, 60*mul]
 bug_speed_mov = [60*mul, 50*mul, 40*mul]
@@ -54,10 +54,10 @@ time_equip = 20*mul
 time_move = 60*mul
 spawn_interval = 60*mul
 confusion_duration = 60*10*mul
-malus_max = 30*60*mul
+malus_max = 15*60*mul
 max_stab = [100,300,600]
 stab_reward = [2,4,6]
-resistance_mul = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+resistance_mul = [1, 0.95, 0.9, 0.85, 0.80, 0.75, 0.7, 0.65, 0.6]
 monster_success_rate = [0.8, 0.85, 0.9]
 n_bugs_max = [[5,0,0],[2,5,1]]
 
@@ -150,4 +150,4 @@ help_strings = ["Help",\
                 "hover".ljust(help_adjust_name, ' ')+"get name".rjust(help_adjust, ' '),\
                 "click".ljust(help_adjust_name, ' ')+"describe".rjust(help_adjust, ' '),\
                 "?".ljust(help_adjust_name, ' ')+"help".rjust(help_adjust, ' '),\
-               "", "", "This is a GPLv3 game.","Feel free to contribute at https://github.com/PFGimenez/1rl"]
+               "", "", "This is a GPLv3 game.","Feel free to contribute or fork at https://github.com/PFGimenez/1rl"]
