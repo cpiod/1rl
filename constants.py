@@ -135,7 +135,7 @@ class MenuState(enum.Enum):
     EQUIP = 3
     POPUP = 4
 
-intro_strings = ["Welcome to 1RL","You have 7 days to create", "your first roguelike!","","Complete your game by choosing its features.","","Beware: unstable features generate bugs!","","Fight bugs with weapons.", "Get higher resistance from better features.", "", "Click on anything to get details.","Press ? to get command help."]
+intro_strings = ["1RL: the story of your first roguelike","You have 7 days to create", "your first roguelike!","","Complete your game by choosing its features.","","Beware: unstable features generate bugs!","","Fight bugs with weapons.", "Get higher resistance from better features.", "", "Click on anything to get details.","Press ? to get command help."]
 help_adjust = 16
 help_adjust_name = 15
 help_strings = ["Help",\

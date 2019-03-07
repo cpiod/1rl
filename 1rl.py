@@ -105,9 +105,9 @@ def main():
     img = tcod.image_load(resource_path("splash.png"))
     img.blit_2x(root_console, 10, 5)
     tcod.console_set_default_foreground(root_console, const.yellow)
-    tcod.console_print_ex(root_console, 85, 15, tcod.BKGND_NONE, tcod.CENTER, "Press any key to create your\nfirst 7DRL game!")
-    tcod.console_print_ex(root_console, int(screen_width/2), screen_height-2, tcod.BKGND_NONE, tcod.CENTER, "By cheap plastic imitation of a game dev")
-    tcod.console_print_ex(root_console, int(screen_width/2), screen_height-1, tcod.BKGND_NONE, tcod.CENTER, "for the 7DRL 2019")
+    tcod.console_print_ex(root_console, 85, 15, tcod.BKGND_NONE, tcod.CENTER, "Press any key to create your\nfirst roguelike!")
+    tcod.console_print_ex(root_console, int(screen_width/2), screen_height-2, tcod.BKGND_NONE, tcod.CENTER, "By a cheap plastic imitation of a game dev")
+    tcod.console_print_ex(root_console, int(screen_width/2), screen_height-1, tcod.BKGND_NONE, tcod.CENTER, "during the 7DRL 2019")
 
     again = True
     while again:
@@ -152,8 +152,18 @@ def main():
     mouse = (500,500) #OOB
     new_mouse = False
     boss = None
+    boss_confirm = False
     while not tcod.console_is_window_closed():
         if new_turn:
+
+            if boss and boss.hp <= 0:
+                msglog.add_log("Congratulations!  You defeated your self-doubt and completed your game!", const.green)
+                msglog.add_log("You ascend to the status of RL game dev...", const.green)
+                render.render_boss_hp(root_console, des_panel, map_height, boss)
+                render.render_log(root_console, log_panel, msglog, map_height)
+                tcod.console_flush()
+                break
+
 
             assert turns.nb_turns(const.TurnType.PLAYER) == 1, turns.nb_turns(const.TurnType.PLAYER)
             assert turns.nb_turns(const.TurnType.SPAWN) == 5, turns.nb_turns(const.TurnType.SPAWN)
@@ -285,10 +295,15 @@ def main():
                     boss_stairs = game_map.is_boss_stairs(player.x, player.y)
                     assert not (stairs and boss_stairs)
                     if stairs or boss_stairs:
-                        if boss_stairs and not player.can_go_boss():
-                            msglog.add_log("You cannot release the game yet, you don't have five stable features!")
+                        if boss_stairs and (not player.can_go_boss() or not boss_confirm):
+                            if not player.can_go_boss():
+                                msglog.add_log("This is the release exit. But you don't have five stable features!")
+                            elif not boss_confirm:
+                                msglog.add_log("You feel anxious about this. Are you really sure you are ready to release your game?")
+                                boss_confirm = True
                         else:
-                            msglog.add_log("You go down the stairs.")
+                            if stairs:
+                                msglog.add_log("You go down the stairs.")
                             for e in entities:
                                 if isinstance(e, entity.Monster):
                                     e.dead(stabilize=False)
@@ -528,7 +543,7 @@ def main():
                         if time_malus > const.malus_max:
                             time_malus = const.malus_max
                     else:
-                        if player.active_weapon and isinstance(player.active_weapon, entity.BasicWeapon) and random.randint(1,3) < 3:
+                        if player.active_weapon and isinstance(player.active_weapon, entity.BasicWeapon) and not isinstance(e, entity.Boss) and random.randint(1,3) < 3:
                             msglog.add_log("The "+e.name+" is burned by your "+player.active_weapon.name+"!")
                             attack(player.active_weapon, e, msglog, player, entities, turns, log_effective=False)
                             render_inv = True
@@ -558,18 +573,6 @@ def main():
             render.render_log(root_console, log_panel, msglog, map_height)
             tcod.console_flush()
             break
-
-        elif current_turn.ttype == const.TurnType.WIN:
-            msglog.add_log("Congratulations!  You defeated your self-doubt and completed your game!", const.green)
-            msglog.add_log("You ascend to the status of RL game dev...", const.green)
-            render.render_log(root_console, log_panel, msglog, map_height)
-            tcod.console_flush()
-            break
-
-        if boss and boss.hp <= 0:
-            render.render_boss_hp(root_console, des_panel, map_height, boss)
-            turns.turns = []
-            turns.add_turn(0, const.TurnType.WIN, None)
 
     time.sleep(3)
     for event in tcod.event.wait():

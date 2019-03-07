@@ -159,7 +159,7 @@ class ParadoxicalWeapon(Weapon):
     def attack(self, target, msglog, turns):
         (dmg,duration) = super().attack(target, msglog, turns)
         # if we missed it
-        if dmg == 0 and not target.confusion_date and random.randint(1, 2) == 1:
+        if dmg == 0 and not isinstance(target, Boss) and not target.confusion_date and random.randint(1, 2) == 1:
             msglog.add_log(random.choice(const.paradox_list))
             msglog.add_log("The "+target.name+" is confused!")
             target.confusion_date = turns.current_date + const.confusion_duration
@@ -266,6 +266,7 @@ class Player(Entity):
         weapon.effect_on_active(self)
 
     def can_go_boss(self):
+        # return True # TODO
         for fslot in const.FeatureSlot:
             f = self.fequiped.get(fslot)
             if not f or not f.is_stable():
@@ -504,6 +505,7 @@ class Monster(Entity):
 
         astar = tcod.path.AStar(pathfinding_map)
         path = astar.get_path(self.x, self.y, target.x, target.y)
+        backup_x = backup_y = None
         if path:
             backup_x, backup_y = path[0]
 
@@ -562,7 +564,7 @@ class Monster(Entity):
 class Boss(Monster):
     def __init__(self, x, y):
         self.fcreator = None
-        self.max_hp = 100
+        self.max_hp = 200
         self.hp = self.max_hp
         Entity.__init__(self, x, y, "@", const.red, "Self-doubt", True, True, const.RenderOrder.ACTOR)
         self.fslot = None

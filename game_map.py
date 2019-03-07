@@ -78,12 +78,12 @@ class GameMap:
         self.tcod_map = tcod.map.Map(self.width, self.height)
         center_x = self.width / 2
         center_y = self.height / 2
-        a = 20
-        b = 10
+        a = 30
+        b = 15
         self.room_list = [Room(int(center_x - a), int(center_y - b), 2*a, 2*b)]
         for x in range(self.width):
             for y in range(self.height):
-                if ((x - center_x)/a)**2 + ((y - center_y)/b)**2 <= 1:
+                if ((x - center_x)/a)**2 + ((y - center_y)/b)**2 <= 1: # ellipse equation
                     self.set_unblocked(x, y)
         (player.x, player.y) = (int(center_x / 2), int(center_y))
         boss = entity.Boss(int(center_x * 1.5), int(center_y))
@@ -138,9 +138,9 @@ class GameMap:
         (player.x, player.y) = self.random_cell()
         (x, y) = self.random_cell()
         self.place_stairs(x,y)
-        if turns.is_boss_ready():
-            (x, y) = self.random_cell()
-            self.place_boss_stairs(x,y)
+        # if turns.is_boss_ready():
+        (x, y) = self.random_cell()
+        self.place_boss_stairs(x,y)
         # self.place_boss_stairs(player.x,player.y) # TODO
         self.add_loot(turns, player, entities)
         self.recompute_fov(player.x, player.y)
