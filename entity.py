@@ -414,6 +414,17 @@ class Player(Entity):
                 d += ["", "You are a telepath."]
         return d
 
+    def get_score(self):
+        score = 0
+        for fslot in const.FeatureSlot:
+            f = self.fequiped.get(fslot)
+            if f:
+                score += f.stability
+                if f.is_stable():
+                    score += 50
+        score += 100*len(self.synergy)
+        return score
+
 class Monster(Entity):
     """
     A bug

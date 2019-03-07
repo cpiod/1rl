@@ -72,8 +72,8 @@ class FeatureSlot(enum.Enum):
     l = {"name": "loot", "color": green, "desat_color": desat_green, "bug_class": "LootBug"}
 
 class WeaponSlot(enum.Enum):
-    fast = {"name": "printf()", "success_rate_base": 0.5, "duration_base": int(60*5/7.5*mul), "instable": False, "key": "1"}
-    slow = {"name": "profiler", "success_rate_base": 0.75, "duration_base": 60*mul, "instable": False, "key": "2"}
+    fast = {"name": "printf()", "success_rate_base": 0.6, "duration_base": 20*mul, "instable": False, "key": "1"}
+    slow = {"name": "profiler", "success_rate_base": 0.8, "duration_base": 60*mul, "instable": False, "key": "2"}
     hack = {"name": "hack", "success_rate_base": 1, "duration_base": 10*mul, "instable": True, "key": "3"}
 
 fego_prob_c = [1/4,1/4,1/2]

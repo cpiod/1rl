@@ -118,16 +118,13 @@ def main():
             elif event.type == "KEYDOWN" or event.type == "MOUSEBUTTONDOWN":
                 again = False
 
-    first_feature = random_loot.get_random_feature(random.choice(list(const.FeatureSlot)), turns, player)
+    first_feature = random_loot.get_random_feature(random.choice(list(const.FeatureSlot)), turns, player, level=1)
     key = player.add_to_inventory(first_feature)
-    # player.fequip(first_feature, key)
 
-    first_weapon = None
     # no hack as first weapon
-    first_weapon = random_loot.get_random_weapon(random.choice([const.WeaponSlot.slow, const.WeaponSlot.fast]), turns, player)
+    first_weapon = random_loot.get_random_weapon(random.choice([const.WeaponSlot.slow, const.WeaponSlot.fast]), turns, player, level=1)
 
     key = player.add_to_inventory(first_weapon)
-    # player.wequip(first_weapon, key)
 
     menu_state = const.MenuState.STANDARD
 
@@ -159,11 +156,11 @@ def main():
             if boss and boss.hp <= 0:
                 msglog.add_log("Congratulations!  You defeated your self-doubt and completed your game!", const.green)
                 msglog.add_log("You ascend to the status of RL game dev...", const.green)
+                msglog.add_log("Score: "+str(player.get_score()), const.green)
                 render.render_boss_hp(root_console, des_panel, map_height, boss)
                 render.render_log(root_console, log_panel, msglog, map_height)
                 tcod.console_flush()
                 break
-
 
             assert turns.nb_turns(const.TurnType.PLAYER) == 1, turns.nb_turns(const.TurnType.PLAYER)
             assert turns.nb_turns(const.TurnType.SPAWN) == 5, turns.nb_turns(const.TurnType.SPAWN)
