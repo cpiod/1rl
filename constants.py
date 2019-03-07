@@ -45,7 +45,7 @@ stability_threshold = 0.7
 inventory_max_size = 5
 mul = 2
 bug_hp = [2, 5, 9]
-bonus_idem = [0, 0, 0, 1, 1, 2]
+bonus_idem = [0, 0, 1, 2, 2, 3]
 bug_atk = [70, 80, 100]
 bug_speed_atk = [180*mul, 120*mul, 60*mul]
 bug_speed_mov = [60*mul, 50*mul, 40*mul]
@@ -135,16 +135,16 @@ class MenuState(enum.Enum):
     EQUIP = 3
     POPUP = 4
 
-intro_strings = ["Welcome to 1RL","You have 7 days to create", "your first roguelike!","","Complete your game by choosing its features.","","Beware: unstable features generate bugs!","","Fight bugs with weapons.", "", "Get higher resistance from better features.", "", "", "Press ? to get command help."]
-help_adjust = 35
-help_adjust_name = 20
+intro_strings = ["Welcome to 1RL","You have 7 days to create", "your first roguelike!","","Complete your game by choosing its features.","","Beware: unstable features generate bugs!","","Fight bugs with weapons.", "Get higher resistance from better features.", "", "Click on anything to get details.","Press ? to get command help."]
+help_adjust = 16
+help_adjust_name = 15
 help_strings = ["Commands",\
-                ("numpad, vi, arrows".ljust(help_adjust_name, ' ')+"move").ljust(help_adjust, ' '),\
-                ("g".ljust(help_adjust_name, ' ')+"pick-up").ljust(help_adjust, ' '),\
-                ("d".ljust(help_adjust_name, ' ')+"drop").ljust(help_adjust, ' '),\
-                ("w".ljust(help_adjust_name, ' ')+"equip").ljust(help_adjust, ' '),\
-                ("[123]".ljust(help_adjust_name, ' ')+"change weapon").ljust(help_adjust, ' '),\
-                ("ENTER".ljust(help_adjust_name, ' ')+"use stairs").ljust(help_adjust, ' '),\
-                ("hover".ljust(help_adjust_name, ' ')+"get name").ljust(help_adjust, ' '),\
-                ("click".ljust(help_adjust_name, ' ')+"describe").ljust(help_adjust, ' '),\
-                ("?".ljust(help_adjust_name, ' ')+"help").ljust(help_adjust, ' ')]
+                "numpad/vi/arrows".ljust(help_adjust, ' ')+"move/attack".rjust(help_adjust_name, ' '),\
+                "g".ljust(help_adjust_name, ' ')+"pick-up".rjust(help_adjust, ' '),\
+                "d".ljust(help_adjust_name, ' ')+"drop".rjust(help_adjust, ' '),\
+                "w".ljust(help_adjust_name, ' ')+"equip".rjust(help_adjust, ' '),\
+                "[123]".ljust(help_adjust_name, ' ')+"change weapon".rjust(help_adjust, ' '),\
+                "ENTER".ljust(help_adjust_name, ' ')+"use stairs".rjust(help_adjust, ' '),\
+                "hover".ljust(help_adjust_name, ' ')+"get name".rjust(help_adjust, ' '),\
+                "click".ljust(help_adjust_name, ' ')+"describe".rjust(help_adjust, ' '),\
+                "?".ljust(help_adjust_name, ' ')+"help".rjust(help_adjust, ' ')]

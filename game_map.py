@@ -356,7 +356,6 @@ class GameMap:
         self.tcod_map.transparent[y,x] = ttype.value.get("transparent")
         self.tcod_map.walkable[y,x] = not ttype.value.get("collision")
 
-
     def is_over_map(self, x, y):
         return x >= 0 and y >= 0 and x < self.width and y < self.height
 

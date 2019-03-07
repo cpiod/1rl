@@ -27,12 +27,25 @@ def render_popup(root_console, popup_panel, map_width, map_height, strings):
     tcod.console_clear(popup_panel)
     tcod.console_set_default_foreground(popup_panel, const.base2)
     popup_panel.print_frame(0, 0, popup_panel.width, popup_panel.height, string=strings[0])
-    del strings[0]
-    y = int(popup_panel.height /2 - len(strings) / 2)
+    wraped_strings = []
+    # wrapper = textwrap.TextWrapper()
+    # wrapper.drop_whitespace = False
+    # wrapper.width = int(0.75*popup_panel.width)
+    first = True
     for s in strings:
+        if first:
+            first = False
+            continue
+        if s == "":
+            wraped_strings.append(s)
+        else:
+            # wraped_strings += wrapper.wrap(s)
+            wraped_strings += textwrap.wrap(s, int(0.75*popup_panel.width))
+    y = int(popup_panel.height /2 - len(wraped_strings) / 2)
+    for s in wraped_strings:
         tcod.console_print_ex(popup_panel, int(popup_panel.width / 2), y, tcod.BKGND_NONE, tcod.CENTER, s)
         y += 1
-    popup_panel.blit(dest=root_console, dest_x = int(map_width/6), dest_y=int(map_height/6), bg_alpha=0.8)
+    popup_panel.blit(dest=root_console, dest_x = int(map_width/6), dest_y=int(map_height/6), bg_alpha=0.9)
 
 def render_boss_hp(root_console, des_panel, map_height, boss):
     """
@@ -278,16 +291,40 @@ def clear_cell(con, x,y,game_map):
     else:
         tcod.console_set_char(con, x, y, ' ')
 
-def get_object_under_mouse(mouse, entities, game_map, screen_width): # TODO
+def get_object_under_mouse(mouse, turns, player, entities, game_map, screen_width, map_width):
     (x, y) = mouse
-    names = [entity.name for entity in entities
-             if entity.x == x and entity.y == y and game_map.is_visible(entity.x, entity.y)]
+    if game_map.is_over_map(x,y) and game_map.is_visible(x,y):
+        entities_in_render_order = sorted([entity for entity in entities
+                if entity.x == x and entity.y == y], key=lambda x: x.render_order.value, reverse=True)
+        if entities_in_render_order:
+            return entities_in_render_order[0]
+        if game_map.tiles[x][y].name:
+            return game_map.tiles[x][y]
+        return None
+    if x >= map_width + 1 and x < screen_width - 1:
+        i = 0
+        if y == 1:
+            return RemainingTime(turns)
 
-    names = ', '.join(names)
-    # space padding to remove the precedent description
-    names = names.ljust(screen_width, ' ')
+        for fslot in const.FeatureSlot:
+            if y >= 4+3*i and y <= 5+3*i:
+                return player.fequiped.get(fslot)
+            i += 1
 
-    return names.capitalize()
+        if y == 20:
+            return Resistances()
+
+        i = 0
+        for wslot in const.WeaponSlot:
+            if y >= 23+3*i and y <= 24+3*i:
+                return player.wequiped.get(wslot)
+            i += 1
+
+        letter_index = ord('a')
+        for i in range(const.inventory_max_size+1):
+            if y >= 33+3*i and y <= 34+3*i:
+                return player.inventory.get(chr(letter_index+i))
+    return None
 
 def get_names_under_mouse(mouse, entities, game_map, screen_width):
     (x, y) = mouse
@@ -305,3 +342,21 @@ def get_names_under_mouse(mouse, entities, game_map, screen_width):
         return  "%s%s" % (names[0].upper(), names[1:]) # fist letter in capital
     else:
         return "".ljust(screen_width, ' ')
+
+def capitalize(string):
+    return  "%s%s" % (string[0].upper(), string[1:]) # fist letter in capital
+
+class RemainingTime():
+    def __init__(self, turns):
+        self.turns = turns
+        self.name = "Remaining time"
+
+    def describe(self):
+        return ["You have only 7 days to create your game.", "", "Each time a bug attacks you, your next move gets a time penalty."]
+
+class Resistances():
+    def __init__(self):
+        self.name = "Resistance"
+
+    def describe(self):
+        return ["Resistance protects from bug attack.", "Each resistance matches one bug type.", "", "Resistances are granted by the features. They depend on:","- whether their feature is stable","- the level of their feature","- the synergy of their feature","","To get synergy, equip features with the same ego!  Resistances upgraded by synergy are noted with *."]

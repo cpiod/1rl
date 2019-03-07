@@ -33,8 +33,8 @@ def main():
     map_height = screen_height - log_height - 1
 
     # Popup size
-    popup_width = int(2 * map_width / 3)
-    popup_height = int(2 * map_height / 3)
+    popup_width = round(2 * map_width / 3)
+    popup_height = round(2 * map_height / 3)
 
     player = entity.Player(None, None)
     entities = [player]
@@ -75,15 +75,15 @@ def main():
 
     # scheduling
     turns = sch.Scheduling()
-    turns.add_turn(0, const.TurnType.MSG, log.Msg("They say the hardest part is actually choosing to make a game. So I guess I've already won?", const.green, const.desat_green))
+    turns.add_turn(0, const.TurnType.MSG, log.Msg("They say the hardest part is actually choosing to make a game.  So I guess I've already won?", const.green, const.desat_green))
     turns.add_turn(3600*24, const.TurnType.MSG, log.Msg("You have 6 days left.", const.green, const.desat_green))
-    turns.add_turn(3600*24*2, const.TurnType.MSG, log.Msg("You have 5 days left. Keep going.", const.green, const.desat_green))
-    turns.add_turn(3600*24*3, const.TurnType.MSG, log.Msg("You have 4 days left. Remember to eat and sleep correctly.", const.orange, const.desat_orange))
-    turns.add_turn(3600*24*4, const.TurnType.MSG, log.Msg("You have 3 days left. That's less than half a week...", const.orange, const.desat_orange))
-    turns.add_turn(3600*24*5, const.TurnType.MSG, log.Msg("You have 2 days left. Don't panic.", const.orange, const.desat_orange))
-    turns.add_turn(3600*24*6, const.TurnType.MSG, log.Msg("Only 1 day left. OK, maybe it's time to panic.", const.red, const.desat_red))
-    turns.add_turn(3600*24*6.5, const.TurnType.MSG, log.Msg("Only 12 hours left! You need to finish this now!", const.red, const.desat_red))
-    turns.add_turn(3600*24*7 - 3600, const.TurnType.MSG, log.Msg("1 hour left! Quick!", const.red, const.desat_red))
+    turns.add_turn(3600*24*2, const.TurnType.MSG, log.Msg("You have 5 days left.  Keep going.", const.green, const.desat_green))
+    turns.add_turn(3600*24*3, const.TurnType.MSG, log.Msg("You have 4 days left.  Remember to eat and sleep correctly.", const.orange, const.desat_orange))
+    turns.add_turn(3600*24*4, const.TurnType.MSG, log.Msg("You have 3 days left.  That's less than half a week...", const.orange, const.desat_orange))
+    turns.add_turn(3600*24*5, const.TurnType.MSG, log.Msg("You have 2 days left.  Don't panic.", const.orange, const.desat_orange))
+    turns.add_turn(3600*24*6, const.TurnType.MSG, log.Msg("Only 1 day left.  OK, maybe it's time to panic.", const.red, const.desat_red))
+    turns.add_turn(3600*24*6.5, const.TurnType.MSG, log.Msg("Only 12 hours left!  You need to finish this now!", const.red, const.desat_red))
+    turns.add_turn(3600*24*7 - 3600, const.TurnType.MSG, log.Msg("1 hour left!  Quick!", const.red, const.desat_red))
     turns.add_turn(0, const.TurnType.PLAYER, player)
     turns.add_turn(3600*24*7, const.TurnType.GAME_OVER, None)
     i = 0
@@ -198,22 +198,42 @@ def main():
             for event in tcod.event.wait():
                 key = None
                 modifiers = []
+
                 if event.type == "QUIT":
                     raise SystemExit()
+
                 elif event.type == "KEYDOWN":
                     for m in tcod.event_constants._REVERSE_MOD_TABLE:
                         if m & event.mod != 0:
                             modifiers.append(tcod.event_constants._REVERSE_MOD_TABLE[m])
                     key = tcod.event_constants._REVERSE_SYM_TABLE.get(event.sym)
+
                 elif event.type == "MOUSEMOTION":
                     if event.tile != mouse:
                         mouse = event.tile
                         new_mouse = True
                     continue
-                # elif event.type == "MOUSEBUTTONDOWN" and event.button == tcod.event.BUTTON_LEFT:
-                #     if menu_state == const.MenuState.STANDARD:
-                #         menu_state = const.MenuState.POPUP
-                #         render.render_popup(root_console, popup_panel, screen_width, screen_height, ["Test 1","Test 2"])
+
+                elif event.type == "MOUSEBUTTONDOWN" and event.button == tcod.event.BUTTON_LEFT:
+                    if menu_state == const.MenuState.STANDARD:
+                        e = render.get_object_under_mouse(mouse, turns, player, entities, game_map, screen_width, map_width)
+                        if e:
+                            menu_state = const.MenuState.POPUP
+                            render.render_popup(root_console, popup_panel, map_width, map_height, [render.capitalize(e.name)]+e.describe())
+                            tcod.console_flush()
+                        else:
+                            msglog.add_log("There is nothing to describe here.")
+                    elif menu_state == const.MenuState.POPUP:
+                        render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
+                        render.render_log(root_console, log_panel, msglog, map_height)
+                        if boss:
+                            render.render_boss_hp(root_console, des_panel, map_height, boss)
+                        else:
+                            render.render_des(root_console, des_panel, map_height, "")
+                        render.render_sch(root_console, sch_panel, turns, map_width, time_malus)
+                        render.render_inv(root_console, inv_panel, player, map_width, sch_height)
+                        menu_state = const.MenuState.STANDARD
+
                 else:
                     continue
 
@@ -237,9 +257,9 @@ def main():
                     previous_active = player.active_weapon
                     new_active = player.wequiped.get(use_weapon)
                     if not new_active:
-                        msglog.add_log("You don't have this weapon")
+                        msglog.add_log("You don't have this weapon.")
                     elif previous_active == new_active:
-                        msglog.add_log("This weapon is already wielded")
+                        msglog.add_log("This weapon is already wielded.")
                     else:
                         player.change_active_weapon(new_active)
                         player.active_weapon.equip_log(msglog)
@@ -258,7 +278,7 @@ def main():
                     assert not (stairs and boss_stairs)
                     if stairs or boss_stairs:
                         if boss_stairs and not player.can_go_boss():
-                            msglog.add_log("You can't release the game yet, you don't have five stable features!")
+                            msglog.add_log("You cannot release the game yet, you don't have five stable features!")
                         else:
                             msglog.add_log("You go down the stairs.")
                             for e in entities:
@@ -387,7 +407,7 @@ def main():
                             new_turn = True
                             break
                         elif level_problem_previous:
-                            msglog.add_log("You can't equip a v"+str(item.level)+" feature on a v"+str(level_problem_previous.level)+" feature.")
+                            msglog.add_log("You cannot equip a v"+str(item.level)+" feature on a v"+str(level_problem_previous.level)+" feature.")
                         elif level_problem_no_previous:
                             msglog.add_log("You need to equip a v1 "+item.fslot.value.get("name")+" feature first.")
                         elif not previous:
@@ -450,7 +470,7 @@ def main():
                                 msglog.add_log("You have no weapon to attack with! Equip with w.")
                             else:
                                 if target == boss and weapon.wslot.value.get("instable"):
-                                    msglog.add_log("Your hack has no effect on "+boss.name)
+                                    msglog.add_log("Your hack has no effect on "+boss.name+".", color_active=const.red, color_inactive=const.red)
                                     duration = weapon.duration
                                 else:
                                     duration = attack(weapon, target, msglog, player, entities, turns)
@@ -525,14 +545,14 @@ def main():
             new_turn = True
 
         elif current_turn.ttype == const.TurnType.GAME_OVER:
-            msglog.add_log("Your self-doubt is too strong. You don't feel your game is worth showing to the world. Who said releasing a game was easy?", const.red, const.red)
+            msglog.add_log("Your self-doubt is too strong.  You don't feel your game is worth showing to the world.  Who said releasing a game was easy?", const.red, const.red)
             msglog.add_log("Game over.", const.red, const.red)
             render.render_log(root_console, log_panel, msglog, map_height)
             tcod.console_flush()
             break
 
         elif current_turn.ttype == const.TurnType.WIN:
-            msglog.add_log("Congratulations! You defeated your self-doubt and completed your game!", const.green)
+            msglog.add_log("Congratulations!  You defeated your self-doubt and completed your game!", const.green)
             msglog.add_log("You ascend to the status of RL game dev...", const.green)
             render.render_log(root_console, log_panel, msglog, map_height)
             tcod.console_flush()

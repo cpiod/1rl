@@ -27,7 +27,8 @@ class Entity:
         self.x += dx
         self.y += dy
 
-
+    def describe(self):
+        return ["No description."]
 
 class Tile(Entity):
     """
@@ -56,6 +57,15 @@ class Tile(Entity):
         entities.remove(item)
         self.item = None
         return item
+
+    def describe(self):
+        if self.ftype == const.TileType.DOOR:
+            return ["A plain old wood door."]
+        elif self.ftype == const.TileType.STAIRS:
+            return ["These stairs lead to the next floor."]
+        elif self.ftype == const.TileType.BOSS_STAIRS:
+            return ["You feel anxious about these stairs."]
+        return super().describe()
 
 class Weapon(Entity):
     """
@@ -112,9 +122,24 @@ class Weapon(Entity):
         player.time_move = const.time_move
         player.name = "You"
 
+    def describe(self):
+        d = ["Weapons help you fight bugs.", "", "Each hit uses "+str(self.duration)+"s.", "Its hit probability is "+str(round(self.success_rate*100))+"%.", ""]
+        if self.wslot.value.get("instable"):
+            d.append("It's a hack: fighting bugs decrease the stability!")
+            d.append("")
+        l = self.wego.value.get("fego")
+        d.append("It is twice as fast against "+l[0].value.get("name")+", "+l[1].value.get("name")+" and "+l[2].value.get("name")+" bugs.")
+        return d
+
 class ConsciousWeapon(Weapon):
     def equip_log(self, msglog):
         msglog.add_log("You feel conscious of bug presence.")
+
+    def describe(self):
+        d = super().describe()
+        d.append("")
+        d.append("It grants its wielder telepathy: bugs are visible through walls.")
+        return d
 
 class BasicWeapon(Weapon):
     def equip_log(self, msglog):
@@ -124,6 +149,11 @@ class BasicWeapon(Weapon):
         super().effect_on_active(player)
         player.name = "You (protected by a caustic aura)"
 
+    def describe(self):
+        d = super().describe()
+        d.append("")
+        d.append("It protects its wielder with a caustic aura. Bugs may take damage when they miss.")
+        return d
 
 class ParadoxicalWeapon(Weapon):
     def attack(self, target, msglog, turns):
@@ -133,11 +163,17 @@ class ParadoxicalWeapon(Weapon):
             msglog.add_log(random.choice(const.paradox_list))
             msglog.add_log("The "+target.name+" is confused!")
             target.confusion_date = turns.current_date + const.confusion_duration
+            target.name = "confused "+target.fslot.value.get("name")+" bug v"+str(target.level)
         return (dmg,duration)
 
     def equip_log(self, msglog):
         msglog.add_log("Your weapon tells you a confusing paradox.")
 
+    def describe(self):
+        d = super().describe()
+        d.append("")
+        d.append("Its attacks can confuse bugs. Confused bugs cannot attack nor move.")
+        return d
 
 class MythicalWeapon(Weapon):
     def equip_log(self, msglog):
@@ -148,6 +184,13 @@ class MythicalWeapon(Weapon):
         player.time_move = int(const.time_move * 0.75)
         player.name = "You (fast)"
 
+    def describe(self):
+        d = super().describe()
+        d.append("")
+        d.append("It makes its wielder faster in its moving.")
+        return d
+
+
 class Feature(Entity):
     """
     A feature
@@ -157,7 +200,7 @@ class Feature(Entity):
         self.n_bugs = [0,0,0]
         self.n_bugs_max = const.n_bugs_max[level-1]
         self.max_stability = const.max_stab[level-1]
-        self.stability = int(self.max_stability / 10)
+        self.stability = 0
         self.fslot = fslot
         self.fego = fego
         self.is_in_inventory = False
@@ -179,6 +222,23 @@ class Feature(Entity):
 
     def is_stable(self):
         return (self.stability / self.max_stability) >= const.stability_threshold
+
+    def describe(self):
+        wego = [wego for wego in const.WeaponEgo if self.fego in wego.value.get("fego")]
+        assert len(wego) == 1
+        wego = wego[0]
+        d = ["Features grant you resistance.", "", "Stability: "+str(self.stability)+"/"+str(self.max_stability)]
+        if self.is_stable():
+            d.append("This feature is stable.")
+        else:
+            d.append("This feature is unstable.  Once equipped, you cannot unequip it.")
+        d += ["", "Its bugs are squashed by "+wego.value.get("name")+" weapons."]
+        if self.level == 2:
+            d += ["", "It is a v2 feature: its bugs are tougher!"]
+            d += ["", "Receive a stability bonus if it upgrades a "+self.fego.value.get("name")+" "+self.fslot.value.get("name")+" v"+str(self.level-1)+"."]
+        elif self.level == 1:
+            d += ["", "Grants a stability bonus if upgraded with a "+self.fego.value.get("name")+" "+self.fslot.value.get("name")+" v"+str(self.level+1)+"."]
+        return d
 
 class Player(Entity):
     """
@@ -339,6 +399,20 @@ class Player(Entity):
                 self.synergy.append(fslot)
             self.resistances[fslot] = r + const.bonus_idem[idem]
 
+    def describe(self):
+        d = ["You are a young and hopeful programmer.", "", "Your goal is to release your first game in 7 days.  Your game must have five stable features.","","Beware, bugs are not the only things between you and the release..."]
+        if not self.active_weapon:
+            d += ["", "You wield no weapon."]
+        else:
+            d += ["", "You wield a "+self.active_weapon.name+"."]
+            if isinstance(self.active_weapon, BasicWeapon):
+                d += ["", "You are protected by a caustic aura.", "Click on your weapon for more details."]
+            elif isinstance(self.active_weapon, MythicalWeapon):
+                d += ["", "You move fast."]
+            elif isinstance(self.active_weapon, ConsciousWeapon):
+                d += ["", "You are a telepath."]
+        return d
+
 class Monster(Entity):
     """
     A bug
@@ -422,6 +496,7 @@ class Monster(Entity):
             if self.confusion_date >= turns.current_date:
                 return
             else:
+                self.name = self.fslot.value.get("name")+" bug v"+str(self.level)
                 self.confusion_date = None
 
         # Create a FOV map that has the dimensions of the map
@@ -466,6 +541,7 @@ class Monster(Entity):
             if self.confusion_date >= turns.current_date:
                 return {}
             else:
+                self.name = self.fslot.value.get("name")+" bug v"+str(self.level)
                 self.confusion_date = None
         if random.random() < self.success_rate:
             r = player.resistances[self.fslot]
@@ -474,6 +550,14 @@ class Monster(Entity):
             return {"dmg": delta_malus}
         else:
             return {}
+
+    def describe(self):
+        d = ["Bugs are generated by unstable features.  Fight them to stabilize your features!"]
+        if self.fcreator:
+            d += ["","This bug has been generated by a "+self.fcreator.name+"."]
+        if self.confusion_date:
+            d += ["","It is confused: it cannot attack nor move."]
+        return d
 
 class Boss(Monster):
     def __init__(self, x, y):
@@ -501,6 +585,9 @@ class Boss(Monster):
             return {"invok": out}
         return {"dmg": round(self.atk)}
 
+    def describe(self):
+        return ["Self-doubt is the last thing between you and the release.","", "There is no time to lose: fight to win!"]
+
 class MonsterBug(Monster):
     """
     Monster bug are tougher
@@ -508,6 +595,9 @@ class MonsterBug(Monster):
     def __init__(self, x, y, level, fcreator, fslot=None):
         super().__init__(x, y, level, fcreator, fslot)
         self.atk = int(self.atk * 1.5)
+
+    def describe(self):
+        return super().describe() + ["", "This v2 "+self.fslot.value.get("name")+" bug hits harder."]
 
 class LootBug(Monster):
     """
@@ -517,6 +607,10 @@ class LootBug(Monster):
         super().__init__(x, y, level, fcreator, fslot)
         self.stability_reward = 1.5 * self.stability_reward
 
+    def describe(self):
+        return super().describe() + ["", "This v2 "+self.fslot.value.get("name")+" bug stabilizes faster your feature."]
+
+
 class RNGBug(Monster):
     """
     RNG bugs can't fail their attack
@@ -524,6 +618,10 @@ class RNGBug(Monster):
     def __init__(self, x, y, level, fcreator, fslot=None):
         super().__init__(x, y, level, fcreator, fslot)
         self.success_rate = 1
+
+    def describe(self):
+        return super().describe() + ["", "This v2 "+self.fslot.value.get("name")+" bug cannot miss its attacks."]
+
 
 class AnimationBug(Monster):
     """
@@ -536,12 +634,19 @@ class AnimationBug(Monster):
     def update_symbol(self):
         pass
 
+    def describe(self):
+        return super().describe() + ["", "You cannot see the HP of this v2 "+self.fslot.value.get("name")+" bug."]
+
+
 class MapGenBug(Monster):
     """
     Mapgen bug can phase
     """
     def get_copy_map(self, game_map):
         return game_map.get_copy_empty_map()
+
+    def describe(self):
+        return super().describe() + ["", "This v2 "+self.fslot.value.get("name")+" bug phases through walls."]
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y):
     for entity in entities:
