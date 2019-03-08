@@ -102,7 +102,7 @@ class FeatureEgo(enum.Enum):
 
     m1 = {"name": "Sisyphean", "char": "m"}
     m2 = {"name": "Lovecraftian", "char": "m"}
-    m3 = {"name": "Elvish", "char": "m"}
+    m3 = {"name": "Tolkienesque", "char": "m"}
 
 class WeaponEgo(enum.Enum):
     c = {"name": "telepathic", "fego": [FeatureEgo.c1, FeatureEgo.c2, FeatureEgo.c3], "char": "t", "w_class": "ConsciousWeapon", "player_color": base3}

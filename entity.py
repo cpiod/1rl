@@ -111,7 +111,7 @@ class Weapon(Entity):
             else:
                 effective = self.is_effective_on(target.fslot)
                 if effective:
-                    dmg = random.randint(1, self.level + 2)
+                    dmg = random.randint(1, 2*self.level)
                 else:
                     dmg = random.randint(1, self.level)
             target.hp -= dmg
@@ -128,7 +128,7 @@ class Weapon(Entity):
     def describe(self):
         d = ["Weapons help you fight bugs.", "", "Each hit uses "+str(self.duration)+"s.", "Its hit probability is "+str(round(self.success_rate*100))+"%."]
         l = self.wego.value.get("fego")
-        d += ["", "Damage:","1d"+str(self.level+2)+" against "+l[0].value.get("name")+", "+l[1].value.get("name")+" and "+l[2].value.get("name")+" bugs.","1d"+str(self.level)+" against other bugs."]
+        d += ["", "Damage:","1d"+str(self.level*2)+" against "+l[0].value.get("name")+", "+l[1].value.get("name")+" and "+l[2].value.get("name")+" bugs.","1d"+str(self.level)+" against other bugs."]
 
         if self.wslot.value.get("instable"):
             d += ["", "It's a hack: fighting bugs decreases the stability!"]

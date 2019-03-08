@@ -427,7 +427,7 @@ def main():
                         inheritance = out.get("inheritance")
                         if inheritance:
                             msglog.add_log("You upgraded your "+item.fego.value.get("name")+" "+item.fslot.value.get("name")+": it is already quite stable!", color_active=const.green, color_inactive=const.desat_green)
-                            item.stability = max(item.stability, inheritance.stability)
+                            item.stability = min(item.max_stability, max(item.stability, inheritance.stability))
                             render_inv = True
                             turns.add_turn(player.time_malus + const.time_equip, const.TurnType.PLAYER, player)
                             player.reset_time_malus()
