@@ -123,6 +123,8 @@ def main():
 
     # no hack as first weapon
     first_weapon = random_loot.get_random_weapon(random.choice([const.WeaponSlot.slow, const.WeaponSlot.fast]), turns, player, level=1)
+    key = player.add_to_inventory(first_weapon)
+    first_weapon = random_loot.get_random_weapon(const.WeaponSlot.hack, turns, player, level=1)
 
     key = player.add_to_inventory(first_weapon)
 
@@ -309,6 +311,7 @@ def main():
                                 game_map.make_map_bsp(turns, entities, player)
                             else:
                                 boss = game_map.make_boss_map(turns, entities, player)
+                                const.n_bugs_max = [const.boss_level_invok, const.boss_level_invok]
                                 msglog.add_log("To release your game, you need to fight your inner ennemy: self-doubt.", const.red)
                             turns.add_turn(player.time_malus + player.time_move, const.TurnType.PLAYER, player)
                             player.reset_time_malus()
@@ -534,7 +537,7 @@ def main():
                         for level in range(1,4):
                             nb = const.boss_level_invok[level-1]
                             for n in range(nb):
-                                new_e = game_map.spawn_boss(entities, invok, level)
+                                new_e = game_map.spawn_boss(entities, invok, level, player)
                                 if new_e:
                                     turns.add_turn(e.speed_mov, const.TurnType.ENNEMY, new_e)
                     elif delta_malus:
@@ -545,7 +548,7 @@ def main():
                     else:
                         if player.active_weapon and isinstance(player.active_weapon, entity.BasicWeapon) and not isinstance(e, entity.Boss) and random.randint(1,3) < 3:
                             msglog.add_log("The "+e.name+" is burned by your "+player.active_weapon.name+"!")
-                            attack(player.active_weapon, e, msglog, player, entities, turns, log_effective=False)
+                            attack(player.active_weapon, e, msglog, player, entities, turns, log_effective=False, passive=True)
                             render_inv = True
                             render_map = True
                         # msglog.add_log("The "+e.name+" misses.")
@@ -554,7 +557,7 @@ def main():
         elif current_turn.ttype == const.TurnType.SPAWN:
             if not boss:
                 creator = player.fequiped.get(current_turn.entity)
-                if creator and not creator.is_stable() and sum(creator.n_bugs) < sum(creator.n_bugs_max):
+                if creator and not creator.is_stable() and sum(creator.n_bugs) < sum(const.n_bugs_max[creator.level - 1]):
                     chance = 1 - creator.stability / creator.max_stability / const.stability_threshold + 0.4
                     if random.random() < chance:
                         e = game_map.spawn(entities, creator)
@@ -599,10 +602,10 @@ def main():
             tcod.console_flush()
 
 
-def attack(weapon, target, msglog, player, entities, turns, log_effective=True):
+def attack(weapon, target, msglog, player, entities, turns, log_effective=True, passive=False):
     (dmg,duration) = weapon.attack(target, msglog, turns)
-    if weapon.wslot.value.get("instable"):
-        if random.randint(1,2) == 1:
+    if weapon.wslot.value.get("instable") and not passive:
+        if target.fcreator and random.randint(1,2) == 1:
             msglog.add_log("Your "+target.fcreator.name+" is less stable!")
             target.fcreator.destabilize(target.stability_reward)
         player.update_resistance()

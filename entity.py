@@ -198,7 +198,6 @@ class Feature(Entity):
     def __init__(self, fslot, fego, level):
         super().__init__(None, None, fego.value.get("char"), fslot.value.get("desat_color"), fego.value.get("name")+" "+fslot.value.get("name")+" v"+str(level), False, True, const.RenderOrder.ITEM)
         self.n_bugs = [0,0,0]
-        self.n_bugs_max = const.n_bugs_max[level-1]
         self.max_stability = const.max_stab[level-1]
         self.stability = 0
         self.fslot = fslot
@@ -463,7 +462,7 @@ class Monster(Entity):
         self.fcreator = fcreator
         self.success_rate = const.monster_success_rate[self.level - 1]
         if self.fcreator:
-            assert fcreator.n_bugs[self.level - 1] < fcreator.n_bugs_max[self.level - 1]
+            assert fcreator.n_bugs[self.level - 1] < const.n_bugs_max[fcreator.level - 1][self.level - 1]
             fcreator.n_bugs[self.level - 1] += 1
         self.stability_reward = const.stab_reward[self.level-1]
         self.confusion_date = None

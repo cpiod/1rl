@@ -151,14 +151,14 @@ class GameMap:
     def is_visible(self, x, y):
         return self.tcod_map.fov[y,x]
 
-    def spawn_boss(self, entities, fslot, level):
+    def spawn_boss(self, entities, fslot, level, player):
         for i in range(50):
             (x,y) = self.random_cell()
             if not any([entity for entity in entities if entity.x == x and entity.y == y]):
                 if level > 1:
                     class_name = fslot.value.get("bug_class")
                     the_class = getattr(entity, class_name)
-                    monster = the_class(x, y, level, None, fslot)
+                    monster = the_class(x, y, level, player.fequiped.get(fslot), fslot)
                 else:
                     monster = entity.Monster(x, y, level, None, fslot)
                 entities.append(monster)
@@ -171,7 +171,7 @@ class GameMap:
             (x,y) = self.random_cell()
             if not self.is_visible(x,y) and not any([entity for entity in entities if entity.x == x and entity.y == y]):
                 level = random.randint(1, feature.level)
-                if feature.n_bugs[level - 1] < feature.n_bugs_max[level - 1]:
+                if feature.n_bugs[level - 1] < const.n_bugs_max[feature.level - 1][level - 1]:
                     if level > 1:
                         class_name = feature.fslot.value.get("bug_class")
                         the_class = getattr(entity, class_name)
