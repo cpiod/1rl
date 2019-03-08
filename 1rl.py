@@ -78,7 +78,7 @@ def main():
     turns.add_turn(0, const.TurnType.MSG, log.Msg("They say the hardest part is actually choosing to make a game.  So I guess I've already won?", const.green, const.desat_green))
     turns.add_turn(3600*24, const.TurnType.MSG, log.Msg("You have 6 days left.", const.green, const.desat_green))
     turns.add_turn(3600*24*2, const.TurnType.MSG, log.Msg("You have 5 days left.  Keep going.", const.green, const.desat_green))
-    turns.add_turn(3600*24*3, const.TurnType.MSG, log.Msg("You have 4 days left.  Remember to eat and sleep correctly.", const.orange, const.desat_orange))
+    turns.add_turn(3600*24*3, const.TurnType.MSG, log.Msg("You have 4 days left.  Don't be too ambitious!", const.orange, const.desat_orange))
     turns.add_turn(3600*24*4, const.TurnType.MSG, log.Msg("You have 3 days left.  That's less than half a week...", const.orange, const.desat_orange))
     turns.add_turn(3600*24*5, const.TurnType.MSG, log.Msg("You have 2 days left.  Don't panic.", const.orange, const.desat_orange))
     turns.add_turn(3600*24*6, const.TurnType.MSG, log.Msg("Only 1 day left.  OK, maybe it's time to panic.", const.red, const.desat_red))
@@ -122,10 +122,10 @@ def main():
     key = player.add_to_inventory(first_feature)
 
     # no hack as first weapon
-    first_weapon = random_loot.get_random_weapon(random.choice([const.WeaponSlot.slow, const.WeaponSlot.fast]), turns, player, level=1)
+    first_weapon = random_loot.get_random_weapon(random.choice([const.WeaponSlot.slow, const.WeaponSlot.fast]), turns, player, level=3)
     key = player.add_to_inventory(first_weapon)
-    first_weapon = random_loot.get_random_weapon(const.WeaponSlot.hack, turns, player, level=1)
 
+    first_weapon = random_loot.get_random_weapon(const.WeaponSlot.hack, turns, player, level=1)# TODO
     key = player.add_to_inventory(first_weapon)
 
     menu_state = const.MenuState.STANDARD
@@ -603,7 +603,7 @@ def main():
 
 
 def attack(weapon, target, msglog, player, entities, turns, log_effective=True, passive=False):
-    (dmg,duration) = weapon.attack(target, msglog, turns)
+    (dmg,duration) = weapon.attack(target, msglog, turns, passive=passive)
     if weapon.wslot.value.get("instable") and not passive:
         if target.fcreator and random.randint(1,2) == 1:
             msglog.add_log("Your "+target.fcreator.name+" is less stable!")

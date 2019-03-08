@@ -264,8 +264,8 @@ def draw_entity(con, entity, game_map, player):
     or (isinstance(entity, ent.Monster) and isinstance(player.active_weapon, ent.ConsciousWeapon)):
         tcod.console_set_char_background(con, entity.x, entity.y, const.base03)
         if visible:
-            if (isinstance(entity, ent.Monster) and entity.confusion_date)\
-               or (isinstance(entity, ent.Player) and entity.inverse):
+            if (isinstance(entity, ent.Monster) and entity.confusion_date):
+               # or (isinstance(entity, ent.Player) and entity.inverse):
                 tcod.console_set_char_background(con, entity.x, entity.y, entity.visible_color)
                 tcod.console_set_char_foreground(con, entity.x, entity.y, const.base03)
             else:

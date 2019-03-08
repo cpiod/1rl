@@ -102,11 +102,14 @@ class Weapon(Entity):
     def equip_log(self, msglog):
         pass
 
-    def attack(self, target, msglog, turns):
+    def attack(self, target, msglog, turns, passive=False):
         dmg = 0
         duration = self.duration
         if random.random() < self.success_rate:
-            dmg = self.dmg
+            if passive:
+                dmg = 1
+            else:
+                dmg = self.dmg
             target.hp -= dmg
             target.update_symbol()
            # succesfull attack
@@ -257,7 +260,7 @@ class Player(Entity):
         self.fequiped = {}
         self.resistances = {}
         self.active_weapon = None
-        self.inverse = False
+        # self.inverse = False
         for fslot in const.FeatureSlot:
             self.resistances[fslot] = 0
 
@@ -424,11 +427,11 @@ class Player(Entity):
                 if f.is_stable():
                     score += 50
         score += 100*len(self.synergy)
-        return score
+        return int(score)
 
     def reset_time_malus(self):
         self.time_malus = 0
-        self.inverse = False
+        # self.inverse = False
 
     def add_time_malus(self, delta_malus, fslot):
         if fslot:
@@ -441,8 +444,8 @@ class Player(Entity):
             self.time_malus += delta_malus
             if self.time_malus > const.malus_max:
                 self.time_malus = const.malus_max
-        if self.time_malus > 0:
-            self.inverse = True
+        # if self.time_malus > 0:
+            # self.inverse = True
 
 class Monster(Entity):
     """
@@ -594,7 +597,7 @@ class Monster(Entity):
 class Boss(Monster):
     def __init__(self, x, y):
         self.fcreator = None
-        self.max_hp = 200
+        self.max_hp = 400
         self.hp = self.max_hp
         Entity.__init__(self, x, y, "@", const.red, "Self-doubt", True, True, const.RenderOrder.ACTOR)
         self.fslot = None
