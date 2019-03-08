@@ -44,23 +44,23 @@ light_blue = tcod.Color(38,139,210)*1.5
 stability_threshold = 0.7
 inventory_max_size = 5
 mul = 2
-bug_hp = [2, 5, 9]
-bonus_idem = [0, 0, 1, 2, 3, 4]
-bug_atk = [70, 80, 100]
-bug_speed_atk = [180*mul, 120*mul, 60*mul]
+bug_hp = [2, 4, 6]
+bonus_idem = [0, 0, 1, 2, 2, 3]
+bug_atk = [30, 40, 50]
+bug_speed_atk = [50, 60, 80]
 bug_speed_mov = [60*mul, 50*mul, 40*mul]
 boss_level_invok = [1, 2, 3]
 time_equip = 20*mul
-time_move = 60*mul
+time_move = 30*mul
 spawn_interval = 60*mul
 confusion_duration = 60*10*mul
 malus_max = 15*60*mul
-max_stab = [100,300,600]
-stab_reward = [2,4,6]
-resistance_malus_max_mul = [1, 0.95, 0.9, 0.85, 0.80, 0.75, 0.7, 0.65, 0.6]
-resistance_mul = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]
+max_stab = [100,400]
+stab_reward = [5,15,30]
+resistance_mul = [1, 0.9, 0.8, 0.75, 0.70, 0.65, 0.60, 0.55, 0.50]
 monster_success_rate = [0.85, 0.9, 0.95]
 n_bugs_max = [[5,0,0],[2,5,1]]
+nb_atk = [5,5,5]
 
 
 paradox_list = ["\"Illusions are not real, yet it's real that illusion itself exists.\"", "\"I know one thing: that I know nothing.\"", "\"Can the Wizard of Yendor create a rock too heavy for itself to lift?\"", "\"What happens if Pinocchio says \"My nose will grow now\"?\"", "\"I am lying.\""]
@@ -122,7 +122,7 @@ class TileType(enum.Enum):
     WALL = {"name": "", "collision": True, "transparent": False, "char": "#", "color": base2}
     FLOOR = {"name": "", "collision": False, "transparent": True, "char": ".", "color": base2}
     STAIRS = {"name": "stairs", "collision": False, "transparent": True, "char": ">", "color": door_color}
-    BOSS_STAIRS = {"name": "strange stairs", "collision": False, "transparent": True, "char": ">", "color": boss_stairs_color}
+    BOSS_STAIRS = {"name": "strange stairs", "collision": False, "transparent": True, "char": "<", "color": boss_stairs_color}
     DOOR = {"name": "door", "collision": False, "transparent": False, "char": "+", "color": door_color}
 
 class RenderOrder(enum.Enum):

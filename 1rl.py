@@ -83,7 +83,6 @@ def main():
     turns.add_turn(3600*24*5, const.TurnType.MSG, log.Msg("You have 2 days left.  Don't panic.", const.orange, const.desat_orange))
     turns.add_turn(3600*24*6, const.TurnType.MSG, log.Msg("Only 1 day left.  OK, maybe it's time to panic.", const.red, const.desat_red))
     turns.add_turn(3600*24*6.5, const.TurnType.MSG, log.Msg("Only 12 hours left!  You need to finish this now!", const.red, const.desat_red))
-    turns.add_turn(3600*24*7 - 3600, const.TurnType.MSG, log.Msg("1 hour left!  Quick!", const.red, const.desat_red))
     turns.add_turn(0, const.TurnType.PLAYER, player)
     turns.add_turn(3600*24*7, const.TurnType.GAME_OVER, None)
     i = 0
@@ -122,11 +121,12 @@ def main():
     key = player.add_to_inventory(first_feature)
 
     # no hack as first weapon
-    first_weapon = random_loot.get_random_weapon(random.choice([const.WeaponSlot.slow, const.WeaponSlot.fast]), turns, player, level=3)
+    first_weapon = random_loot.get_random_weapon(random.choice([const.WeaponSlot.slow, const.WeaponSlot.fast]), turns, player, level=1)
+    # first_weapon = random_loot.get_random_weapon(random.choice([const.WeaponSlot.slow, const.WeaponSlot.fast]), turns, player, level=3) # TODO
     key = player.add_to_inventory(first_weapon)
 
-    first_weapon = random_loot.get_random_weapon(const.WeaponSlot.hack, turns, player, level=1)# TODO
-    key = player.add_to_inventory(first_weapon)
+    # first_weapon = random_loot.get_random_weapon(const.WeaponSlot.hack, turns, player, level=1)# TODO
+    # key = player.add_to_inventory(first_weapon)
 
     menu_state = const.MenuState.STANDARD
 
@@ -168,6 +168,11 @@ def main():
             assert turns.nb_turns(const.TurnType.ENNEMY) == len([e for e in entities if isinstance(e, entity.Monster)]),(turns.nb_turns(const.TurnType.ENNEMY),len([e for e in entities if isinstance(e, entity.Monster)]),entities,turns.turns)
 
             current_turn = turns.get_turn()
+
+            if current_turn.ttype == const.TurnType.PLAYER:
+                for e in entities:
+                    if isinstance(e, entity.Monster):
+                        e.reset_nb_atk()
 
             render.render_sch(root_console, sch_panel, turns, map_width, player.time_malus)
             new_turn = False
@@ -295,9 +300,9 @@ def main():
                     if stairs or boss_stairs:
                         if boss_stairs and (not player.can_go_boss() or not boss_confirm):
                             if not player.can_go_boss():
-                                msglog.add_log("This is the release exit. But you don't have five stable features!")
+                                msglog.add_log("This is the release exit.  But you don't have five stable features!")
                             elif not boss_confirm:
-                                msglog.add_log("You feel anxious about this. Are you really sure you are ready to release your game?")
+                                msglog.add_log("You feel anxious about this.  Are you really sure you are ready to release your game?")
                                 boss_confirm = True
                         else:
                             if stairs:
@@ -407,7 +412,7 @@ def main():
                                 elif synergy == 4:
                                     msglog.add_log("You feel a great synergy between your four "+item.fego.value.get("name")+" features!", color_active=const.green, color_inactive=const.desat_green)
                                 elif synergy == 5:
-                                    msglog.add_log("You feel an insane synergy between your five "+item.fego.value.get("name")+" features!", color_active=const.green, color_inactive=const.desat_green)
+                                    msglog.add_log("You feel an incredible synergy between your five "+item.fego.value.get("name")+" features!", color_active=const.green, color_inactive=const.desat_green)
                                 else:
                                     assert False
 
@@ -546,7 +551,8 @@ def main():
                         render_map = True
 
                     else:
-                        if player.active_weapon and isinstance(player.active_weapon, entity.BasicWeapon) and not isinstance(e, entity.Boss) and random.randint(1,3) < 3:
+                        missed = d.get("missed")
+                        if missed and player.active_weapon and isinstance(player.active_weapon, entity.BasicWeapon) and not isinstance(e, entity.Boss) and random.randint(1,3) < 3:
                             msglog.add_log("The "+e.name+" is burned by your "+player.active_weapon.name+"!")
                             attack(player.active_weapon, e, msglog, player, entities, turns, log_effective=False, passive=True)
                             render_inv = True
@@ -572,14 +578,12 @@ def main():
 
         elif current_turn.ttype == const.TurnType.GAME_OVER:
             msglog.add_log("Your self-doubt is too strong.  You don't feel your game is worth showing to the world.  Who said releasing a game was easy?", const.red, const.red)
+            msglog.add_log("Score: "+str(player.get_score()), const.red, const.red)
             msglog.add_log("Game over.", const.red, const.red)
             render.render_log(root_console, log_panel, msglog, map_height)
             tcod.console_flush()
             break
 
-    time.sleep(3)
-    for event in tcod.event.wait():
-        pass
     again = True
     while again:
         for event in tcod.event.wait():

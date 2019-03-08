@@ -79,7 +79,6 @@ class Weapon(Entity):
         self.success_rate = wslot.value.get("success_rate_base")
         self.duration = wslot.value.get("duration_base")
         self.wslot = wslot
-        self.dmg = self.level
         self.is_in_inventory = False
         self.equiped = False
         self.fslot_effective = []
@@ -106,16 +105,17 @@ class Weapon(Entity):
         dmg = 0
         duration = self.duration
         if random.random() < self.success_rate:
+           # succesfull attack
             if passive:
                 dmg = 1
             else:
-                dmg = self.dmg
+                effective = self.is_effective_on(target)
+                if effective:
+                    dmg = self.level
+                else:
+                    dmg = random.randint(1, self.level)
             target.hp -= dmg
             target.update_symbol()
-           # succesfull attack
-            effective = self.is_effective_on(target)
-            if effective:
-                duration = int(self.duration/2)
         else:
             msglog.add_log("You miss the "+target.name)
 
@@ -159,8 +159,8 @@ class BasicWeapon(Weapon):
         return d
 
 class ParadoxicalWeapon(Weapon):
-    def attack(self, target, msglog, turns):
-        (dmg,duration) = super().attack(target, msglog, turns)
+    def attack(self, target, msglog, turns, passive):
+        (dmg,duration) = super().attack(target, msglog, turns, passive)
         # if we missed it
         if dmg == 0 and not isinstance(target, Boss) and not target.confusion_date and random.randint(1, 2) == 1:
             msglog.add_log(random.choice(const.paradox_list))
@@ -270,7 +270,7 @@ class Player(Entity):
         weapon.effect_on_active(self)
 
     def can_go_boss(self):
-        return True # TODO
+        # return True # TODO
         for fslot in const.FeatureSlot:
             f = self.fequiped.get(fslot)
             if not f or not f.is_stable():
@@ -393,7 +393,11 @@ class Player(Entity):
             feature = self.fequiped.get(fslot)
             r = 0
             if feature:
-                r = 2*feature.level
+                if feature.level == 1:
+                    r = 2
+                else:
+                    assert feature.level == 2
+                    r = 6
                 if not feature.is_stable():
                     r -= 1
                 for fslot_equiped in const.FeatureSlot:
@@ -434,16 +438,17 @@ class Player(Entity):
         # self.inverse = False
 
     def add_time_malus(self, delta_malus, fslot):
-        if fslot:
-            r = self.resistances[fslot]
-            mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
-        else:
-            r = round(sum(self.resistances.values())/5)
-            mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
-        if self.time_malus + delta_malus <= mul*const.malus_max:
-            self.time_malus += delta_malus
-            if self.time_malus > const.malus_max:
-                self.time_malus = const.malus_max
+        self.time_malus += delta_malus
+        # if fslot:
+        #     r = self.resistances[fslot]
+        #     mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
+        # else:
+        #     r = round(sum(self.resistances.values())/5)
+        #     mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
+        # if self.time_malus + delta_malus <= mul*const.malus_max:
+        #     self.time_malus += delta_malus
+        #     if self.time_malus > const.malus_max:
+        #         self.time_malus = const.malus_max
         # if self.time_malus > 0:
             # self.inverse = True
 
@@ -459,6 +464,7 @@ class Monster(Entity):
         self.hp = const.bug_hp[level-1]
         super().__init__(x, y, str(self.hp), self.fslot.value.get("color"), self.fslot.value.get("name")+" bug v"+str(level), True, True, const.RenderOrder.ACTOR)
         self.level = level
+        self.reset_nb_atk()
         self.atk = const.bug_atk[level-1]
         self.speed_atk = const.bug_speed_atk[level-1]
         self.speed_mov = const.bug_speed_mov[level-1]
@@ -570,6 +576,8 @@ class Monster(Entity):
             # it will still try to move towards the player (closer to the corridor opening)
                 self.move_towards(target.x, target.y, game_map, entities)
 
+    def reset_nb_atk(self):
+        self.nb_atk = const.nb_atk[self.level-1]
 
     def attack(self, player, turns):
         if self.confusion_date:
@@ -578,13 +586,16 @@ class Monster(Entity):
             else:
                 self.name = self.fslot.value.get("name")+" bug v"+str(self.level)
                 self.confusion_date = None
+        if self.nb_atk == 0:
+            return {}
+        self.nb_atk -= 1
         if random.random() < self.success_rate:
             r = player.resistances[self.fslot]
             mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
             delta_malus = round(self.atk*mul)
             return {"dmg": delta_malus}
         else:
-            return {}
+            return {"missed": True}
 
     def describe(self):
         d = ["Bugs are generated by unstable features.  Fight them to stabilize your features!"]
@@ -597,10 +608,11 @@ class Monster(Entity):
 class Boss(Monster):
     def __init__(self, x, y):
         self.fcreator = None
-        self.max_hp = 400
+        self.max_hp = 200
         self.hp = self.max_hp
         Entity.__init__(self, x, y, "@", const.red, "Self-doubt", True, True, const.RenderOrder.ACTOR)
         self.fslot = None
+        self.level = 3
         self.atk = 300
         self.speed_atk = 350
         self.speed_mov = 30
@@ -632,7 +644,7 @@ class MonsterBug(Monster):
         self.atk = int(self.atk * 1.5)
 
     def describe(self):
-        return super().describe() + ["", "This v2 "+self.fslot.value.get("name")+" bug hits harder."]
+        return super().describe() + ["", "This v"+str(self.level)+" "+self.fslot.value.get("name")+" bug hits harder."]
 
 class LootBug(Monster):
     """
@@ -643,7 +655,7 @@ class LootBug(Monster):
         self.stability_reward = 1.5 * self.stability_reward
 
     def describe(self):
-        return super().describe() + ["", "This v2 "+self.fslot.value.get("name")+" bug stabilizes faster your feature."]
+        return super().describe() + ["", "This v"+str(self.level)+" "+self.fslot.value.get("name")+" bug stabilizes faster your feature."]
 
 
 class RNGBug(Monster):
@@ -655,7 +667,7 @@ class RNGBug(Monster):
         self.success_rate = 1
 
     def describe(self):
-        return super().describe() + ["", "This v2 "+self.fslot.value.get("name")+" bug cannot miss its attacks."]
+        return super().describe() + ["", "This v"+str(self.level)+" "+self.fslot.value.get("name")+" bug cannot miss its attacks."]
 
 
 class AnimationBug(Monster):
@@ -670,7 +682,7 @@ class AnimationBug(Monster):
         pass
 
     def describe(self):
-        return super().describe() + ["", "You cannot see the HP of this v2 "+self.fslot.value.get("name")+" bug."]
+        return super().describe() + ["", "You cannot see the HP of this v"+str(self.level)+" "+self.fslot.value.get("name")+" bug."]
 
 
 class MapGenBug(Monster):
@@ -681,7 +693,7 @@ class MapGenBug(Monster):
         return game_map.get_copy_empty_map()
 
     def describe(self):
-        return super().describe() + ["", "This v2 "+self.fslot.value.get("name")+" bug phases through walls."]
+        return super().describe() + ["", "This v"+str(self.level)+" "+self.fslot.value.get("name")+" bug phases through walls."]
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y):
     for entity in entities:

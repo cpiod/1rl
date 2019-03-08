@@ -141,7 +141,7 @@ class GameMap:
         # if turns.is_boss_ready():
         (x, y) = self.random_cell()
         self.place_boss_stairs(x,y)
-        self.place_boss_stairs(player.x,player.y) # TODO
+        # self.place_boss_stairs(player.x,player.y) # TODO
         self.add_loot(turns, player, entities)
         self.recompute_fov(player.x, player.y)
 
@@ -170,9 +170,10 @@ class GameMap:
         for i in range(50):
             (x,y) = self.random_cell()
             if not self.is_visible(x,y) and not any([entity for entity in entities if entity.x == x and entity.y == y]):
-                level = random.randint(1, feature.level)
+                level = random.randint(1, 3)
                 if feature.n_bugs[level - 1] < const.n_bugs_max[feature.level - 1][level - 1]:
-                    if level > 1:
+                    # mapgen bug are OP. Give their abitity to level 3 bug only
+                    if (feature.fslot == const.FeatureSlot.i and level >= 3) or (feature.fslot != const.FeatureSlot.i and level >= 2):
                         class_name = feature.fslot.value.get("bug_class")
                         the_class = getattr(entity, class_name)
                         monster = the_class(x, y, level, feature)
