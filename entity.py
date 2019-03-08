@@ -252,11 +252,13 @@ class Player(Entity):
         for i in range(const.inventory_max_size+1):
             self.inventory[chr(letter_index+i)] = None
         self.time_move = const.time_move
+        self.time_malus = 0
         self.synergy = []
         self.wequiped = {}
         self.fequiped = {}
         self.resistances = {}
         self.active_weapon = None
+        self.inverse = False
         for fslot in const.FeatureSlot:
             self.resistances[fslot] = 0
 
@@ -266,7 +268,7 @@ class Player(Entity):
         weapon.effect_on_active(self)
 
     def can_go_boss(self):
-        # return True # TODO
+        return True # TODO
         for fslot in const.FeatureSlot:
             f = self.fequiped.get(fslot)
             if not f or not f.is_stable():
@@ -425,6 +427,24 @@ class Player(Entity):
         score += 100*len(self.synergy)
         return score
 
+    def reset_time_malus(self):
+        self.time_malus = 0
+        self.inverse = False
+
+    def add_time_malus(self, delta_malus, fslot):
+        if fslot:
+            r = self.resistances[fslot]
+            mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
+        else:
+            r = round(sum(self.resistances.values())/5)
+            mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
+        if self.time_malus + delta_malus <= mul*const.malus_max:
+            self.time_malus += delta_malus
+            if self.time_malus > const.malus_max:
+                self.time_malus = const.malus_max
+        if self.time_malus > 0:
+            self.inverse = True
+
 class Monster(Entity):
     """
     A bug
@@ -579,9 +599,9 @@ class Boss(Monster):
         self.hp = self.max_hp
         Entity.__init__(self, x, y, "@", const.red, "Self-doubt", True, True, const.RenderOrder.ACTOR)
         self.fslot = None
-        self.atk = 100
-        self.speed_atk = 20
-        self.speed_mov = 10
+        self.atk = 300
+        self.speed_atk = 350
+        self.speed_mov = 30
         self.success_rate = 1
         self.stability_reward = 0
         self.confusion_date = None

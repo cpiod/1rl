@@ -142,7 +142,6 @@ def main():
     fov_recompute = False
     render_inv = False
     force_log = False
-    time_malus = 0
     new_turn = True
     render_map = False
     # last_player_date = 0
@@ -168,7 +167,7 @@ def main():
 
             current_turn = turns.get_turn()
 
-            render.render_sch(root_console, sch_panel, turns, map_width, time_malus)
+            render.render_sch(root_console, sch_panel, turns, map_width, player.time_malus)
             new_turn = False
             # if current_turn.ttype == const.TurnType.PLAYER and time_malus > 60*5:
                 # msglog.add_log("You lose "+str(time_malus)+"s because of the bugs' attacks!")
@@ -241,7 +240,7 @@ def main():
                             render.render_boss_hp(root_console, des_panel, map_height, boss)
                         else:
                             render.render_des(root_console, des_panel, map_height, "")
-                        render.render_sch(root_console, sch_panel, turns, map_width, time_malus)
+                        render.render_sch(root_console, sch_panel, turns, map_width, player.time_malus)
                         render.render_inv(root_console, inv_panel, player, map_width, sch_height)
                         menu_state = const.MenuState.STANDARD
 
@@ -311,8 +310,8 @@ def main():
                             else:
                                 boss = game_map.make_boss_map(turns, entities, player)
                                 msglog.add_log("To release your game, you need to fight your inner ennemy: self-doubt.", const.red)
-                            turns.add_turn(time_malus + player.time_move, const.TurnType.PLAYER, player)
-                            time_malus = 0
+                            turns.add_turn(player.time_malus + player.time_move, const.TurnType.PLAYER, player)
+                            player.reset_time_malus()
                             render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
                             render_map = True
                             new_turn = True
@@ -422,8 +421,9 @@ def main():
                             msglog.add_log("You upgraded your "+item.fego.value.get("name")+" "+item.fslot.value.get("name")+": it is already quite stable!", color_active=const.green, color_inactive=const.desat_green)
                             item.stability = max(item.stability, inheritance.stability)
                             render_inv = True
-                            turns.add_turn(time_malus + const.time_equip, const.TurnType.PLAYER, player)
-                            time_malus = 0
+                            turns.add_turn(player.time_malus + const.time_equip, const.TurnType.PLAYER, player)
+                            player.reset_time_malus()
+                            render_map = True
                             new_turn = True
                             break
                         elif level_problem_previous:
@@ -438,8 +438,9 @@ def main():
                                     render_map = True
                                     player.active_weapon.equip_log(msglog)
                             render_inv = True
-                            turns.add_turn(time_malus + const.time_equip, const.TurnType.PLAYER, player)
-                            time_malus = 0
+                            turns.add_turn(player.time_malus + const.time_equip, const.TurnType.PLAYER, player)
+                            player.reset_time_malus()
+                            render_map = True
                             new_turn = True
                             break
                         else:
@@ -460,7 +461,7 @@ def main():
                             render.render_boss_hp(root_console, des_panel, map_height, boss)
                         else:
                             render.render_des(root_console, des_panel, map_height, "")
-                        render.render_sch(root_console, sch_panel, turns, map_width, time_malus)
+                        render.render_sch(root_console, sch_panel, turns, map_width, player.time_malus)
                         render.render_inv(root_console, inv_panel, player, map_width, sch_height)
                     else:
                         msglog.add_log("Nevermind.")
@@ -473,8 +474,9 @@ def main():
 
                     if (dx, dy) == (0, 0):
                         # msglog.add_log("There is no time to lose!")
-                        turns.add_turn(time_malus + player.time_move, const.TurnType.PLAYER, player)
-                        time_malus = 0
+                        turns.add_turn(player.time_malus + player.time_move, const.TurnType.PLAYER, player)
+                        player.reset_time_malus()
+                        render_map = True
                         new_turn = True
                         force_log = True
                         break
@@ -495,8 +497,8 @@ def main():
                                 else:
                                     duration = attack(weapon, target, msglog, player, entities, turns)
                                     render_inv = True
-                                turns.add_turn(time_malus + duration, const.TurnType.PLAYER, player)
-                                time_malus = 0
+                                turns.add_turn(player.time_malus + duration, const.TurnType.PLAYER, player)
+                                player.reset_time_malus()
                                 new_turn = True
                                 render_map = True
                                 break
@@ -505,8 +507,9 @@ def main():
                             des = game_map.description_item_on_floor(player)
                             if des:
                                 msglog.add_log("You see a "+des+" on the floor.")
-                            turns.add_turn(time_malus + player.time_move, const.TurnType.PLAYER, player)
-                            time_malus = 0
+                            turns.add_turn(player.time_malus + player.time_move, const.TurnType.PLAYER, player)
+                            player.reset_time_malus()
+                            render_map = True
                             fov_recompute = True
                             new_turn = True
                             force_log = True
@@ -536,16 +539,9 @@ def main():
                                     turns.add_turn(e.speed_mov, const.TurnType.ENNEMY, new_e)
                     elif delta_malus:
                         assert int(delta_malus) == delta_malus, delta_malus
-                        if e.fslot:
-                            r = player.resistances[e.fslot]
-                            mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
-                        else:
-                            r = round(sum(player.resistances.values())/5)
-                            mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
-                        if time_malus + delta_malus <= mul*const.malus_max:
-                            time_malus += delta_malus
-                            if time_malus > const.malus_max:
-                                time_malus = const.malus_max
+                        player.add_time_malus(delta_malus, e.fslot)
+                        render_map = True
+
                     else:
                         if player.active_weapon and isinstance(player.active_weapon, entity.BasicWeapon) and not isinstance(e, entity.Boss) and random.randint(1,3) < 3:
                             msglog.add_log("The "+e.name+" is burned by your "+player.active_weapon.name+"!")
@@ -584,10 +580,22 @@ def main():
     again = True
     while again:
         for event in tcod.event.wait():
+            key = None
+            modifiers = []
+
             if event.type == "QUIT":
                 raise SystemExit()
-            elif event.type == "KEYDOWN" or event.type == "MOUSEBUTTONDOWN":
-                again = False
+
+            elif event.type == "KEYDOWN":
+                for m in tcod.event_constants._REVERSE_MOD_TABLE:
+                    if m & event.mod != 0:
+                        modifiers.append(tcod.event_constants._REVERSE_MOD_TABLE[m])
+                key = tcod.event_constants._REVERSE_SYM_TABLE.get(event.sym)
+
+                action = keys.handle_popup_keys(key, modifiers)
+                if action.get("cancel"):
+                    again = False
+
             tcod.console_flush()
 
 

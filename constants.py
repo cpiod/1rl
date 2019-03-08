@@ -58,7 +58,7 @@ malus_max = 15*60*mul
 max_stab = [100,300,600]
 stab_reward = [2,4,6]
 resistance_mul = [1, 0.95, 0.9, 0.85, 0.80, 0.75, 0.7, 0.65, 0.6]
-monster_success_rate = [0.8, 0.85, 0.9]
+monster_success_rate = [0.85, 0.9, 0.95]
 n_bugs_max = [[5,0,0],[2,5,1]]
 
 

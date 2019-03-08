@@ -141,7 +141,7 @@ class GameMap:
         # if turns.is_boss_ready():
         (x, y) = self.random_cell()
         self.place_boss_stairs(x,y)
-        # self.place_boss_stairs(player.x,player.y) # TODO
+        self.place_boss_stairs(player.x,player.y) # TODO
         self.add_loot(turns, player, entities)
         self.recompute_fov(player.x, player.y)
 

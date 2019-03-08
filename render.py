@@ -264,7 +264,8 @@ def draw_entity(con, entity, game_map, player):
     or (isinstance(entity, ent.Monster) and isinstance(player.active_weapon, ent.ConsciousWeapon)):
         tcod.console_set_char_background(con, entity.x, entity.y, const.base03)
         if visible:
-            if isinstance(entity, ent.Monster) and entity.confusion_date:
+            if (isinstance(entity, ent.Monster) and entity.confusion_date)\
+               or (isinstance(entity, ent.Player) and entity.inverse):
                 tcod.console_set_char_background(con, entity.x, entity.y, entity.visible_color)
                 tcod.console_set_char_foreground(con, entity.x, entity.y, const.base03)
             else:
@@ -304,7 +305,7 @@ def get_object_under_mouse(mouse, turns, player, entities, game_map, screen_widt
     if x >= map_width + 1 and x < screen_width - 1:
         i = 0
         if y == 1:
-            return RemainingTime(turns)
+            return RemainingTime(turns, player)
 
         for fslot in const.FeatureSlot:
             if y >= 4+3*i and y <= 5+3*i:
@@ -347,12 +348,16 @@ def capitalize(string):
     return  "%s%s" % (string[0].upper(), string[1:]) # fist letter in capital
 
 class RemainingTime():
-    def __init__(self, turns):
+    def __init__(self, turns, player):
         self.turns = turns
+        self.player = player
         self.name = "Remaining time"
 
     def describe(self):
-        return ["You have only 7 days to create your game.", "", "Each time a bug attacks you, your next move gets a time penalty."]
+        d = ["You have only 7 days to create your game.", "", "Each time a bug attacks you, your next move gets a time penalty."]
+        if self.player.time_malus > 0:
+            d += ["", "You current time penalty is "+str(self.player.time_malus)+"s."]
+        return d
 
 class Resistances():
     def __init__(self):
