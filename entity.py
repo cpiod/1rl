@@ -3,6 +3,10 @@ import constants as const
 import random
 import math
 
+"""
+All the entity classes. Uses inheritance, not composition
+"""
+
 class Entity:
     """
     A generic entity
@@ -28,6 +32,7 @@ class Entity:
         self.y += dy
 
     def describe(self):
+        # should be overriden !
         return ["No description."]
 
 class Tile(Entity):
@@ -41,6 +46,9 @@ class Tile(Entity):
         self.item = None
 
     def put_item(self, item, entities):
+        """
+        Put item on the floor
+        """
         assert self.item == None
         assert item not in entities
         self.item = item
@@ -49,6 +57,9 @@ class Tile(Entity):
         entities.append(item)
 
     def take_item(self, entities):
+        """
+        Take item from the floor
+        """
         assert self.item != None
         assert self.item in entities
         item = self.item
@@ -65,6 +76,9 @@ class Tile(Entity):
             return ["These stairs lead to the next floor."]
         elif self.ftype == const.TileType.BOSS_STAIRS:
             return ["You feel anxious about these stairs."]
+        else:
+            # floor and walls have no name, so they can't be described
+            assert False
         return super().describe()
 
 class Weapon(Entity):
@@ -75,7 +89,6 @@ class Weapon(Entity):
         super().__init__(None, None, wego.value.get("char"), const.base3, wego.value.get("name")+" "+wslot.value.get("name")+" v"+str(level), False, True, const.RenderOrder.ITEM)
         self.wego = wego
         self.level = level
-        # self.success_rate = min(1, int(100*(wslot.value.get("success_rate_base")+level*0.05))/100)
         self.success_rate = wslot.value.get("success_rate_base")
         self.duration = wslot.value.get("duration_base")
         self.wslot = wslot
@@ -87,8 +100,11 @@ class Weapon(Entity):
         self.fslot_effective = [fslot for fslot in const.FeatureSlot if fequiped.get(fslot) and fequiped.get(fslot).fego in self.wego.value.get("fego")]
 
     def stat_string(self):
+        """
+        used to render the right panel
+        """
         string = str(round(self.success_rate * 100))+"% "+str(self.duration)+"s"
-        if self.wslot.value.get("instable"):
+        if self.wslot.value.get("unstable"):
             string = "Stab- "+string
         return string
 
@@ -99,6 +115,7 @@ class Weapon(Entity):
         return fslot in self.fslot_effective
 
     def equip_log(self, msglog):
+        # overriden
         pass
 
     def attack(self, target, msglog, turns, passive=False):
@@ -107,21 +124,28 @@ class Weapon(Entity):
         if random.random() < self.success_rate:
            # succesfull attack
             if passive:
+                # passive (basic) attack inflict only 1 dmg
                 dmg = 1
             else:
                 effective = self.is_effective_on(target.fslot)
+                # not effective: 1d(level). effective: 1d(2*level)
                 if effective:
                     dmg = random.randint(1, 2*self.level)
                 else:
                     dmg = random.randint(1, self.level)
             target.hp -= dmg
+            # because symbol = HP
             target.update_symbol()
         else:
-            msglog.add_log("You miss the "+target.name)
+            if isinstance(target, Boss):
+                msglog.add_log("You miss "+target.name)
+            else:
+                msglog.add_log("You miss the "+target.name)
 
         return (dmg, duration)
 
     def effect_on_active(self, player):
+        # overriden
         player.time_move = const.time_move
         player.name = "You"
 
@@ -130,11 +154,14 @@ class Weapon(Entity):
         l = self.wego.value.get("fego")
         d += ["", "Damage:","1d"+str(self.level*2)+" against "+l[0].value.get("name")+", "+l[1].value.get("name")+" and "+l[2].value.get("name")+" bugs.","1d"+str(self.level)+" against other bugs."]
 
-        if self.wslot.value.get("instable"):
+        if self.wslot.value.get("unstable"):
             d += ["", "It's a hack: fighting bugs decreases the stability!"]
         return d
 
-class ConsciousWeapon(Weapon):
+class TelepathicWeapon(Weapon):
+    """
+    Grant telepathy. See effect in render.py
+    """
     def equip_log(self, msglog):
         msglog.add_log("You feel conscious of bug presence.")
 
@@ -145,6 +172,10 @@ class ConsciousWeapon(Weapon):
         return d
 
 class BasicWeapon(Weapon):
+    """
+    Pun-based weapon: basic (standard) and basic (not acid)
+    Note: RNG bug v2 and v3 are immune to basic weapons because they never miss their attack
+    """
     def equip_log(self, msglog):
         msglog.add_log("You feel surrounded by a caustic aura.")
 
@@ -159,6 +190,9 @@ class BasicWeapon(Weapon):
         return d
 
 class ParadoxicalWeapon(Weapon):
+    """
+    Paradoxical weapons confuse bugs. Confused bugs can't attack nor move.
+    """
     def attack(self, target, msglog, turns, passive):
         (dmg,duration) = super().attack(target, msglog, turns, passive)
         # if we missed it
@@ -179,6 +213,9 @@ class ParadoxicalWeapon(Weapon):
         return d
 
 class MythicalWeapon(Weapon):
+    """
+    Mythical weapon make you faster (movement uses 75% of normal time). Handy to explore…
+    """
     def equip_log(self, msglog):
         msglog.add_log("Your mythical weapon grants you superhuman speed.")
 
@@ -200,6 +237,7 @@ class Feature(Entity):
     """
     def __init__(self, fslot, fego, level):
         super().__init__(None, None, fego.value.get("char"), fslot.value.get("desat_color"), fego.value.get("name")+" "+fslot.value.get("name")+" v"+str(level), False, True, const.RenderOrder.ITEM)
+        # track the number of generated bugs
         self.n_bugs = [0,0,0]
         self.max_stability = const.max_stab[level-1]
         self.stability = 0
@@ -215,6 +253,9 @@ class Feature(Entity):
             self.stability = 0
 
     def stabilize(self, amount):
+        """
+        Returns True iff the feature is more stable
+        """
         if self.stability == self.max_stability:
             return False
         self.stability += amount
@@ -251,6 +292,7 @@ class Player(Entity):
         self.inventory = {}
 
         letter_index = ord('a')
+        # there is a hidden inventory slot (used when the player equips a weapon from the ground directly)
         for i in range(const.inventory_max_size+1):
             self.inventory[chr(letter_index+i)] = None
         self.time_move = const.time_move
@@ -260,7 +302,6 @@ class Player(Entity):
         self.fequiped = {}
         self.resistances = {}
         self.active_weapon = None
-        # self.inverse = False
         for fslot in const.FeatureSlot:
             self.resistances[fslot] = 0
 
@@ -286,14 +327,15 @@ class Player(Entity):
         return len([i for i in self.inventory if self.inventory.get(i)]) == 0
 
     def remove_from_inventory(self, item, drop_key):
+        # drop an object
         assert item.is_in_inventory
         assert self.inventory.get(drop_key)
         self.inventory[drop_key].is_in_inventory = False
         self.inventory[drop_key] = None
 
     def add_to_inventory(self, item):
+        # pick up an object
         assert not item.is_in_inventory
-        # assert not self.is_inventory_full()
         for i in self.inventory:
             if not self.inventory.get(i):
                 self.inventory[i] = item
@@ -301,6 +343,7 @@ class Player(Entity):
                 if isinstance(item, Weapon):
                     item.update_effective(self.fequiped)
                 return i
+        # there should be an empty slot! (can be the extra/hidden slot)
         assert False
         return None
 
@@ -308,16 +351,24 @@ class Player(Entity):
         assert not feature.equiped
         assert feature.is_in_inventory
         previous_feature = self.fequiped.get(feature.fslot)
+
         # you can't equip an unstable feature
         if previous_feature and not previous_feature.is_stable():
             return {"unstable-previous": previous_feature}
+
+        # you want to equip a v2 feature but don't have a v1 feature
         if not previous_feature and feature.level > 1:
             return {"level-problem-no-previous": True}
+
+        # jumps for v1 to v3. Obsolete.
         if previous_feature and previous_feature.level < feature.level - 1:
+            assert False # obsolete
             return {"level-problem-previous": previous_feature}
+
         feature.equiped = True
         feature.is_in_inventory = False
         self.fequiped[feature.fslot] = feature
+
         # update effective
         for weapon in self.wequiped:
             w = self.wequiped.get(weapon)
@@ -327,6 +378,7 @@ class Player(Entity):
             item = self.inventory.get(i)
             if item and isinstance(item, Weapon):
                 item.update_effective(self.fequiped)
+
         # replace previous feature in inventory
         if previous_feature:
             previous_feature.is_in_inventory = True
@@ -334,8 +386,10 @@ class Player(Entity):
             self.inventory[key] = previous_feature
         else:
             self.inventory[key] = None
+
         # update player resistance
         self.update_resistance()
+
         # there is no need to recall the synergy
         if previous_feature and previous_feature.fego == feature.fego:
             return {"inheritance": previous_feature,"synergy": None}
@@ -344,6 +398,10 @@ class Player(Entity):
         return {"synergy": synergy}
 
     def flevel(self):
+        """
+        Returns a metric estimating the level of the player
+        Used for weapon generation
+        """
         level = 0
         for fslot in self.fequiped:
             feature = self.fequiped.get(fslot)
@@ -418,7 +476,7 @@ class Player(Entity):
                 d += ["", "You are protected by a caustic aura.", "Click on your weapon for more details."]
             elif isinstance(self.active_weapon, MythicalWeapon):
                 d += ["", "You move fast."]
-            elif isinstance(self.active_weapon, ConsciousWeapon):
+            elif isinstance(self.active_weapon, TelepathicWeapon):
                 d += ["", "You are a telepath."]
         return d
 
@@ -435,28 +493,18 @@ class Player(Entity):
 
     def reset_time_malus(self):
         self.time_malus = 0
-        # self.inverse = False
 
     def add_time_malus(self, delta_malus, fslot):
         self.time_malus += delta_malus
-        # if fslot:
-        #     r = self.resistances[fslot]
-        #     mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
-        # else:
-        #     r = round(sum(self.resistances.values())/5)
-        #     mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
-        # if self.time_malus + delta_malus <= mul*const.malus_max:
-        #     self.time_malus += delta_malus
-        #     if self.time_malus > const.malus_max:
-        #         self.time_malus = const.malus_max
-        # if self.time_malus > 0:
-            # self.inverse = True
 
 class Monster(Entity):
     """
     A bug
+    It has generally a creator: the feature that generated it
+    Some bugs have no creator: the boss and its minions
     """
     def __init__(self, x, y, level, fcreator, fslot=None):
+        # self.fslot replace fcreator when there is no creator
         if fslot == None:
             self.fslot = fcreator.fslot
         else:
@@ -529,6 +577,9 @@ class Monster(Entity):
         return max(abs(dx), abs(dy))
 
     def get_copy_map(self, game_map):
+        """
+        Overriden by mapgen bugs
+        """
         return game_map.get_copy_map()
 
     def move_astar(self, target, entities, game_map, turns):
@@ -539,8 +590,9 @@ class Monster(Entity):
                 self.name = self.fslot.value.get("name")+" bug v"+str(self.level)
                 self.confusion_date = None
 
-        # Create a FOV map that has the dimensions of the map
         pathfinding_map = self.get_copy_map(game_map)
+
+        # First, get a path without entities (for backup)
 
         astar = tcod.path.AStar(pathfinding_map)
         path = astar.get_path(self.x, self.y, target.x, target.y)
@@ -548,23 +600,19 @@ class Monster(Entity):
         if path:
             backup_x, backup_y = path[0]
 
+        # Then, get a path with entities
+
         for entity in entities:
             if entity.collision and entity != self and entity != target:
-                # Set the tile as a wall so it must be navigated around
                 pathfinding_map.transparent[entity.y,entity.x] = pathfinding_map.walkable[entity.y,entity.x] = False
 
         astar = tcod.path.AStar(pathfinding_map)
-        # Compute the path between self's coordinates and the target's coordinates
         path = astar.get_path(self.x, self.y, target.x, target.y)
 
-        # Check if the path exists, and in this case, also the path is shorter than 25 tiles
-        # The path size matters if you want the monster to use alternative longer paths (for example through other rooms) if for example the player is in a corridor
-        # It makes sense to keep path size relatively low to keep the monsters from running around the map if there's an alternative path really far away
+        # if the path is to long, uses the backup strat
         if path and len(path) < 45:
-            # Find the next coordinates in the computed full path
             x, y = path[0]
             if x or y:
-                # Set self's coordinates to the next path tile
                 self.x = x
                 self.y = y
         else:
@@ -572,8 +620,7 @@ class Monster(Entity):
                 self.x = backup_x
                 self.y = backup_y
             else:
-            # Keep the old move function as a backup so that if there are no paths (for example another monster blocks a corridor)
-            # it will still try to move towards the player (closer to the corridor opening)
+                # if you can't use astar, just go in straight line
                 self.move_towards(target.x, target.y, game_map, entities)
 
     def reset_nb_atk(self):
@@ -590,6 +637,7 @@ class Monster(Entity):
             return {}
         self.nb_atk -= 1
         if random.random() < self.success_rate:
+            # compute damage w.r.t. the player resistance
             r = player.resistances[self.fslot]
             mul = const.resistance_mul[min(len(const.resistance_mul)-1, r)]
             delta_malus = round(self.atk*mul)
@@ -648,7 +696,7 @@ class MonsterBug(Monster):
 
 class LootBug(Monster):
     """
-    Loot bug have a lower stability reward
+    Loot bug have a higher stability reward
     """
     def __init__(self, x, y, level, fcreator, fslot=None):
         super().__init__(x, y, level, fcreator, fslot)
@@ -672,7 +720,7 @@ class RNGBug(Monster):
 
 class AnimationBug(Monster):
     """
-    Animation bug don't have their HP written
+    Animation bug don't show their HP
     """
     def __init__(self, x, y, level, fcreator, fslot=None):
         super().__init__(x, y, level, fcreator, fslot)
@@ -694,6 +742,7 @@ class MapGenBug(Monster):
 
     def describe(self):
         return super().describe() + ["", "This v"+str(self.level)+" "+self.fslot.value.get("name")+" bug phases through walls."]
+
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y):
     for entity in entities:

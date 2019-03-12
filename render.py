@@ -24,13 +24,14 @@ def render_map(root_console, con, entities, player, game_map, screen_width, scre
     con.blit(dest=root_console)
 
 def render_popup(root_console, popup_panel, map_width, map_height, strings):
+    """
+    Render the popup (description screen)
+    """
     tcod.console_clear(popup_panel)
     tcod.console_set_default_foreground(popup_panel, const.base2)
+    # the first item of the list is the window title
     popup_panel.print_frame(0, 0, popup_panel.width, popup_panel.height, string=strings[0])
     wraped_strings = []
-    # wrapper = textwrap.TextWrapper()
-    # wrapper.drop_whitespace = False
-    # wrapper.width = int(0.75*popup_panel.width)
     first = True
     for s in strings:
         if first:
@@ -39,7 +40,6 @@ def render_popup(root_console, popup_panel, map_width, map_height, strings):
         if s == "":
             wraped_strings.append(s)
         else:
-            # wraped_strings += wrapper.wrap(s)
             wraped_strings += textwrap.wrap(s, int(0.75*popup_panel.width))
     y = int(popup_panel.height /2 - len(wraped_strings) / 2)
     for s in wraped_strings:
@@ -50,6 +50,7 @@ def render_popup(root_console, popup_panel, map_width, map_height, strings):
 def render_boss_hp(root_console, des_panel, map_height, boss):
     """
     render the boss hp bar
+    replace the description during the boss fight
     """
     tcod.console_set_default_foreground(des_panel, const.base3)
     tcod.console_print_ex(des_panel, 1, 0, tcod.BKGND_NONE, tcod.LEFT, boss.name)
@@ -65,6 +66,9 @@ def render_boss_hp(root_console, des_panel, map_height, boss):
     des_panel.blit(dest=root_console, dest_y=map_height)
 
 def render_des(root_console, des_panel, map_height, string):
+    """
+    render the description bar
+    """
     tcod.console_set_default_foreground(des_panel, const.base2)
     tcod.console_print_ex(des_panel, 1, 0, tcod.BKGND_NONE, tcod.LEFT, string)
     des_panel.blit(dest=root_console, dest_y=map_height)
@@ -89,6 +93,9 @@ def render_log(root_console, log_panel, msglog, map_height, force=False):
         log_panel.blit(dest=root_console, dest_y=map_height + 1)
 
 def render_feature(inv_panel, feature, default_fore, y, player):
+    """
+    reader the feature part of the right panel
+    """
     max_stab_width = 10
     start_stab = inv_panel.width - 1 - max_stab_width
 
@@ -122,6 +129,9 @@ def render_feature(inv_panel, feature, default_fore, y, player):
         tcod.console_set_char_background(inv_panel, x, y, const.base02, tcod.BKGND_SET)
 
 def render_weapon(inv_panel, weapon, default_fore, y, active_weapon):
+    """
+    reader the weapon part of the right panel
+    """
     x = len(weapon.wego.value.get("name")) + 4
     for fslot in weapon.fslot_effective:
         # tcod.console_set_char_background(inv_panel, x, y, fslot.value.get("color"), tcod.BKGND_SET)
@@ -140,6 +150,9 @@ def render_weapon(inv_panel, weapon, default_fore, y, active_weapon):
     tcod.console_print_ex(inv_panel, inv_panel.width-1, y, tcod.BKGND_NONE, tcod.RIGHT, string)
 
 def render_sch(root_console, sch_panel, turns, map_width, time_malus):
+    """
+    render the time panel
+    """
     # Time
     (remaining_d, remaining_h, remaining_m, remaining_s) = turns.get_remaining()
     w = sch_panel.width
@@ -164,7 +177,7 @@ def render_sch(root_console, sch_panel, turns, map_width, time_malus):
 
 def render_inv(root_console, inv_panel, player, map_width, sch_height):
     """
-    Render the right panel (time, features, weapons, inventory)
+    Render the right panel (features, weapons, inventory) except time
     """
     tcod.console_clear(inv_panel)
     default_fore = const.base0
@@ -229,7 +242,7 @@ def render_inv(root_console, inv_panel, player, map_width, sch_height):
             y += 1
             tcod.console_print_ex(inv_panel, 3, y, tcod.BKGND_NONE, tcod.LEFT, wslot.value.get("name"))
             string = str(round(wslot.value.get("success_rate_base") * 100))+"% "+str(wslot.value.get("duration_base"))+"s"
-            if wslot.value.get("instable"):
+            if wslot.value.get("unstable"):
                 string = "Stab- "+string
             tcod.console_print_ex(inv_panel, w-1, y, tcod.BKGND_NONE, tcod.RIGHT, string)
         y += 1
@@ -261,11 +274,11 @@ def draw_entity(con, entity, game_map, player):
     visible = game_map.is_visible(entity.x, entity.y)
     if visible\
     or (entity.is_seen and (isinstance(entity, ent.Weapon) or isinstance(entity, ent.Feature)))\
-    or (isinstance(entity, ent.Monster) and isinstance(player.active_weapon, ent.ConsciousWeapon)):
+    or (isinstance(entity, ent.Monster) and isinstance(player.active_weapon, ent.TelepathicWeapon)):
+        # are visible: what is directly visible, remembered weapon and feature. When telepathic, monster are visible too
         tcod.console_set_char_background(con, entity.x, entity.y, const.base03)
         if visible:
             if (isinstance(entity, ent.Monster) and entity.confusion_date):
-               # or (isinstance(entity, ent.Player) and entity.inverse):
                 tcod.console_set_char_background(con, entity.x, entity.y, entity.visible_color)
                 tcod.console_set_char_foreground(con, entity.x, entity.y, const.base03)
             else:
@@ -275,6 +288,7 @@ def draw_entity(con, entity, game_map, player):
         tcod.console_set_char(con, entity.x, entity.y, entity.char)
 
 def clear_cell(con, x,y,game_map):
+    # print the floor of a cell
     wall = game_map.is_blocked(x,y)
     door = game_map.is_door(x,y)
     visible = game_map.is_visible(x,y)
@@ -293,6 +307,9 @@ def clear_cell(con, x,y,game_map):
         tcod.console_set_char(con, x, y, ' ')
 
 def get_object_under_mouse(mouse, turns, player, entities, game_map, screen_width, map_width):
+    """
+    Used to know what to describe
+    """
     (x, y) = mouse
     if game_map.is_over_map(x,y) and game_map.is_visible(x,y):
         entities_in_render_order = sorted([entity for entity in entities
@@ -340,14 +357,17 @@ def get_names_under_mouse(mouse, entities, game_map, screen_width):
         # space padding to remove the precedent description
         names = names.ljust(screen_width, ' ')
 
-        return  "%s%s" % (names[0].upper(), names[1:]) # fist letter in capital
+        return "%s%s" % (names[0].upper(), names[1:]) # fist letter in capital
     else:
         return "".ljust(screen_width, ' ')
 
 def capitalize(string):
-    return  "%s%s" % (string[0].upper(), string[1:]) # fist letter in capital
+    return "%s%s" % (string[0].upper(), string[1:]) # fist letter in capital
 
 class RemainingTime():
+    """
+    Dummy class, only used for description
+    """
     def __init__(self, turns, player):
         self.turns = turns
         self.player = player
@@ -360,6 +380,9 @@ class RemainingTime():
         return d
 
 class Resistances():
+    """
+    Dummy class, only used for description
+    """
     def __init__(self):
         self.name = "Resistance"
 

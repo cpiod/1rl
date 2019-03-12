@@ -8,6 +8,9 @@ import numpy as np
 import random_loot as rloot
 
 class Room:
+    """
+    A room! Wow.
+    """
     def __init__(self, x, y, w, h):
         self.x = x # upper left point
         self.y = y # upper left point
@@ -15,10 +18,10 @@ class Room:
         self.h = h
         self.n_loot = 0
         self.neighbors = []
-        self.sample = None
 
 class GameMap:
     def __init__(self, width, height, con, show_map=False):
+        self.sample = None
         self.width = width
         self.con = con
         self.height = height
@@ -31,6 +34,9 @@ class GameMap:
                 self.tcod_empty_map.walkable[y,x] = True
 
     def get_sample(self):
+        """
+        Used to color the walls and the floor
+        """
         ogrid = [np.arange(self.width, dtype=np.float32), np.arange(self.height, dtype=np.float32)]
 
         noise = tcod.noise.Noise(
@@ -45,34 +51,44 @@ class GameMap:
         self.sample = noise.sample_ogrid(ogrid)*(max_lum-min_lum) + min_lum
 
     def add_loot(self, turns, player, entities):
+        """
+        Add loot to a new level
+        """
         n_slot = {}
         for fslot in const.FeatureSlot:
+            # 2d4 features of each slot
             n_slot[fslot] = sum([random.randint(1,4) for i in range(2)])
         for wslot in const.WeaponSlot:
+            # 1d4 weapons of each slot
             n_slot[wslot] = sum([random.randint(1,4) for i in range(1)])
 
         for slot in n_slot:
             n_generated = n_slot.get(slot)
             for n in range(n_generated):
-                # print(slot,n)
                 n_try = 50
                 while n_try > 0:
                     n_try -= 1
+                    # loot is more probable in room with low arity
                     arity = random.choice([1,1,1,2,2,3,4,5])
-                    rlist = [r for r in self.rooms_with_arity(arity) if r.n_loot < 2] # 2 items per room max
+                    rlist = [r for r in self.rooms_with_arity(arity) if r.n_loot < const.max_item_per_room]
                     if rlist:
                         room = random.choice(rlist)
                         (x,y) = self.random_cell_in_room(room)
                         if not self.tiles[x][y].item:
                             room.n_loot += 1
                             self.tiles[x][y].put_item(rloot.get_random_loot(slot, turns, player), entities)
-                            # print(self.tiles[x][y].item.name)
                             break
 
     def rooms_with_arity(self, max_arity):
+        """
+        Return the list of room with at most max_arity neighbors
+        """
         return [r for r in self.room_list if len(r.neighbors) <= max_arity]
 
     def make_boss_map(self, turns, entities, player):
+        """
+        An arena
+        """
         self.get_sample()
         self.tiles = [[entity.Tile(x,y,color_coeff=self.sample[x][y]) for y in range(self.height)] for x in range(self.width)]
         self.tcod_map = tcod.map.Map(self.width, self.height)
@@ -88,7 +104,7 @@ class GameMap:
         (player.x, player.y) = (int(center_x / 2), int(center_y))
         boss = entity.Boss(int(center_x * 1.5), int(center_y))
         entities.append(boss)
-        turns.add_turn(boss.speed_mov, const.TurnType.ENNEMY, boss)
+        turns.add_turn(boss.speed_mov, const.TurnType.ENEMY, boss)
         self.recompute_fov(player.x, player.y)
         return boss
 
@@ -138,10 +154,10 @@ class GameMap:
         (player.x, player.y) = self.random_cell()
         (x, y) = self.random_cell()
         self.place_stairs(x,y)
-        # if turns.is_boss_ready():
+
         (x, y) = self.random_cell()
         self.place_boss_stairs(x,y)
-        # self.place_boss_stairs(player.x,player.y) # TODO
+        # self.place_boss_stairs(player.x,player.y) # TODO (used for debug)
         self.add_loot(turns, player, entities)
         self.recompute_fov(player.x, player.y)
 
@@ -155,7 +171,7 @@ class GameMap:
         for i in range(50):
             (x,y) = self.random_cell()
             if not any([entity for entity in entities if entity.x == x and entity.y == y]):
-                if level > 1:
+                if (fslot == const.FeatureSlot.i and level >= 3) or (fslot != const.FeatureSlot.i and level >= 2):
                     class_name = fslot.value.get("bug_class")
                     the_class = getattr(entity, class_name)
                     monster = the_class(x, y, level, player.fequiped.get(fslot), fslot)
@@ -180,7 +196,6 @@ class GameMap:
                     else:
                         monster = entity.Monster(x, y, level, feature)
                     entities.append(monster)
-                    # print("Spawn from "+feature.name+": "+str(feature.n_bugs))
                     return monster
         return None
 
@@ -230,10 +245,6 @@ class GameMap:
         if not bsp.children:
             w = random.randrange(max(3,int(bsp.w/3)),bsp.w-2)
             h = random.randrange(max(3,int(bsp.h/3)),bsp.h-2)
-            # w = 1
-            # h = 1
-            # w = bsp.w - 1
-            # h = bsp.h - 1
             upper_left_x = random.randrange(bsp.x, bsp.x + bsp.w - w)
             upper_left_y = random.randrange(bsp.y, bsp.y + bsp.h - h)
 
@@ -336,12 +347,10 @@ class GameMap:
 
     def create_h_tunnel(self, x1, x2, y):
         for x in range(min(x1, x2), max(x1, x2) + 1):
-#            tcod.console_set_char_foreground(self.con, x, y, c)
             self.set_unblocked(x,y)
 
     def create_v_tunnel(self, y1, y2, x):
         for y in range(min(y1, y2), max(y1, y2) + 1):
-#            tcod.console_set_char_foreground(self.con, x, y, c)
             self.set_unblocked(x,y)
 
     def get_copy_map(self):
@@ -408,9 +417,15 @@ class GameMap:
             return (item,key)
 
     def description_item_on_floor(self, player):
+        """
+        Get the name of the item on the floor where the player is
+        """
         if self.tiles[player.x][player.y].item:
             return self.tiles[player.x][player.y].item.name
         return None
 
     def is_there_item_on_floor(self, player):
+        """
+        Is there an item on the floor, where the player is?
+        """
         return self.tiles[player.x][player.y].item != None

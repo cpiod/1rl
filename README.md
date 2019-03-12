@@ -1,6 +1,4 @@
-# 1RL
-
-[Download on itch.io!](https://pfgimenez.itch.io/1rl)
+# [Download 1RL on itch.io!](https://pfgimenez.itch.io/1rl)
 
 Create your first roguelike!
 
@@ -19,7 +17,7 @@ This is my first participation to a game jam, namely 7DRL 2019. So this is kind 
 
 ## Manual compilation (Unix)
 
-You will need libsdl2-dev package (2.0.5+).
+You will need python 3.6+, libsdl2-dev (2.0.5+) and libomp5.
 
 First, install tcod and pyinstaller:
 
@@ -39,4 +37,4 @@ The binary is in `dist`.
 
 ## Acknowledgement
 
-This game uses the [python-tcod](https://github.com/libtcod/python-tcod) library. Splash art by [Master484](http://m484games.ucoz.com/).
+This game uses the [python-tcod](https://github.com/libtcod/python-tcod) library. Splash art based on assets by [Master484](http://m484games.ucoz.com/).

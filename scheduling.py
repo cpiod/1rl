@@ -1,6 +1,10 @@
 import heapq
 
 class Scheduling():
+    """
+    The turn system!
+    This is a priority queue that remember, for each entity, the next turn it will play
+    """
     def __init__(self):
         self.turns = []
         self.current_date = 0
@@ -31,11 +35,6 @@ class Scheduling():
         self.current_date = out.date
         assert int(out.date) == out.date, out.date
         return out
-
-    def is_boss_ready(self):
-        remaining = 7*24*60*60 - self.current_date
-        remaining_d = int(remaining / (24*60*60))
-        return remaining_d <= 2
 
     def get_remaining(self):
         remaining = 7*24*60*60 - self.current_date

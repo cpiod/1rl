@@ -117,15 +117,16 @@ def main():
             elif event.type == "KEYDOWN" or event.type == "MOUSEBUTTONDOWN":
                 again = False
 
+    # give a level 1 feature
     first_feature = random_loot.get_random_feature(random.choice(list(const.FeatureSlot)), turns, player, level=1)
     key = player.add_to_inventory(first_feature)
 
     # no hack as first weapon
     first_weapon = random_loot.get_random_weapon(random.choice([const.WeaponSlot.slow, const.WeaponSlot.fast]), turns, player, level=1)
-    # first_weapon = random_loot.get_random_weapon(random.choice([const.WeaponSlot.slow, const.WeaponSlot.fast]), turns, player, level=3) # TODO
+    # first_weapon = random_loot.get_random_weapon(random.choice([const.WeaponSlot.slow, const.WeaponSlot.fast]), turns, player, level=3) # TODO (debug)
     key = player.add_to_inventory(first_weapon)
 
-    # first_weapon = random_loot.get_random_weapon(const.WeaponSlot.hack, turns, player, level=1)# TODO
+    # first_weapon = random_loot.get_random_weapon(const.WeaponSlot.hack, turns, player, level=1)# TODO (debug)
     # key = player.add_to_inventory(first_weapon)
 
     menu_state = const.MenuState.STANDARD
@@ -142,34 +143,36 @@ def main():
 
     tcod.console_flush()
     fov_recompute = False
-    render_inv = False
-    force_log = False
-    new_turn = True
-    render_map = False
-    # last_player_date = 0
+    render_inv = False # render inventory
+    force_log = False # force to pass log
+    new_turn = True # end of the turn
+    render_map = False # render all the map
     mouse = (500,500) #OOB
-    new_mouse = False
-    boss = None
-    boss_confirm = False
+    new_mouse = False # did the mouse move
+    boss = None # is it the final fight?
+    boss_confirm = False # did the player confirm they are ready?
     while not tcod.console_is_window_closed():
         if new_turn:
 
+            # The boss is defeated
             if boss and boss.hp <= 0:
                 msglog.add_log("Congratulations!  You defeated your self-doubt and completed your game!", const.green)
                 msglog.add_log("You ascend to the status of RL game dev...", const.green)
-                msglog.add_log("Score: "+str(player.get_score()), const.green)
+                msglog.add_log("Score: "+str(10*player.get_score()), const.green)
                 render.render_boss_hp(root_console, des_panel, map_height, boss)
                 render.render_log(root_console, log_panel, msglog, map_height)
                 tcod.console_flush()
                 break
 
+            # A bunch of assert to be sure there are no serious bugs
             assert turns.nb_turns(const.TurnType.PLAYER) == 1, turns.nb_turns(const.TurnType.PLAYER)
             assert turns.nb_turns(const.TurnType.SPAWN) == 5, turns.nb_turns(const.TurnType.SPAWN)
-            assert turns.nb_turns(const.TurnType.ENNEMY) == len([e for e in entities if isinstance(e, entity.Monster)]),(turns.nb_turns(const.TurnType.ENNEMY),len([e for e in entities if isinstance(e, entity.Monster)]),entities,turns.turns)
+            assert turns.nb_turns(const.TurnType.ENEMY) == len([e for e in entities if isinstance(e, entity.Monster)]),(turns.nb_turns(const.TurnType.ENEMY),len([e for e in entities if isinstance(e, entity.Monster)]),entities,turns.turns)
 
             current_turn = turns.get_turn()
 
             if current_turn.ttype == const.TurnType.PLAYER:
+                # reset the attack counter
                 for e in entities:
                     if isinstance(e, entity.Monster):
                         e.reset_nb_atk()
@@ -181,17 +184,12 @@ def main():
 
         tcod.console_flush()
         if current_turn.ttype == const.TurnType.PLAYER:
-            # delta_time = int((turns.current_date - last_player_date) / 60)
-            # ticktock = ""
-            # if delta_time >= 10:
-                # msglog.add_log("Tick... Tock...")
-            # last_player_date = turns.current_date
             if fov_recompute:
                 game_map.recompute_fov(player.x, player.y)
                 for e in entities:
                     if not e.is_seen and game_map.is_visible(e.x, e.y):
                         e.is_seen = True
-                        # if isinstance(e, entity.Monster):
+
             if fov_recompute or render_map:
                 new_mouse = True
                 render.render_map(root_console, con, entities, player, game_map, screen_width, screen_height)
@@ -252,6 +250,7 @@ def main():
                         menu_state = const.MenuState.STANDARD
 
                 else:
+                    # nothing interesting
                     continue
 
                 if menu_state == const.MenuState.STANDARD:
@@ -264,10 +263,6 @@ def main():
                     action = keys.handle_popup_keys(key, modifiers)
                 else:
                     assert False
-
-                exit_game = action.get("exit")
-                if exit_game:
-                    return True
 
                 use_weapon = action.get('use_weapon')
                 if use_weapon:
@@ -302,7 +297,7 @@ def main():
                             if not player.can_go_boss():
                                 msglog.add_log("This is the release exit.  But you don't have five stable features!")
                             elif not boss_confirm:
-                                msglog.add_log("You feel anxious about this.  Are you really sure you are ready to release your game?")
+                                msglog.add_log("You feel anxious about this.  Are you really sure you are ready to release your game?  If not, find the other stairs to continue your adventure.")
                                 boss_confirm = True
                         else:
                             if stairs:
@@ -376,10 +371,12 @@ def main():
                         menu_state = const.MenuState.EQUIP
 
                 drop_unknow = action.get('drop_unknow')
+                # we didn't understand what the player want to drop
                 if drop_unknow:
                     msglog.add_log("What do you want to drop? [abcde]")
 
                 equip_unknow = action.get('equip_unknow')
+                # we didn't understand what the player want to equip
                 if equip_unknow:
                     msglog.add_log("What do you want to equip? [abcde]")
 
@@ -481,7 +478,6 @@ def main():
                     dx, dy = move
 
                     if (dx, dy) == (0, 0):
-                        # msglog.add_log("There is no time to lose!")
                         turns.add_turn(player.time_malus + player.time_move, const.TurnType.PLAYER, player)
                         player.reset_time_malus()
                         render_map = True
@@ -499,8 +495,8 @@ def main():
                             if not weapon:
                                 msglog.add_log("You have no weapon to attack with! Equip with w.")
                             else:
-                                if target == boss and weapon.wslot.value.get("instable"):
-                                    msglog.add_log("Your hack has no effect on "+boss.name+".", color_active=const.red, color_inactive=const.red)
+                                if target == boss and weapon.wslot.value.get("unstable"):
+                                    msglog.add_log("Your hack has no effect on "+boss.name+".", color_active=const.red, color_inactive=const.desat_red)
                                     duration = weapon.duration
                                 else:
                                     duration = attack(weapon, target, msglog, player, entities, turns)
@@ -523,28 +519,31 @@ def main():
                             force_log = True
                             break
 
-        elif current_turn.ttype == const.TurnType.ENNEMY:
+        elif current_turn.ttype == const.TurnType.ENEMY:
             e = current_turn.entity
             assert e.hp > 0, e.hp
             if e in entities:
                 if e.distance_to(player) >= 2:
+                    # if close, attack
                     e.move_astar(player, entities, game_map, turns)
-                    if game_map.is_visible(e.x, e.y) or (player.active_weapon and isinstance(player.active_weapon, entity.ConsciousWeapon)):
+                    if game_map.is_visible(e.x, e.y) or (player.active_weapon and isinstance(player.active_weapon, entity.TelepathicWeapon)):
                         render_map = True
-                    turns.add_turn(e.speed_mov, const.TurnType.ENNEMY, e)
+                    turns.add_turn(e.speed_mov, const.TurnType.ENEMY, e)
                 else:
-                    turns.add_turn(e.speed_atk, const.TurnType.ENNEMY, e)
+                    # if far, move
+                    turns.add_turn(e.speed_atk, const.TurnType.ENEMY, e)
                     d = e.attack(player, turns)
                     delta_malus = d.get("dmg")
                     invok = d.get("invok")
                     if invok:
+                        # the boss invoks minions
                         msglog.add_log(e.name+" invoks "+invok.value.get("name")+" bugs!")
                         for level in range(1,4):
                             nb = const.boss_level_invok[level-1]
                             for n in range(nb):
                                 new_e = game_map.spawn_boss(entities, invok, level, player)
                                 if new_e:
-                                    turns.add_turn(e.speed_mov, const.TurnType.ENNEMY, new_e)
+                                    turns.add_turn(e.speed_mov, const.TurnType.ENEMY, new_e)
                     elif delta_malus:
                         assert int(delta_malus) == delta_malus, delta_malus
                         player.add_time_malus(delta_malus, e.fslot)
@@ -552,31 +551,36 @@ def main():
 
                     else:
                         missed = d.get("missed")
+                        # basic passive attack
                         if missed and player.active_weapon and isinstance(player.active_weapon, entity.BasicWeapon) and not isinstance(e, entity.Boss) and random.randint(1,3) < 3:
                             msglog.add_log("The "+e.name+" is burned by your "+player.active_weapon.name+"!")
                             attack(player.active_weapon, e, msglog, player, entities, turns, log_effective=False, passive=True)
                             render_inv = True
                             render_map = True
-                        # msglog.add_log("The "+e.name+" misses.")
             new_turn = True
 
         elif current_turn.ttype == const.TurnType.SPAWN:
+            # regurlarly, we spawn bugs
             if not boss:
                 creator = player.fequiped.get(current_turn.entity)
+                # stable features don't generate bugs
                 if creator and not creator.is_stable() and sum(creator.n_bugs) < sum(const.n_bugs_max[creator.level - 1]):
+                    # the more stable, the slower it generates bugs
                     chance = 1 - creator.stability / creator.max_stability / const.stability_threshold + 0.4
                     if random.random() < chance:
                         e = game_map.spawn(entities, creator)
                         if e:
-                            turns.add_turn(e.speed_mov, const.TurnType.ENNEMY, e)
+                            turns.add_turn(e.speed_mov, const.TurnType.ENEMY, e)
             turns.add_turn(const.spawn_interval, const.TurnType.SPAWN, current_turn.entity)
             new_turn = True
 
         elif current_turn.ttype == const.TurnType.MSG:
+            # a message to this particular date
             msglog.add_log(current_turn.entity.string, current_turn.entity.color_active, current_turn.entity.color_inactive)
             new_turn = True
 
         elif current_turn.ttype == const.TurnType.GAME_OVER:
+            # :(
             msglog.add_log("Your self-doubt is too strong.  You don't feel your game is worth showing to the world.  Who said releasing a game was easy?", const.red, const.red)
             msglog.add_log("Score: "+str(player.get_score()), const.red, const.red)
             msglog.add_log("Game over.", const.red, const.red)
@@ -584,6 +588,7 @@ def main():
             tcod.console_flush()
             break
 
+    # That's the end.
     again = True
     while again:
         for event in tcod.event.wait():
@@ -607,21 +612,20 @@ def main():
 
 
 def attack(weapon, target, msglog, player, entities, turns, log_effective=True, passive=False):
+    # attack a bug (passively or actively)
     (dmg,duration) = weapon.attack(target, msglog, turns, passive=passive)
-    if weapon.wslot.value.get("instable") and not passive:
+    if weapon.wslot.value.get("unstable") and not passive:
         if target.fcreator and random.randint(1,2) == 1:
-            msglog.add_log("Your "+target.fcreator.name+" is less stable!")
+            # 50% chance to lower the stability if the player uses a hack
+            msglog.add_log("Your "+target.fcreator.name+" is less stable!", const.red, const.desat_red)
             target.fcreator.destabilize(target.stability_reward)
         player.update_resistance()
     if target.hp <= 0:
-        # if log_effective and weapon.is_effective_on(target.fslot):
-            # msglog.add_log("You squashed the "+target.name+"!")
-        more_stable = target.dead(stabilize=not weapon.wslot.value.get("instable"))
+        # don't stabilize features of bugs killed by hack
+        more_stable = target.dead(stabilize=not weapon.wslot.value.get("unstable"))
         entities.remove(target)
         turns.remove_turn(target)
         player.update_resistance()
-        # if more_stable:
-            # msglog.add_log("Your "+target.fcreator.name+" is more stable.")
     return duration
 
 def resource_path(relative):
