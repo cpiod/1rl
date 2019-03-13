@@ -138,9 +138,9 @@ class Weapon(Entity):
             target.update_symbol()
         else:
             if isinstance(target, Boss):
-                msglog.add_log("You miss "+target.name)
+                msglog.add_log("You miss "+target.name+".")
             else:
-                msglog.add_log("You miss the "+target.name)
+                msglog.add_log("You miss the "+target.name+".")
 
         return (dmg, duration)
 

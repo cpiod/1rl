@@ -297,7 +297,7 @@ def main():
                             if not player.can_go_boss():
                                 msglog.add_log("This is the release exit.  But you don't have five stable features!")
                             elif not boss_confirm:
-                                msglog.add_log("You feel anxious about this.  Are you really sure you are ready to release your game?  If not, find the other stairs to continue your adventure.")
+                                msglog.add_log("You feel anxious about this.  Are you really sure that you are ready to release your game?  If not, find the other stairs to continue your adventure.")
                                 boss_confirm = True
                         else:
                             if stairs:
@@ -384,7 +384,7 @@ def main():
                 if drop_key:
                     item = player.inventory.get(drop_key)
                     if item:
-                        msglog.add_log("You drop a "+item.name)
+                        msglog.add_log("You drop a "+item.name+".")
                         game_map.drop_item_on_floor(player, entities, item, drop_key)
                         menu_state = const.MenuState.STANDARD
                         render_inv = True
@@ -537,7 +537,7 @@ def main():
                     invok = d.get("invok")
                     if invok:
                         # the boss invoks minions
-                        msglog.add_log(e.name+" invoks "+invok.value.get("name")+" bugs!")
+                        msglog.add_log(e.name+" invokes "+invok.value.get("name")+" bugs!")
                         for level in range(1,4):
                             nb = const.boss_level_invok[level-1]
                             for n in range(nb):
