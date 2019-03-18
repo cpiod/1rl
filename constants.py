@@ -76,7 +76,8 @@ max_item_per_room = 2 # max 2 items per room
 bonus_idem = [0, 0, 1, 2, 2, 3]
 
 # printed with paradoxical weapon
-paradox_list = ["\"Illusions are not real, yet it's real that illusion itself exists.\"", "\"I know one thing: that I know nothing.\"", "\"Can the Wizard of Yendor create a rock too heavy for itself to lift?\"", "\"What happens if Pinocchio says \"My nose will grow now\"?\"", "\"I am lying.\""]
+paradox_list = ["\"Illusions are not real, yet it's real that illusion itself exists.\"", "\"I know one thing: that I know nothing.\"", "\"Can the Wizard of Yendor create a rock too heavy for itself to lift?\"", "\"What happens if Pinocchio says \"My nose will grow now\"?\"", "\"I am lying.\"", "\"What is the sound of one hand?\"", "\"I can resist anything but temptation.\"", "\"The only rule is: ignore all the rules.\"", "\"Let's kill Death.\"", "\"Never say never.\"", "\"The only constant is
+                change.\"", "\"Moderation in all things, including moderation.\"", "\"What if you travel in time and kill your grandfather before he meets your grandmother?\"", "\"Which came first, the chicken or the egg?\""]
 
 class FeatureSlot(enum.Enum):
     m = {"name": "monsters", "color": magenta, "desat_color": desat_magenta, "bug_class": "MonsterBug"}
