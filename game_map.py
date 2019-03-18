@@ -157,7 +157,7 @@ class GameMap:
 
         (x, y) = self.random_cell()
         self.place_boss_stairs(x,y)
-        # self.place_boss_stairs(player.x,player.y) # TODO (used for debug)
+        # self.place_boss_stairs(player.x,player.y) # DEBUG
         self.add_loot(turns, player, entities)
         self.recompute_fov(player.x, player.y)
 

@@ -311,7 +311,7 @@ class Player(Entity):
         weapon.effect_on_active(self)
 
     def can_go_boss(self):
-        # return True # TODO
+        # return True # DEBUG
         for fslot in const.FeatureSlot:
             f = self.fequiped.get(fslot)
             if not f or not f.is_stable():
@@ -551,23 +551,29 @@ class Monster(Entity):
                 if not (game_map.is_blocked(self.x + dx + i, self.y + dy) or
                     get_blocking_entities_at_location(entities, self.x + dx + i, self.y + dy)):
                     self.move(dx + i, dy)
+                    return True
                     break
         elif dy == 0:
             for i in [0,-1,1]:
                 if not (game_map.is_blocked(self.x + dx, self.y + dy + i) or
                     get_blocking_entities_at_location(entities, self.x + dx, self.y + dy + i)):
                     self.move(dx, dy + i)
+                    return True
                     break
         else: # both dx and dy are non-null
             if not (game_map.is_blocked(self.x + dx, self.y + dy) or
                     get_blocking_entities_at_location(entities, self.x + dx, self.y + dy)):
                 self.move(dx, dy)
+                return True
             elif not (game_map.is_blocked(self.x + dx, self.y) or
                     get_blocking_entities_at_location(entities, self.x + dx, self.y)):
                 self.move(dx, 0)
+                return True
             elif not (game_map.is_blocked(self.x, self.y + dy) or
                     get_blocking_entities_at_location(entities, self.x, self.y + dy)):
                 self.move(0, dy)
+                return True
+        return False
 
     def distance_to(self, other):
         # Manhattan distance
@@ -615,13 +621,15 @@ class Monster(Entity):
             if x or y:
                 self.x = x
                 self.y = y
+                return True
         else:
             if (backup_x or backup_y) and pathfinding_map.walkable[backup_y,backup_x]:
                 self.x = backup_x
                 self.y = backup_y
+                return True
             else:
                 # if you can't use astar, just go in straight line
-                self.move_towards(target.x, target.y, game_map, entities)
+                return self.move_towards(target.x, target.y, game_map, entities)
 
     def reset_nb_atk(self):
         self.nb_atk = const.nb_atk[self.level-1]
