@@ -6,6 +6,7 @@
 - Describe discovered items
 - Can hover out-of-sight items
 - Spelling
+- Render optimization
 - New paradoxes
 - Comments
 
