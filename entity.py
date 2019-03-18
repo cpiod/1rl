@@ -122,6 +122,12 @@ class Weapon(Entity):
         dmg = 0
         duration = self.duration
         if random.random() < self.success_rate:
+            # a confused attacked bug has 50% chance of being not confuse anymore
+            if target.confusion_date and random.randint(1,2) == 1:
+                target.confusion_date = None
+                target.name = target.fslot.value.get("name")+" bug v"+str(target.level)
+                msglog.add_log("Your attack revives the "+target.name+".")
+
            # succesfull attack
             if passive:
                 # passive (basic) attack inflict only 1 dmg
@@ -195,12 +201,15 @@ class ParadoxicalWeapon(Weapon):
     """
     def attack(self, target, msglog, turns, passive):
         (dmg,duration) = super().attack(target, msglog, turns, passive)
-        # if we missed it
-        if dmg == 0 and not isinstance(target, Boss) and not target.confusion_date and random.randint(1, 2) == 1:
-            msglog.add_log(random.choice(const.paradox_list))
-            msglog.add_log("The "+target.name+" is confused!")
-            target.confusion_date = turns.current_date + const.confusion_duration
-            target.name = "confused "+target.fslot.value.get("name")+" bug v"+str(target.level)
+        # if we didn't missed it
+        if dmg != 0  and not target.confusion_date and random.randint(1, 3) == 1:
+            if isinstance(target, Boss):
+                msglog.add_log("Paradoxes won't help you against Self-doubt!", color_active=const.red, color_inactive=const.desat_red)
+            elif dmg < target.hp:
+                msglog.add_log(random.choice(const.paradox_list))
+                msglog.add_log("The "+target.name+" is confused!")
+                target.confusion_date = turns.current_date + const.confusion_duration
+                target.name = "confused "+target.fslot.value.get("name")+" bug v"+str(target.level)
         return (dmg,duration)
 
     def equip_log(self, msglog):
