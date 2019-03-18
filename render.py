@@ -311,12 +311,14 @@ def get_object_under_mouse(mouse, turns, player, entities, game_map, screen_widt
     Used to know what to describe
     """
     (x, y) = mouse
-    if game_map.is_over_map(x,y) and game_map.is_visible(x,y):
+    if game_map.is_over_map(x,y):
         entities_in_render_order = sorted([entity for entity in entities
-                if entity.x == x and entity.y == y], key=lambda x: x.render_order.value, reverse=True)
+                if entity.x == x and entity.y == y and\
+                                           (game_map.is_visible(x,y) or\
+                                            ((isinstance(entity, ent.Weapon) or isinstance(entity, ent.Feature)) and entity.is_seen))], key=lambda x: x.render_order.value, reverse=True)
         if entities_in_render_order:
             return entities_in_render_order[0]
-        if game_map.tiles[x][y].name:
+        if game_map.is_visible(x,y) and game_map.tiles[x][y].name:
             return game_map.tiles[x][y]
         return None
     if x >= map_width + 1 and x < screen_width - 1:
@@ -346,13 +348,16 @@ def get_object_under_mouse(mouse, turns, player, entities, game_map, screen_widt
 
 def get_names_under_mouse(mouse, entities, game_map, screen_width):
     (x, y) = mouse
-    if game_map.is_over_map(x,y) and game_map.is_visible(x,y):
+    if game_map.is_over_map(x,y):
         entities_in_render_order = sorted([entity for entity in entities
-                if entity.x == x and entity.y == y], key=lambda x: x.render_order.value, reverse=True)
+                if entity.x == x and entity.y == y and\
+                                           (game_map.is_visible(x,y) or\
+                                            ((isinstance(entity, ent.Weapon) or isinstance(entity, ent.Feature)) and entity.is_seen))], key=lambda x: x.render_order.value, reverse=True)
         names = [e.name for e in entities_in_render_order]
-        string = game_map.tiles[x][y].name
-        if string:
-            names.append(string)
+        if game_map.is_visible(x,y):
+            string = game_map.tiles[x][y].name
+            if string:
+                names.append(string)
         names = ', over a '.join(names)
         # space padding to remove the precedent description
         names = names.ljust(screen_width, ' ')
