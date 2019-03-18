@@ -111,8 +111,11 @@ class Weapon(Entity):
     def is_effective_on_fego(self, fego):
         return fego in self.wego.value.get("fego")
 
-    def is_effective_on(self, fslot):
-        return fslot in self.fslot_effective
+    def is_effective_on(self, target):
+        if target.fcreator:
+            return self.is_effective_on_fego(target.fcreator.fego)
+        else: # fallback: check with the current equiped feature
+            return target.fslot in self.fslot_effective
 
     def equip_log(self, msglog):
         # overriden
@@ -126,14 +129,14 @@ class Weapon(Entity):
             if target.confusion_date and random.randint(1,2) == 1:
                 target.confusion_date = None
                 target.name = target.fslot.value.get("name")+" bug v"+str(target.level)
-                msglog.add_log("Your attack revives the "+target.name+".")
+                msglog.add_log("Your attack makes the "+target.name+" focused again!")
 
            # succesfull attack
             if passive:
                 # passive (basic) attack inflict only 1 dmg
                 dmg = 1
             else:
-                effective = self.is_effective_on(target.fslot)
+                effective = self.is_effective_on(target)
                 # not effective: 1d(level). effective: 1d(2*level)
                 if effective:
                     dmg = random.randint(1, 2*self.level)
