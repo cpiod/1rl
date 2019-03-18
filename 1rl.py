@@ -186,9 +186,15 @@ def main():
         if current_turn.ttype == const.TurnType.PLAYER:
             if fov_recompute:
                 game_map.recompute_fov(player.x, player.y)
+                new_ent = []
                 for e in entities:
                     if not e.is_seen and game_map.is_visible(e.x, e.y):
+                        if isinstance(e, entity.Weapon) or isinstance(e, entity.Feature):
+                            new_ent.append(e.name)
                         e.is_seen = True
+                if new_ent:
+                    new_ent = ' and a '.join(new_ent)
+                    msglog.add_log("You discover a "+new_ent+".")
 
             if fov_recompute or render_map:
                 new_mouse = True

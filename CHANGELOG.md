@@ -1,9 +1,9 @@
 # TODO
-- Describe discovered items
 - Nerf paradoxical weapons
 - Add paradoxes
 
 # Unreleased
+- Describe discovered items
 - Can hover out-of-sight items
 - Spelling
 - Comments
