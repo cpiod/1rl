@@ -25,7 +25,6 @@ class GameMap:
         self.width = width
         self.con = con
         self.height = height
-        self.dlevel = 0
         self.tcod_empty_map = tcod.map.Map(self.width, self.height)
         self.show_map = show_map
         for x in range(self.width):
@@ -113,7 +112,6 @@ class GameMap:
         self.tiles = [[entity.Tile(x,y,color_coeff=self.sample[x][y]) for y in range(self.height)] for x in range(self.width)]
         self.room_list = None
         self.tcod_map = tcod.map.Map(self.width, self.height)
-        self.dlevel += 1
         map_width = self.width
         map_height = self.height
         if self.show_map:

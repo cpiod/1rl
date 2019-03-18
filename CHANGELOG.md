@@ -1,14 +1,11 @@
-# TODO
-- Modify paradoxical weapons
-- Return to splash screen after game over
-
-# Unreleased
+# v1.1
+- Paradoxical weapons rework
 - Describe discovered items
 - Can hover out-of-sight items
-- Spelling
+- Return to splash screen after game over
 - Render optimization
 - New paradoxes
-- Comments
+- Spelling, comments
 
 # v1.0
 Original 7DRL release

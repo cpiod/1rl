@@ -70,7 +70,6 @@ max_stab = [100,400] # stability max
 stab_reward = [5,15,30] # stability reward per bug level
 resistance_mul = [1, 0.9, 0.8, 0.75, 0.70, 0.65, 0.60, 0.55, 0.50] # multiplicative bonus resistance
 monster_success_rate = [0.85, 0.9, 0.95]
-n_bugs_max = [[5,0,0],[2,5,1]]
 max_item_per_room = 2 # max 2 items per room
 # synergy bonus
 bonus_idem = [0, 0, 1, 2, 2, 3]

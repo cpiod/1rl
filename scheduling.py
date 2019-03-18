@@ -6,6 +6,9 @@ class Scheduling():
     This is a priority queue that remember, for each entity, the next turn it will play
     """
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         self.turns = []
         self.current_date = 0
         self.current_turn = None

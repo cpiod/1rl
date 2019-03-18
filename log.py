@@ -14,6 +14,9 @@ class Log():
     def __init__(self, width, height):
         self.height = height
         self.width = width
+        self.reset()
+
+    def reset(self):
         self.messages = []
         self.last = 0 # used to know which messages are bright
 
