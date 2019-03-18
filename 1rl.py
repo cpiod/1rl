@@ -532,9 +532,9 @@ def main():
                                         duration = weapon.duration
                                         dmg = 0
                                     else:
-                                        (dmg, duration, more_stable) = attack(weapon, target, msglog, player, entities, turns)
+                                        (dmg, duration, more_stable, less_stable) = attack(weapon, target, msglog, player, entities, turns)
                                         # stability may have changed
-                                        if more_stable:
+                                        if more_stable or less_stable:
                                             render_inv = True
                                     turns.add_turn(player.time_malus + duration, const.TurnType.PLAYER, player)
                                     player.reset_time_malus()
@@ -590,9 +590,9 @@ def main():
                             # basic passive attack
                             if missed and player.active_weapon and isinstance(player.active_weapon, entity.BasicWeapon) and not isinstance(e, entity.Boss) and random.randint(1,3) < 3:
                                 msglog.add_log("The "+e.name+" is burned by your "+player.active_weapon.name+"!")
-                                (dmg, duration, more_stable) = attack(player.active_weapon, e, msglog, player, entities, turns, log_effective=False, passive=True)
+                                (dmg, duration, more_stable, less_stable) = attack(player.active_weapon, e, msglog, player, entities, turns, log_effective=False, passive=True)
                                 # stability may have changed
-                                if more_stable:
+                                if more_stable or less_stable:
                                     render_inv = True
                                 if dmg > 0:
                                     render_map = True
@@ -656,11 +656,13 @@ def attack(weapon, target, msglog, player, entities, turns, log_effective=True, 
     # attack a bug (passively or actively)
     (dmg,duration) = weapon.attack(target, msglog, turns, passive=passive)
     more_stable = False
+    less_stable = False
     if weapon.wslot.value.get("unstable") and not passive:
         if target.fcreator and random.randint(1,2) == 1:
             # 50% chance to lower the stability if the player uses a hack
             msglog.add_log("Your "+target.fcreator.name+" is less stable!", const.red, const.desat_red)
             target.fcreator.destabilize(target.stability_reward)
+            less_stable = True
         player.update_resistance()
     if target.hp <= 0:
         # don't stabilize features of bugs killed by hack
@@ -668,7 +670,7 @@ def attack(weapon, target, msglog, player, entities, turns, log_effective=True, 
         entities.remove(target)
         turns.remove_turn(target)
         player.update_resistance()
-    return (dmg, duration, more_stable)
+    return (dmg, duration, more_stable, less_stable)
 
 def resource_path(relative):
     try:
