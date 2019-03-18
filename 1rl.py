@@ -89,10 +89,10 @@ def main():
         entities = [player]
         msglog.reset()
         turns.reset()
-        turns.add_turn(0, const.TurnType.MSG, log.Msg("They say the hardest part is actually choosing to make a game.  So I guess I've already won?", const.green, const.desat_green))
+        turns.add_turn(0, const.TurnType.MSG, log.Msg("They say the hardest part is actually choosing to make a game.  So I guess I've already won?", const.green, const.desat_green2))
         turns.add_turn(0, const.TurnType.PLAYER, player)
-        turns.add_turn(3600*24, const.TurnType.MSG, log.Msg("You have 6 days left.", const.green, const.desat_green))
-        turns.add_turn(3600*24*2, const.TurnType.MSG, log.Msg("You have 5 days left.  Keep going.", const.green, const.desat_green))
+        turns.add_turn(3600*24, const.TurnType.MSG, log.Msg("You have 6 days left.", const.green, const.desat_green2))
+        turns.add_turn(3600*24*2, const.TurnType.MSG, log.Msg("You have 5 days left.  Keep going.", const.green, const.desat_green2))
         turns.add_turn(3600*24*3, const.TurnType.MSG, log.Msg("You have 4 days left.  Don't be too ambitious!", const.orange, const.desat_orange))
         turns.add_turn(3600*24*4, const.TurnType.MSG, log.Msg("You have 3 days left.  That's less than half a week...", const.orange, const.desat_orange))
         turns.add_turn(3600*24*5, const.TurnType.MSG, log.Msg("You have 2 days left.  Don't panic.", const.orange, const.desat_orange))
@@ -163,9 +163,9 @@ def main():
 
                 # The boss is defeated
                 if boss and boss.hp <= 0:
-                    msglog.add_log("Congratulations!  You defeated your self-doubt and completed your game!", const.green)
-                    msglog.add_log("You ascend to the status of RL game dev...", const.green)
-                    msglog.add_log("Score: "+str(10*player.get_score()), const.green)
+                    msglog.add_log("Congratulations!  You defeated your self-doubt and completed your game!", const.green, const.green)
+                    msglog.add_log("You ascend to the status of RL game dev...", const.green, const.green)
+                    msglog.add_log("Score: "+str(10*player.get_score()), const.green, const.green)
                     render.render_boss_hp(root_console, des_panel, map_height, boss)
                     render.render_log(root_console, log_panel, msglog, map_height)
                     tcod.console_flush()
@@ -187,8 +187,6 @@ def main():
                     render.render_sch(root_console, sch_panel, turns, map_width, player.time_malus)
                     need_flush = True
                 new_turn = False
-                # if current_turn.ttype == const.TurnType.PLAYER and time_malus > 60*5:
-                    # msglog.add_log("You lose "+str(time_malus)+"s because of the bugs' attacks!")
 
             if current_turn.ttype == const.TurnType.PLAYER:
                 if fov_recompute:
@@ -436,13 +434,13 @@ def main():
                                 synergy = out.get("synergy")
                                 if synergy:
                                     if synergy == 2:
-                                        msglog.add_log("You feel a small synergy between your two "+item.fego.value.get("name")+" features.", color_active=const.green, color_inactive=const.desat_green)
+                                        msglog.add_log("You feel a small synergy between your two "+item.fego.value.get("name")+" features.", color_active=const.green, color_inactive=const.desat_green2)
                                     elif synergy == 3:
-                                        msglog.add_log("You feel a good synergy between your three "+item.fego.value.get("name")+" features.", color_active=const.green, color_inactive=const.desat_green)
+                                        msglog.add_log("You feel a good synergy between your three "+item.fego.value.get("name")+" features.", color_active=const.green, color_inactive=const.desat_green2)
                                     elif synergy == 4:
-                                        msglog.add_log("You feel a great synergy between your four "+item.fego.value.get("name")+" features!", color_active=const.green, color_inactive=const.desat_green)
+                                        msglog.add_log("You feel a great synergy between your four "+item.fego.value.get("name")+" features!", color_active=const.green, color_inactive=const.desat_green2)
                                     elif synergy == 5:
-                                        msglog.add_log("You feel an incredible synergy between your five "+item.fego.value.get("name")+" features!", color_active=const.green, color_inactive=const.desat_green)
+                                        msglog.add_log("You feel an incredible synergy between your five "+item.fego.value.get("name")+" features!", color_active=const.green, color_inactive=const.desat_green2)
                                     else:
                                         assert False
 
@@ -456,7 +454,7 @@ def main():
                             level_problem_previous = out.get("level-problem-previous")
                             inheritance = out.get("inheritance")
                             if inheritance:
-                                msglog.add_log("You upgraded your "+item.fego.value.get("name")+" "+item.fslot.value.get("name")+": it is already quite stable!", color_active=const.green, color_inactive=const.desat_green)
+                                msglog.add_log("You upgraded your "+item.fego.value.get("name")+" "+item.fslot.value.get("name")+": it is already quite stable!", color_active=const.green, color_inactive=const.desat_green2)
                                 item.stability = min(item.max_stability, max(item.stability, inheritance.stability))
                                 render_inv = True
                                 turns.add_turn(player.time_malus + const.time_equip, const.TurnType.PLAYER, player)
@@ -626,7 +624,7 @@ def main():
                 msglog.add_log("Score: "+str(player.get_score()), const.red, const.red)
                 msglog.add_log("Game over.", const.red, const.red)
                 render.render_log(root_console, log_panel, msglog, map_height)
-                render.render_sch(root_console, sch_panel, turns, map_width, player.time_malus)
+                render.render_sch(root_console, sch_panel, turns, map_width, -1)
                 tcod.console_flush()
                 break
 

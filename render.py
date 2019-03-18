@@ -158,10 +158,11 @@ def render_sch(root_console, sch_panel, turns, map_width, time_malus):
     w = sch_panel.width
     tcod.console_set_default_foreground(sch_panel, const.base0)
     sch_panel.print_frame(0, 0, w, 3, string="Remaining time")
-    if remaining_d <= 1:
-        tcod.console_set_default_foreground(sch_panel, const.red)
-    elif remaining_d <= 3:
-        tcod.console_set_default_foreground(sch_panel, const.orange)
+    color = const.base0
+    if remaining_d <= 0:
+        color = const.red
+    elif remaining_d <= 2:
+        color = const.orange
     remaining_d = "{:01d}".format(remaining_d)
     remaining_h = "{:02d}".format(remaining_h)
     remaining_m = "{:02d}".format(remaining_m)
@@ -169,10 +170,13 @@ def render_sch(root_console, sch_panel, turns, map_width, time_malus):
     time_string = remaining_d+"d "+remaining_h+"h "+remaining_m+"m "+remaining_s+"s"
     if time_malus == 0:
         malus = ""
+    elif time_malus == -1: # game over
+        malus = ":("
+        time_malus = 10000
     else:
         malus = "-"+str(time_malus)+"s"
-    sch_panel.print(3, 1, time_string, alignment=tcod.LEFT)
-    sch_panel.print(4+len(time_string), 1, malus, alignment=tcod.LEFT, fg=const.red)
+    sch_panel.print(3, 1, time_string, alignment=tcod.LEFT, fg=color)
+    sch_panel.print(4+len(time_string), 1, malus, alignment=tcod.LEFT, fg=const.red if time_malus >= 3600 else const.orange)
     sch_panel.blit(dest=root_console, dest_x=map_width)
 
 def render_inv(root_console, inv_panel, player, map_width, sch_height):

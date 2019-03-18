@@ -37,6 +37,8 @@ desat_blue = tcod.Color(38,139,210)
 tcod.color_scale_HSV(desat_blue, 0.7, 1)
 desat_green = tcod.Color(133,153,0)
 tcod.color_scale_HSV(desat_green, 0.7, 1)
+desat_green2 = tcod.Color(133,153,0)
+tcod.color_scale_HSV(desat_green2, 0.7, 0.6)
 desat_yellow = tcod.Color(181,137,0)
 tcod.color_scale_HSV(desat_yellow, 0.7, 1)
 boss_stairs_color = desat_green
@@ -77,10 +79,10 @@ bonus_idem = [0, 0, 1, 2, 2, 3]
 # printed with paradoxical weapon
 paradox_list = ["\"Illusions are not real, yet it's real that illusion itself exists.\"",\
                 "\"I know one thing: that I know nothing.\"",\
-                "\"Can the Wizard of Yendor create a rock too heavy for itself to lift?\"",\
+                "\"Can the Wizard of Yendor create a rock too heavy for himself to lift?\"",\
                 "\"What happens if Pinocchio says \"My nose will grow now\"?\"",\
                 "\"I am lying.\"",\
-                "\"What is the sound of one hand?\"",\
+                "\"What is the sound of one hand clapping?\"",\
                 "\"I can resist anything but temptation.\"",\
                 "\"The only rule is: ignore all the rules.\"",\
                 "\"Let's kill Death.\"",\

@@ -5,6 +5,7 @@
 - Return to splash screen after game over
 - Render optimization
 - New paradoxes
+- Color tweak
 - Spelling, comments
 
 # v1.0
