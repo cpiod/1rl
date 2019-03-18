@@ -1,3 +1,8 @@
+# v1.2
+- Bugfix: weakness should check the creator of a bug, not the currently equipped feature
+- Bugfix: refresh inventory after hack use
+- Color tweak
+
 # v1.1
 - Paradoxical weapons rework
 - Describe discovered items
@@ -5,7 +10,6 @@
 - Return to splash screen after game over
 - Render optimization
 - New paradoxes
-- Color tweak
 - Spelling, comments
 
 # v1.0

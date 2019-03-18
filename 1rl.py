@@ -38,7 +38,7 @@ def main():
 
     # tcod init
     tcod.console_set_custom_font(resource_path('font.png'), tcod.FONT_LAYOUT_ASCII_INROW)
-    root_console = tcod.console_init_root(screen_width, screen_height, '1RL v1.1 – 7DRL 2019')
+    root_console = tcod.console_init_root(screen_width, screen_height, '1RL v1.2 – 7DRL 2019')
     tcod.console_set_default_background(root_console, const.base03)
 
     # map console
